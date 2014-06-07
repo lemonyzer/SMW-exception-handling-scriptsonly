@@ -22,10 +22,10 @@ public class KI : MonoBehaviour {
 
 	bool grounded = false;
 	bool walled = false;
-	public Transform groundCheck;
-	public Transform wallCheck;
-	float groundRadius = 0.04f;
-	float wallRadius = 0.04f;
+	public Vector2 groundCheckPosition = new Vector2(0, -0.5f);
+	public Vector2 wallCheckPosition = new Vector2(0.5f, 0);
+	float groundRadius = 0.2f;
+	float wallRadius = 0.1f;
 	public LayerMask whatIsGround;
 	public LayerMask whatIsWall;
 
@@ -68,14 +68,29 @@ public class KI : MonoBehaviour {
 			if (curDistance < targetDistance) {
 				closest = go;
 				targetDistance = curDistance;
-				if( diff.y < 0 )
+
+				if( diff.y < 0.1f )			// save offset!!! physic has no 0.0F precision!
+				{
 					targetHigher = false;
+				}
 				else
+				{
 					targetHigher = true;
-				if( diff.x < 0 )
+				}
+
+				if( -10.0f < diff.x && diff.x < 0.0f )			//between -10 and 0
+				{
 					targetDirection = -1;
-				else
+				}
+				else if( 10.0f < diff.x && diff.x < 20.0f )		//between 10 and 20
+				{
+					targetDirection = -1;
+				}
+				else 											//else (between 0 and 10)
+				{
 					targetDirection = +1;
+				}
+
 			}
 		}
 
@@ -129,15 +144,19 @@ public class KI : MonoBehaviour {
 			KiMove();
 			//		FixInputCheck();					//Tastatur
 			//		FixInputTouchCheck ();				//Mobile
-			FixMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+			FixMove();							//Jump, Wall-Jump, rechts, links Bewegung	
+			JumpAblePlatform();
 		}
 	}
 	void FixCheckPosition()
 	{
-		//Boden unter den Füßen
-		grounded = Physics2D.OverlapCircle (groundCheck.position, groundRadius, whatIsGround);
-		//Gesicht an Wand (nur Gesicht, kein Rücken!)
-		walled = Physics2D.OverlapCircle (wallCheck.position, wallRadius, whatIsWall);
+		Vector2 playerPos = new Vector2(rigidbody2D.transform.position.x,rigidbody2D.transform.position.y);
+		grounded = Physics2D.OverlapCircle (playerPos+groundCheckPosition, groundRadius, whatIsGround);
+		walled = Physics2D.OverlapCircle (playerPos+wallCheckPosition, wallRadius, whatIsWall);
+//		//Boden unter den Füßen
+//		grounded = Physics2D.OverlapCircle (groundCheck.position, groundRadius, whatIsGround);
+//		//Gesicht an Wand (nur Gesicht, kein Rücken!)
+//		walled = Physics2D.OverlapCircle (wallCheck.position, wallRadius, whatIsWall);
 	}
 	void FixSetAnim() 
 	{
@@ -219,5 +238,23 @@ public class KI : MonoBehaviour {
 	
 	void StopJump() {
 		inputJump = false;
+	}
+
+	void JumpAblePlatform()
+	{
+		if(rigidbody2D.velocity.y >0.0F)
+		{
+			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
+		}
+		else
+			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
+		//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
+	}
+	
+	void ForceJumpAblePlatform()
+	{
+		Debug.Log("Force Jump-Able-Platform");
+		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
 	}
 }

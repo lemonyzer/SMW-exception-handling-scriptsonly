@@ -3,20 +3,36 @@ using System.Collections;
 
 public class Beam : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
+	bool beamableObject;
 
+	void Start()
+	{
+		beamableObject=false;
 	}
 
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
-		if(other.gameObject.layer.Equals(LayerMask.NameToLayer("Player")))
+		beamableObject = false;
+
+		if(other.gameObject.layer == LayerMask.NameToLayer("Player1"))
+		{
+			beamableObject = true;
+		}
+		else if(other.gameObject.layer == LayerMask.NameToLayer("Player2"))
+		{
+			beamableObject = true;
+		}
+		else if(other.gameObject.layer == LayerMask.NameToLayer("Player3"))
+		{
+			beamableObject = true;
+		}
+		else if(other.gameObject.layer == LayerMask.NameToLayer("Player4"))
+		{
+			beamableObject = true;
+		}
+
+		if(beamableObject)
 		{
 			float oldY = other.transform.position.y;
 			float oldX = other.transform.position.x;
@@ -29,5 +45,6 @@ public class Beam : MonoBehaviour {
 				other.gameObject.transform.position = new Vector2(0.5f,oldY);
 			}
 		}
+
 	}
 }

@@ -26,24 +26,56 @@ public class HealthController : MonoBehaviour {
 	public bool isKI=false;
 
 	public bool isHit=false;
+
 	Transform myCharacter;
+	BoxCollider2D myCharacterCollider2D;
 	Transform feet;
+	BoxCollider2D feetCollider2D;
 	Transform head;
+	BoxCollider2D headCollider2D;
+
+	PlayerController myPlayerControllerScript;
+	KI myKIScript;
+
 	Animator anim;
 
 	// Use this for initialization
 	void Start () {
+
 		myCharacter = this.gameObject.transform.parent;
+
+		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
+		if(myCharacterCollider2D == null)
+			Debug.LogError("Character has no BoxCollider2D");
+
 		feet = myCharacter.Find("Feet");
+		feetCollider2D = feet.GetComponent<BoxCollider2D>();
+		if(feetCollider2D == null)
+			Debug.LogError("Character's feet has no BoxCollider2D");
+
+
 		head = myCharacter.Find("Head");
+		headCollider2D = head.GetComponent<BoxCollider2D>();
+		if(headCollider2D == null)
+			Debug.LogError("Character's head has no BoxCollider2D");
+
 		anim = myCharacter.GetComponent<Animator>();
 		if(lbl_life != null)
 			lbl_life.text = myCharacter.name + ": " + currentLifes;
 
-		if(myCharacter.GetComponent<KI>() != null)
-			isKI = true;
+		myPlayerControllerScript = myCharacter.GetComponent<PlayerController>() as PlayerController;
+		if(myPlayerControllerScript == null)
+			Debug.LogError("Character has no PlayerController Script");
+		
+		myKIScript = myCharacter.GetComponent<KI>() as KI;
+		if(myKIScript == null)
+		{
+			Debug.LogError("Character has no KI Script");
+			isKI = false;
+		}
 		else
-			isKI = false; 
+			isKI = true;
+			 
 	}
 
 	public void ApplyDamage(float damage, bool headJumped)
@@ -62,12 +94,13 @@ public class HealthController : MonoBehaviour {
 				AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
 
 				// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-				myCharacter.GetComponent<BoxCollider2D>().enabled = false;
+				myCharacterCollider2D.enabled = false;
 
-				// Fuß BoxCollider2D deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
+				// Fuß BoxCollider2D & SendDamageScript deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
 				// myCharacter.Find("Feet").gameObject.SetActive(false);
 				feet.gameObject.SetActive(false);
-				head.gameObject.GetComponent<BoxCollider2D>().enabled = false;
+				headCollider2D.enabled = false;
+				//head.gameObject.GetComponent<BoxCollider2D>().enabled = false;	//BAD PROGRAMMING!
 
 				// verhindern dass das GameObject durch die Gravität in Boden fällt
 				myCharacter.rigidbody2D.isKinematic = true;
@@ -193,7 +226,8 @@ public class HealthController : MonoBehaviour {
 
 		SetSpawnPoint();
 		myCharacter.renderer.enabled = true;
-		myCharacter.GetComponent<BoxCollider2D>().enabled = true;
+		myCharacterCollider2D.enabled=true;
+		//myCharacter.GetComponent<BoxCollider2D>().enabled = true;	//BAD PROGRAMMING!
 		myCharacter.rigidbody2D.isKinematic = true;
 	}
 
@@ -245,15 +279,15 @@ public class HealthController : MonoBehaviour {
 	{
 		if(isKI)
 		{
-			myCharacter.GetComponent<KI>().isDead = true;
+			myKIScript.isDead = true;
 			// myCharacter.GetComponent<KI>().enabled = false; // NICHT komplette Animator deaktivieren!
 			//myCharacter.GetComponent<KI>().JumpAllowed = false;
 			//myCharacter.GetComponent<KI>().MoveAllowed = false;
 		}
 
-		if(myCharacter.GetComponent<PlayerController>() != null)
+		if(myPlayerControllerScript != null)
 		{
-			myCharacter.GetComponent<PlayerController>().isDead = true;
+			myPlayerControllerScript.isDead = true;
 			//myCharacter.GetComponent<PlayerController>().enabled = false;
 		}
 
@@ -263,15 +297,15 @@ public class HealthController : MonoBehaviour {
 	{
 		if(isKI)
 		{
-			myCharacter.GetComponent<KI>().isDead = false;
+			myKIScript.isDead = false;
 			// myCharacter.GetComponent<KI>().enabled = true; // NICHT komplette Animator deaktivieren!
 			//myCharacter.GetComponent<KI>().JumpAllowed = true;
 			//myCharacter.GetComponent<KI>().MoveAllowed = true;
 		}
 		
-		if(myCharacter.GetComponent<PlayerController>() != null)
+		if(myPlayerControllerScript != null)
 		{
-			myCharacter.GetComponent<PlayerController>().isDead = false;
+			myPlayerControllerScript.isDead = false;
 			//myCharacter.GetComponent<PlayerController>().enabled = true;
 		}
 	}
@@ -311,7 +345,7 @@ public class HealthController : MonoBehaviour {
 //			anim.SetBool("Hitted",false);
 
 			//Spieler kann wieder angegriffen werden
-			head.gameObject.GetComponent<BoxCollider2D>().enabled = true;
+			headCollider2D.enabled = true;
 			isHit = false;
 			anim.SetBool ("SpawnProtection", false);
 		}

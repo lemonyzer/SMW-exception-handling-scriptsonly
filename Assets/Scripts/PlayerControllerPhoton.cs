@@ -1,20 +1,20 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-
-//	public bool debug=true;
-//	GUIText guitext;
-//	GUIText guitext2;
-
+public class PlayerControllerPhoton : Photon.MonoBehaviour {
+	
+	//	public bool debug=true;
+	//	GUIText guitext;
+	//	GUIText guitext2;
+	
 	public bool isDead = false;
 	public bool JumpAllowed=true;
 	public bool MoveAllowed=true;
-
+	
 	public AudioClip jumpSound;
 	public AudioClip changeRunDirectionSound;
 	public AudioClip wallJumpSound;
-
+	
 	public Vector2 moveDirection = Vector2.zero;
 	//CharacterController characterController;
 	//public float gravity=10;
@@ -23,19 +23,38 @@ public class PlayerController : MonoBehaviour {
 	float velocity = 0;
 	public bool inputJump = false;
 	public bool inputMove = false;
-	public bool facingRight = true;
-
+	bool facingRight = true;
+	
 	Animator anim;
-
+	
 	public bool grounded = false;
 	public bool walled = false;
 	public Vector2 groundCheckPosition = new Vector2(0, -0.5f);
 	public Vector2 wallCheckPosition = new Vector2(0.5f, 0);
+	public Transform groundCheck;
+	public Transform wallCheck;
 	float groundRadius = 0.2f;
 	float wallRadius = 0.1f;
 	public LayerMask whatIsGround;
 	public LayerMask whatIsWall;
-
+	
+	
+//	/* Android */
+//	public Touch myTouch;
+//	float deltaX=0;
+//	/* Input */
+//	bool inputTouchJump;
+//	public float rangeX = Screen.width*0.125f;	//Pixelbreite  Bildschirmauflösung/2 /2
+//	float touchBeganPositionX=0;
+//	float touchBeganPositionY=0;
+//	bool buttonIsPressed = false;
+//	bool stickIsPressed = false;
+//	/* / Input */
+//	//float deltaY=0;
+//	public Button buttonA;
+//	public Button buttonB;
+//	public AnalogStick leftStick;
+//	/* / Android */
 
 	/* Android */
 	/* Input */
@@ -45,54 +64,55 @@ public class PlayerController : MonoBehaviour {
 	int buttonTapCount=0;
 	bool stickIsPressed = false;
 	/* / Input */
-
-//	public Button buttonA;
-//	public Button buttonB;
-//	public AnalogStick leftStick;
-
+	
+	//	public Button buttonA;
+	//	public Button buttonB;
+	//	public AnalogStick leftStick;
+	
 	Touch analogStick;
 	int analogStickTouchID=-1;
 	bool analogStickTouchBegan=false;
-
+	
 	float touchBeganPositionX;
 	float touchBeganPositionY;
 	float deltaX=0;
 	float deltaY=0;
-
+	
 	public GUITexture analogStickTexture;
 	public GUITexture stickTexture;
 	public float analogStickTextureWidth=0;
 	public float analogStickTextureHeight=0;
-
+	
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
 	/* / Android */
 	
-	void Start() {
-		anim = GetComponent<Animator>();
-		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);
-		stickTexture = (GUITexture) Instantiate(stickTexture);
-		analogStickTextureWidth = analogStickTexture.pixelInset.width;
-		analogStickTextureHeight = analogStickTexture.pixelInset.height;
-	}
-
 	void Awake()
 	{
-
-
+		if (!photonView.isMine)
+		{
+			//We aren't the photonView owner, disable this script
+			//RPC's and OnPhotonSerializeView will STILL get trough but we prevent Update from running
+			enabled = false;
+		}
 	}
-
+	
+	// Use this for initialization
+	void Start () {
+		//characterController = GetComponent<CharacterController>();	//aktuelle Componente des Gameobjects zuweisen 
+		anim = GetComponent<Animator>();
+	}
+	
 	void Update() {
-
-		InputCheck ();
-		InputTouchCheck ();	
-		JumpAblePlatform();
-//		if(!isDead)
-//		{
-//			deltaX=0f;
-//			deltaY=0f;
-//		}
-
+		if (photonView.isMine)
+		{
+			if(!isDead)
+			{
+				InputCheck ();
+				InputTouchCheck ();	
+				JumpAblePlatform();
+			}
+		}
 	}
 	void InputCheck()
 	{
@@ -107,14 +127,14 @@ public class PlayerController : MonoBehaviour {
 		}
 		else
 			inputMove = false;
-
+		
 		/* Jump Keyboard */
 		//moveDirection.y =  Input.GetAxis("Vertical");
 		if (Input.GetKeyDown (KeyCode.Space))
 			inputJump = true;
 		else
 			inputJump = false;
-
+		
 		/* Jump Mouse (and Touch) */
 		//Achtung: gilt auf für Touch!
 		//		if (Input.GetMouseButtonDown (0)) {
@@ -134,79 +154,9 @@ public class PlayerController : MonoBehaviour {
 			deltaX = 0.0F;
 		}
 		inputTouchJump=buttonIsPressed;
-
-//		foreach(Touch touch in Input.touches)
-//		{
-//			if(!buttonIsPressed)
-//			{
-//				//noch kein Finger in linker Bildschirmhälfte gefunden
-//				if( touch.position.x > (Screen.width * 0.5f) )
-//				{
-//					buttonIsPressed = true;
-//				}
-//			}
-//			if(!stickIsPressed)
-//			{
-//				switch (touch.phase) 
-//				{
-//					case TouchPhase.Began:
-//					if(touch.position.x < (Screen.width * 0.5f))
-//					{
-//						if(touch.position.x > (Screen.width * 0.125f))
-//						{
-//							touchBeganPositionX = touch.position.x;
-//							touchBeganPositionY = touch.position.y;
-//						}
-//						else
-//						{
-//							//zu nah am Rand, OFFSET!
-//							touchBeganPositionX = Screen.width*0.125f;
-//							touchBeganPositionY = touch.position.y;
-//						}
-//							
-//						stickIsPressed = true;
-//					}
-//					break;
-//
-//					case TouchPhase.Moved:
-//					deltaX = (touch.position.x - touchBeganPositionX)/rangeX;
-//					if(deltaX > 1.0f)
-//						deltaX = 1.0f;
-//					else if(deltaX < -1.0f)
-//						deltaX = -1.0f;
-//					break;
-//
-//					case TouchPhase.Stationary:
-//						break;
-//					case TouchPhase.Ended:
-//					stickIsPressed = false;
-//						break;
-//
-//				}
-//			}
-//		}
-
-//		if(Input.touchCount > 0)
-//		{
-//			/* mindestens ein Finger auf dem Display */
-//			if(leftStick.isPressed)
-//			{
-//				deltaX = leftStick.deltaX;
-//			}
-//			else
-//				deltaX=0;
-//			
-//			inputTouchJump=buttonA.isPressed;
-//		}
-//		else
-//		{
-//			/* kein Finger auf dem Display */
-//			deltaX=0;
-//			inputTouchJump=false;
-//		}
-
+		
 	}
-
+	
 	// Update is called once per frame
 	void FixedUpdate () {
 		if(!isDead)
@@ -249,7 +199,7 @@ public class PlayerController : MonoBehaviour {
 		}
 		else
 			Debug.LogError("Animator not set");
-
+		
 	}
 	void FixMove()
 	{
@@ -283,7 +233,7 @@ public class PlayerController : MonoBehaviour {
 		{
 			Flip ();
 		}
-
+		
 		/* mit CharacterController
 		//		moveDirection.y -= gravity; // nicht nötig, Physic2D!
 		//		if(characterController.isGrounded) 
@@ -312,41 +262,41 @@ public class PlayerController : MonoBehaviour {
 			Flip ();										//Charakter drehen 
 			anim.SetBool("Wall",false);
 			//rigidbody2D.velocity = jumpForce;
-//			rigidbody2D.AddForce(new Vector2(300, 300));
-//			rigidbody2D.AddForce(jumpForce);
+			//			rigidbody2D.AddForce(new Vector2(300, 300));
+			//			rigidbody2D.AddForce(jumpForce);
 			//rigidbody2D.AddForce(new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y)); //Kraft in Richtung localScale.x anwenden
 			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);								//<--- besser für JumpAblePlatforms
 		}
 	}
-
+	
 	void StartJump() {
 		if(JumpAllowed)
 			inputJump = true;
 	}
-
+	
 	void StopJump() {
 		inputJump = false;
 	}
-
-
+	
+	
 	void Flip() {
 		// Drift sound abspielen
 		if(grounded)
 			AudioSource.PlayClipAtPoint(changeRunDirectionSound,transform.position,1);				//ChangeDirection
-
+		
 		// Richtungvariable anpassen
 		facingRight = !facingRight;
-
+		
 		// WallCheck anpassen
 		wallCheckPosition *= -1;
-
+		
 		// Transform spiegeln
 		Vector3 theScale = transform.localScale;
 		theScale.x *= -1;
 		transform.localScale = theScale;
-
+		
 	}
-
+	
 	/* Collider2D
 	void OnTriggerEnter2D(Collider2D other) {
 //		Debug.LogError(other.gameObject.tag);
@@ -382,20 +332,20 @@ public class PlayerController : MonoBehaviour {
 	{
 		if(rigidbody2D.velocity.y >0.0F)
 		{
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),LayerMask.NameToLayer("Player"),true);
 			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
 		}
 		else
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
+			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),LayerMask.NameToLayer("Player"),false);
 		//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 	}
-
+	
 	void ForceJumpAblePlatform()
 	{
 		Debug.Log("Force Jump-Able-Platform");
-		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),LayerMask.NameToLayer("Player"),true);
 	}
-
+	
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
 		if (stream.isWriting)
@@ -426,6 +376,7 @@ public class PlayerController : MonoBehaviour {
 				{
 					buttonTouchID = touch.fingerId;
 					if(buttonTapCount < touch.tapCount) {
+						Debug.Log("Button: " + buttonTapCount + " new TapCount: " + touch.tapCount); 
 						buttonTapCount = touch.tapCount;
 						buttonIsPressed=true;
 					}
@@ -441,12 +392,12 @@ public class PlayerController : MonoBehaviour {
 			switch (touch.phase) {
 				/* 1. */
 			case TouchPhase.Began:
-//				Steuerung reagiert schlecht!
-//
-//				if(touch.position.x > (Screen.width * 0.5f))
-//				{
-//					buttonIsPressed=true;
-//				}
+				//				Steuerung reagiert schlecht!
+				//
+				//				if(touch.position.x > (Screen.width * 0.5f))
+				//				{
+				//					buttonIsPressed=true;
+				//				}
 				if(touch.position.x < (Screen.width * 0.5f))
 				{
 					// Analog Stick gefunden
@@ -552,7 +503,7 @@ public class PlayerController : MonoBehaviour {
 						deltaY = 1.0f;
 					else if(deltaY < -1.0f)
 						deltaY = -1.0f;
-
+					
 				}
 				break;
 				
@@ -601,4 +552,5 @@ public class PlayerController : MonoBehaviour {
 			}
 		}
 	}
+	
 }
