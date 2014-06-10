@@ -3,28 +3,67 @@ using System.Collections;
 
 public class JumpAblePlatformSaveZone : MonoBehaviour {
 
-	public string targetTag ="Player";
+	public bool isCorrectGameObject;
+	string playerLayer;
+	PlayerController playerController;
+	KI kiController;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+	void Start()
+	{
+		isCorrectGameObject=false;
+    }
 
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
-		Debug.LogError( other.gameObject.name +  " Collision OFF!");
-		if(other.gameObject.layer.Equals(LayerMask.NameToLayer("Player")))
+		isCorrectGameObject=false;
+
+		//if(other.gameObject.layer == LayerMask.NameToLayer("Player1"))
+		if(other.gameObject.layer == 11)
 		{
-			Debug.LogError("Collision OFF!");
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),LayerMask.NameToLayer("Player"),true);
-		}
-/*
+			isCorrectGameObject=true;
+
+        }
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player2"))
+		else if(other.gameObject.layer == 12)
+		{
+			isCorrectGameObject=true;
+
+        }
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player3"))
+		else if(other.gameObject.layer == 13)
+		{
+			isCorrectGameObject=true;
+
+        }
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player4"))
+		else if(other.gameObject.layer == 14)
+		{
+			isCorrectGameObject=true;
+
+        }
+        
+        
+        if(isCorrectGameObject)
+		{
+			playerController = other.gameObject.GetComponent("PlayerController") as PlayerController;
+			if(playerController == null)
+			{
+				// Player muss KI sein
+				kiController  = other.gameObject.GetComponent("KI") as KI;
+				kiController.isInJumpAbleSaveZone = true;
+			}
+			else
+			{
+				playerController.isInJumpAbleSaveZone = true;
+			}
+			Debug.LogError( other.gameObject.name +  ": enters Save Zone => JumpAblePlatform Collision OFF! " + other.gameObject.layer);
+			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,true);
+			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,true);
+            
+        }
+        
+        /*
 		if(other.gameObject.tag != null)
 		{
 			if(other.gameObject.tag == targetTag)
@@ -38,7 +77,55 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 
 	void OnTriggerExit2D(Collider2D other)
 	{
-		/*
+
+		isCorrectGameObject=false;
+		
+		//if(other.gameObject.layer == LayerMask.NameToLayer("Player1"))
+		if(other.gameObject.layer == 11)
+		{
+			isCorrectGameObject=true;
+			
+		}
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player2"))
+		else if(other.gameObject.layer == 12)
+		{
+			isCorrectGameObject=true;
+			
+		}
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player3"))
+		else if(other.gameObject.layer == 13)
+		{
+			isCorrectGameObject=true;
+			
+		}
+		//else if(other.gameObject.layer == LayerMask.NameToLayer("Player4"))
+		else if(other.gameObject.layer == 14)
+		{
+			isCorrectGameObject=true;
+			
+		}
+		
+		
+		if(isCorrectGameObject)
+		{
+			playerController = other.gameObject.GetComponent("PlayerController") as PlayerController;
+			if(playerController == null)
+			{
+				// Player muss KI sein
+				kiController  = other.gameObject.GetComponent("KI") as KI;
+				kiController.isInJumpAbleSaveZone = false;
+			}
+			else
+			{
+				playerController.isInJumpAbleSaveZone = false;
+            }
+			Debug.LogError( other.gameObject.name +  ": leaving Save Zone => JumpAblePlatform Collision On! " + other.gameObject.layer);
+			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,false);
+			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,false);
+            
+        }
+        
+        /*
 		if(other.gameObject.tag != null)
 		{
 			if(other.gameObject.tag == targetTag)

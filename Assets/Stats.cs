@@ -8,11 +8,12 @@ public class Stats : MonoBehaviour {
 	public GameObject winEffect2;
 	public AudioClip winSound;
 	public GameObject backGround;
-	public List<GameObject> player;
-	public List<GameObject> stats;
+	public List<GameObject> playerList;
+	public List<GameObject> statsList;
 	bool allEnemyDeath=false;
 	bool playerLebt=false;
 	bool winEffectOn=false;
+	bool restart=false;
 	
 	Transform currCharacter;		
 	Transform currHead;				//has HeadTrigger and HealthController
@@ -25,21 +26,21 @@ public class Stats : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		allEnemyDeath = true;
-		foreach(GameObject go in player)			
+		foreach(GameObject go in playerList)			
 		{
 			if(go != null)	// falls Ein Spieler schon destroyed wurde
 			{
-				if(go.tag.Equals("Player"))
+				if(go.tag.Equals(Tags.player))
 				{																				//abfrage fehlt ob Player gestorben!!!!
-					currHead = go.transform.Find("Head");
+					currHead = go.transform.Find(Tags.head);
 					if(currHead.GetComponent<HealthController>().currentLifes > 0.0f)
 					{
 						playerLebt = true;
 					}
 				}
-				else if(go.tag.Equals("Enemy"))
+				else if(go.tag.Equals(Tags.enemy))
 				{
-					currHead = go.transform.Find("Head");
+					currHead = go.transform.Find(Tags.head);
 					if(currHead.GetComponent<HealthController>().currentLifes > 0.0f)
 					{
 						allEnemyDeath = false;
@@ -50,10 +51,10 @@ public class Stats : MonoBehaviour {
 		}
 		if(allEnemyDeath)
 		{
-			if(player[0] != null) {
+			if(playerList[0] != null) {
 				//Win!!!
 				Debug.Log("YOU WIN!!!");
-				currCharacter = player[0].transform;
+				currCharacter = playerList[0].transform;
 				if(winEffect!=null)
 				{
 					if(!winEffectOn)
@@ -83,7 +84,7 @@ public class Stats : MonoBehaviour {
 		}
 	}
 
-	bool restart=false;
+
 
 	IEnumerator RestartSceneDelay()
 	{

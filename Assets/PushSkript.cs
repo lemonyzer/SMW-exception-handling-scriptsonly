@@ -3,14 +3,15 @@ using System.Collections;
 
 public class PushSkript : MonoBehaviour {
 
-	string targetTag="Player";
-	string targetTag2="Enemy";
+	string targetTag="Enemy";
+	string targetTag2="Player";
 	float pushForce=150.0f;
 
 	bool bounced;
 
 	Transform myCharacter;
 	Rigidbody2D myRigidBody2D;
+	Rigidbody2D otherRigidBody2D;
 	PlayerController myPlayerController;
 	PlayerController otherPlayerController;
 
@@ -37,11 +38,11 @@ public class PushSkript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(bounced)
-		{
-			bounced = false;
-			myRigidBody2D.velocity = new Vector2(10.0f,0.0f);
-		}
+//		if(bounced)
+//		{
+//			bounced = false;
+//			myRigidBody2D.velocity = new Vector2(10.0f,0.0f);
+//		}
 	}
 
 	void OnCollisionEnter2D(Collision2D collision) 
@@ -49,6 +50,7 @@ public class PushSkript : MonoBehaviour {
 
 		if(collision.gameObject.tag == targetTag)
 		{
+			otherRigidBody2D = collision.transform.rigidbody2D;
 			bounced = true;
 			foreach(ContactPoint2D contact in collision.contacts)
 			{
@@ -59,12 +61,24 @@ public class PushSkript : MonoBehaviour {
 			Debug.Log("velocity.x=" + collision.transform.rigidbody2D.velocity.x);
 			Debug.Log("velocity.x=" + collision.transform.gameObject.rigidbody2D.velocity.x);
 			float myVelocityX = rigidbody2D.velocity.x;
-			float otherVelocityX = collision.transform.gameObject.rigidbody2D.velocity.x;
+			float myVelocityY = rigidbody2D.velocity.y;
+			float otherVelocityX = otherRigidBody2D.velocity.x;
+			float otherVelocityY = otherRigidBody2D.velocity.x;
+
+			//myRigidBody2D.velocity = new Vector2(otherVelocityX,myVelocityY);
+
+			//otherRigidBody2D.velocity = new Vector2(-otherVelocityX,otherVelocityY);
+
+
 			if(otherVelocityX > 0.0F)
 			{
 				// Gegenspieler bewegt sich nach rechts
 //				myRigidBody2D.velocity = new Vector2(10.0f,0.0f);
 				//rigidbody2D.AddForce(new Vector2(100f*otherVelocityX,0.0f));
+				myRigidBody2D.AddForce(new Vector2(otherVelocityX*10.0f,20.0f),ForceMode2D.Impulse);
+				otherRigidBody2D.AddForce(new Vector2(-1.0f*otherVelocityX*10.0f,20.0f),ForceMode2D.Impulse);
+				//myRigidBody2D.velocity = new Vector2(otherVelocityX*10.0f,20.0f);
+				//otherRigidBody2D.velocity = new Vector2(-1.0f*otherVelocityX*10.0f,20.0f);
 
 				// bounces in other direction
 				//collision.transform.rigidbody2D.velocity = new Vector2(-pushForce,collision.gameObject.rigidbody2D.velocity.y); 	
@@ -77,6 +91,8 @@ public class PushSkript : MonoBehaviour {
 			{
 				// Gegenspieler bewegt sich nach links
 //				myRigidBody2D.velocity = new Vector2(-10.0F,0.0F);
+				myRigidBody2D.velocity = new Vector2(otherVelocityX*10.0f,20.0f);
+				otherRigidBody2D.velocity = new Vector2(-1.0f*otherVelocityX*10.0f,20.0f);
 
 				// bounces in other direction
 				//collision.transform.rigidbody2D.velocity = new Vector2(pushForce,collision.gameObject.rigidbody2D.velocity.y); 		

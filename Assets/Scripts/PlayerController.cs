@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour {
 	public bool isDead = false;
 	public bool JumpAllowed=true;
 	public bool MoveAllowed=true;
+	public bool isInJumpAbleSaveZone=false;
 
 	public AudioClip jumpSound;
 	public AudioClip changeRunDirectionSound;
@@ -67,6 +68,10 @@ public class PlayerController : MonoBehaviour {
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
 	/* / Android */
+
+	private GameObject gameController;
+	private HashID hash;
+
 	
 	void Start() {
 		anim = GetComponent<Animator>();
@@ -74,18 +79,31 @@ public class PlayerController : MonoBehaviour {
 		stickTexture = (GUITexture) Instantiate(stickTexture);
 		analogStickTextureWidth = analogStickTexture.pixelInset.width;
 		analogStickTextureHeight = analogStickTexture.pixelInset.height;
+		isInJumpAbleSaveZone=false;
 	}
 
 	void Awake()
 	{
-
-
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		hash = gameController.GetComponent<HashID>();
 	}
 
 	void Update() {
 
-		InputCheck ();
-		InputTouchCheck ();	
+		if (Application.platform == RuntimePlatform.Android)
+		{
+			InputTouchCheck();
+		}
+		else if (Application.platform == RuntimePlatform.WindowsPlayer)
+		{
+			InputCheck();
+		}
+		else if (Application.platform == RuntimePlatform.WindowsEditor)
+		{
+			InputCheck();
+		}
+
+
 		JumpAblePlatform();
 //		if(!isDead)
 //		{
@@ -243,9 +261,9 @@ public class PlayerController : MonoBehaviour {
 	{
 		if(anim != null)
 		{
-			anim.SetBool ("Ground", grounded);
-			anim.SetBool ("Wall", walled);
-			anim.SetFloat ("vSpeed", rigidbody2D.velocity.y);
+			anim.SetBool(hash.groundedBool, grounded);
+			anim.SetBool(hash.walledBool, walled);
+			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
 		}
 		else
 			Debug.LogError("Animator not set");
@@ -260,28 +278,28 @@ public class PlayerController : MonoBehaviour {
 		//velocity = rigidbody2D.velocity.x + (moveDirection.x + deltaX) * maxSpeed;				//schwammig!!!! bei Flip() Kraftrichtung auch wechseln
 		if(anim != null)
 		{
-			anim.SetFloat("Speed", Mathf.Abs (velocity));
+			anim.SetFloat(hash.hSpeedFloat, Mathf.Abs(velocity));
 		}
 		else
 			Debug.LogError("Animator not set");
 		//abs für beide Richtungen!!! richtung behalten!!
 		if(Mathf.Abs(velocity) < maxSpeed)
 		{
-			//rigidbody2D.AddForce( new Vector2 (velocity,0));
-			rigidbody2D.velocity = new Vector2 (velocity, rigidbody2D.velocity.y);
+//			rigidbody2D.AddForce( new Vector2 (velocity,0f));
+			rigidbody2D.velocity = new Vector2(velocity, rigidbody2D.velocity.y);
 		}
 		else 
 		{
-			//rigidbody2D.AddForce( new Vector2 ((moveDirection.x + deltaX)*maxSpeed,0));
-			rigidbody2D.velocity = new Vector2 ((moveDirection.x + deltaX)*maxSpeed, rigidbody2D.velocity.y);
+//			rigidbody2D.AddForce( new Vector2 ((moveDirection.x + deltaX)*maxSpeed,0f));
+			rigidbody2D.velocity = new Vector2((moveDirection.x + deltaX)*maxSpeed, rigidbody2D.velocity.y);
 		}
 		if (velocity > 0 && !facingRight)
 		{
-			Flip ();
+			Flip();
 		}
 		else if (velocity < 0 && facingRight)
 		{
-			Flip ();
+			Flip();
 		}
 
 		/* mit CharacterController
@@ -298,7 +316,7 @@ public class PlayerController : MonoBehaviour {
 		if (grounded && (inputJump || inputTouchJump)) {
 			//Springen
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//Jump
-			anim.SetBool("Ground",false);
+			anim.SetBool(hash.groundedBool,false);
 			rigidbody2D.velocity = new Vector2(0.0F,jumpForce.y);								//<--- besser für JumpAblePlatforms
 			//rigidbody2D.fixedAngle = false;
 			//rigidbody2D.AddTorque(10);
@@ -309,8 +327,8 @@ public class PlayerController : MonoBehaviour {
 			//von Wand wegspringen
 			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);				//WallJump
 			rigidbody2D.velocity = new Vector2(0,0);		//alte Geschwindigkeit entfernen
-			Flip ();										//Charakter drehen 
-			anim.SetBool("Wall",false);
+			Flip();											//Charakter drehen 
+			anim.SetBool(hash.walledBool,false);
 			//rigidbody2D.velocity = jumpForce;
 //			rigidbody2D.AddForce(new Vector2(300, 300));
 //			rigidbody2D.AddForce(jumpForce);
@@ -380,21 +398,32 @@ public class PlayerController : MonoBehaviour {
 */
 	void JumpAblePlatform()
 	{
-		if(rigidbody2D.velocity.y >0.0F)
+		if(!isInJumpAbleSaveZone)
 		{
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
+			Debug.LogWarning(gameObject.name + ": velocity.y=" + rigidbody2D.velocity.y);
+			if(rigidbody2D.velocity.y >0.1F)
+			{
+				Debug.LogWarning(gameObject.name + ": JumpAblePlatform Collision: Off!" + gameObject.layer);
+				//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+				Physics2D.IgnoreLayerCollision(18,gameObject.layer,true);
+				//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
+			}
+			else if(rigidbody2D.velocity.y <0.1F)
+			{
+				Debug.LogWarning(gameObject.name + ": JumpAblePlatform Collision: On!" + gameObject.layer);
+				//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
+				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
+			}
+			
+			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 		}
-		else
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
-		//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 	}
 
-	void ForceJumpAblePlatform()
-	{
-		Debug.Log("Force Jump-Able-Platform");
-		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-	}
+//	void ForceJumpAblePlatform()
+//	{
+//		Debug.Log("Force Jump-Able-Platform");
+//		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+//	}
 
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{

@@ -41,16 +41,11 @@ public class HashID : MonoBehaviour {
 		changeRunDirectionState = Animator.StringToHash("Base Layer.ChangeRunDirection");
 		jumpState = 			Animator.StringToHash("Base Layer.Jump");
 
-		speedFloat = Animator.StringToHash("Speed");				//duplicates
-		hSpeedFloat = Animator.StringToHash("hSpeed");				//duplicates
-
+		hSpeedFloat = Animator.StringToHash("hSpeed");
 		vSpeedFloat = Animator.StringToHash("vSpeed");
 
-		groundBool = Animator.StringToHash("Ground");				//duplicates
-		groundedBool = Animator.StringToHash("Grounded");			//duplicates
-
-		wallBool = Animator.StringToHash("Wall");					//duplicates
-		walledBool = Animator.StringToHash("Walled");				//duplicates
+		groundedBool = Animator.StringToHash("Grounded");
+		walledBool = Animator.StringToHash("Walled");
 
 		hittedBool = Animator.StringToHash("Hitted");
 		gameOverBool = Animator.StringToHash("GameOver");

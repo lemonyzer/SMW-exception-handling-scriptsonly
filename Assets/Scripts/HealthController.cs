@@ -39,6 +39,14 @@ public class HealthController : MonoBehaviour {
 
 	Animator anim;
 
+	GameObject gameController;
+	private HashID hash;
+
+	void Awake() {
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		hash = gameController.GetComponent<HashID>();
+	}
+
 	// Use this for initialization
 	void Start () {
 
@@ -63,11 +71,11 @@ public class HealthController : MonoBehaviour {
 		if(lbl_life != null)
 			lbl_life.text = myCharacter.name + ": " + currentLifes;
 
-		myPlayerControllerScript = myCharacter.GetComponent<PlayerController>() as PlayerController;
+		myPlayerControllerScript = myCharacter.GetComponent<PlayerController>();
 		if(myPlayerControllerScript == null)
 			Debug.LogError("Character has no PlayerController Script");
 		
-		myKIScript = myCharacter.GetComponent<KI>() as KI;
+		myKIScript = myCharacter.GetComponent<KI>();
 		if(myKIScript == null)
 		{
 			Debug.LogError("Character has no KI Script");
@@ -85,10 +93,14 @@ public class HealthController : MonoBehaviour {
 			if(!isHit)		//nur wenn er noch nicht getroffen wurde
 			{
 				isHit = true;
-/*new*/			anim.SetTrigger("HitTrigger");
-				anim.SetBool("Hitted",true);
-				anim.SetBool("Dead",true);	// zu schnell!
-				anim.SetBool("Spawn",false);
+//				anim.SetTrigger("HitTrigger");
+				anim.SetTrigger(hash.hitTrigger);
+//				anim.SetBool("Hitted",true);
+				anim.SetBool(hash.hittedBool,true);
+//				anim.SetBool("Dead",true);	// zu schnell!
+				anim.SetBool(hash.deadBool,true);	// zu schnell!
+//				anim.SetBool("Spawn",false);
+				anim.SetBool(hash.spawnBool,false);
 
 				// Death Sound abspielen
 				AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
@@ -137,7 +149,8 @@ public class HealthController : MonoBehaviour {
 					{
 						/* Game Over...
 						 * Player hat alle Leben verloren */
-						anim.SetBool ("GameOver", true);
+//						anim.SetBool ("GameOver", true);
+						anim.SetBool (hash.gameOverBool, true);
 						currentLifes = 0;
 						GameOver();
 					}
@@ -152,7 +165,8 @@ public class HealthController : MonoBehaviour {
 						 	*/
 
 							//Animation setzen
-							anim.SetBool("HeadJumped",true);
+//							anim.SetBool("HeadJumped",true);
+							anim.SetBool(hash.headJumpedBool,true);
 							//Animation 3 sekunden laufen lassen
 							HeadJumped();
 							StartCoroutine(SpawnDelay());
@@ -207,6 +221,7 @@ public class HealthController : MonoBehaviour {
 		if(myCharacter.tag.Equals("Player"))
 		{
 			//StartCoroutine(PlayerGameOver());
+			//fader!
 			RestartScene();
 		}
 	}
@@ -316,14 +331,17 @@ public class HealthController : MonoBehaviour {
 		if(respawn)
 		{
 			respawn=false;
-			anim.SetBool ("Spawn", true);
+//			anim.SetBool("Spawn", true);
+			anim.SetBool(hash.spawnBool, true);
 			ReSpawn();
 			// Ki und Controlls nach SpawnTime (SpawnAnimation) aktivieren
 			StartCoroutine(SpawnAnimationTime());
 		}
 		if(enableControlls) {
-			anim.SetBool ("Spawn", false);
-			anim.SetBool ("SpawnProtection", true);
+//			anim.SetBool ("Spawn", false);
+			anim.SetBool(hash.spawnBool, false);
+//			anim.SetBool ("SpawnProtection", true);
+			anim.SetBool(hash.spawnProtectionBool, true);
 			enableControlls = false;
 
 			// Ki und Controlls aktivieren
@@ -347,7 +365,8 @@ public class HealthController : MonoBehaviour {
 			//Spieler kann wieder angegriffen werden
 			headCollider2D.enabled = true;
 			isHit = false;
-			anim.SetBool ("SpawnProtection", false);
+//			anim.SetBool ("SpawnProtection", false);
+			anim.SetBool(hash.spawnProtectionBool, false);
 		}
 	}
 }

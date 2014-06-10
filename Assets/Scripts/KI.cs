@@ -8,6 +8,7 @@ public class KI : MonoBehaviour {
 	public AudioClip jumpSound;
 	public AudioClip changeRunDirectionSound;
 	public AudioClip wallJumpSound;
+	public bool isInJumpAbleSaveZone=false;
 
 	Animator anim;
 
@@ -41,17 +42,35 @@ public class KI : MonoBehaviour {
 	//intelegent, 
 	public float changeDirectionInterval=0.7f; // 0,7 sekunden
 	public bool ableToChangeDirection = false;
-	public float deltaLastDirectionChange = 0.0F;
-	public float deltaLastJump = 0.0F;
+	public float deltaLastDirectionChange;
+	public float deltaLastJump;
+
+	GameObject gameController;
+	private HashID hash;
+	Stats stats;
+
+	void Awake() {
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		//stats = gameController.GetComponent("Stats") as Stats;
+		stats = gameController.GetComponent<Stats>();
+		hash = gameController.GetComponent<HashID>();
+	}
 
 	void Start() {
 		//anim = gameObject.transform.parent.gameObject.GetComponent<Animator>();
 		anim = GetComponent<Animator>();
+		isInJumpAbleSaveZone=false;
+		deltaLastJump =0.0f;
+		deltaLastDirectionChange = 0.7f;
 	}
 
 	void Update() 
 	{
 		FixCheckPosition();
+		if(ableToChangeDirection)
+		{
+			target = FindClosestPlayerWithGameController();
+		}
 	}
 
 	GameObject FindClosestPlayer() {
@@ -96,6 +115,53 @@ public class KI : MonoBehaviour {
 
 		return closest;
 	}
+
+	GameObject FindClosestPlayerWithGameController() {
+
+		targetDistance = Mathf.Infinity;
+		Vector3 position = transform.position;
+
+		foreach (GameObject go in stats.playerList)
+		{
+			if(go.layer != gameObject.layer)
+			{
+				// Nur andere Spieler können target werden!
+				Vector3 diff = go.transform.position - position;
+				float curDistance = diff.sqrMagnitude;
+				if (curDistance < targetDistance) {
+					closest = go;
+					targetDistance = curDistance;
+					
+					if( diff.y < 0.1f )			// save offset!!! physic has no 0.0F precision!
+					{
+						targetHigher = false;
+					}
+					else
+					{
+						targetHigher = true;
+					}
+					
+					if( -10.0f < diff.x && diff.x < 0.0f )			//between -10 and 0
+					{
+						targetDirection = -1;
+					}
+					else if( 10.0f < diff.x && diff.x < 20.0f )		//between 10 and 20
+					{
+						targetDirection = -1;
+					}
+					else 											//else (between 0 and 10)
+					{
+						targetDirection = +1;
+					}
+					
+				}
+			}
+//			else
+//				Debug.Log("GameObject layer: " + go.layer + " == Player(Ki) layer: " + gameObject.layer);
+		}
+		
+		return closest;
+	}
 	
 	// Update is called once per frame
 	void KiMove () {
@@ -103,8 +169,7 @@ public class KI : MonoBehaviour {
 		/*
 		spotted = Physics2D.OverlapCircle (spotCheck.position, spottingRadius, whatIsSpotted);
 		*/
-		
-		target = FindClosestPlayer();
+
 		if(target != null)
 		{
 			if(!targetHigher)
@@ -127,19 +192,23 @@ public class KI : MonoBehaviour {
 			}
 		}
 	}
+	
+	void CheckTimeBetweenLastDirectionChange() {
+		deltaLastDirectionChange += Time.deltaTime;
+		if(deltaLastDirectionChange > changeDirectionInterval)				//Bot leichter machen
+		{												//alle halbe Sekunde darf er Richtung wechseln
+			ableToChangeDirection=true;
+			deltaLastDirectionChange=0.0F;
+		}
+		else
+			ableToChangeDirection=false;
+	}
 
 	// Update is called once per frame
-	void FixedUpdate () {
+	void FixedUpdate() {
 		if(!isDead)
 		{
-			deltaLastDirectionChange += Time.deltaTime;
-			if(deltaLastDirectionChange > changeDirectionInterval)				//Bot leichter machen
-			{												//alle halbe Sekunde darf er Richtung wechseln
-				ableToChangeDirection=true;
-				deltaLastDirectionChange=0.0F;
-			}
-			else
-				ableToChangeDirection=false;
+			CheckTimeBetweenLastDirectionChange();
 			FixSetAnim();
 			KiMove();
 			//		FixInputCheck();					//Tastatur
@@ -160,9 +229,12 @@ public class KI : MonoBehaviour {
 	}
 	void FixSetAnim() 
 	{
-		anim.SetBool ("Grounded", grounded);
-		anim.SetBool ("Walled", walled);
-		anim.SetFloat ("vSpeed", rigidbody2D.velocity.y);
+//		anim.SetBool ("Grounded", grounded);
+		anim.SetBool (hash.groundedBool, grounded);
+//		anim.SetBool ("Walled", walled);
+		anim.SetBool (hash.walledBool, walled);
+//		anim.SetFloat ("vSpeed", rigidbody2D.velocity.y);
+		anim.SetFloat (hash.vSpeedFloat, rigidbody2D.velocity.y);
 	}
 
 	void FixMove()
@@ -172,7 +244,8 @@ public class KI : MonoBehaviour {
 		//velocity enthält alte Kraft -/+
 		velocity = (moveDirection.x ) * maxSpeed;
 		//velocity = rigidbody2D.velocity.x + (moveDirection.x + deltaX) * maxSpeed;				//schwammig!!!! bei Flip() Kraftrichtung auch wechseln
-		anim.SetFloat("hSpeed", Mathf.Abs (velocity));
+//		anim.SetFloat("hSpeed", Mathf.Abs (velocity));
+		anim.SetFloat(hash.hSpeedFloat, Mathf.Abs (velocity));
 		//abs für beide Richtungen!!! richtung behalten!!
 		if(Mathf.Abs(velocity) < maxSpeed)
 		{
@@ -202,7 +275,8 @@ public class KI : MonoBehaviour {
 		if (grounded && inputJump) {
 			//Springen
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//Jump
-			anim.SetBool("Grounded",false);
+//			anim.SetBool("Grounded",false);
+			anim.SetBool(hash.groundedBool,false);
 			rigidbody2D.velocity = new Vector2(0.0F, jumpForce.y);
 			//igidbody2D.AddForce(new Vector2(0, jumpForce.y));
 		}
@@ -212,7 +286,8 @@ public class KI : MonoBehaviour {
 			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);				//WallJump
 			rigidbody2D.velocity = new Vector2(0,0);		//alte Geschwindigkeit entfernen
 			Flip ();										//Charakter drehen 
-			anim.SetBool("Walled",false);
+//			anim.SetBool("Walled",false);
+			anim.SetBool(hash.walledBool,false);
 			//rigidbody2D.velocity = jumpForce;
 			//			rigidbody2D.AddForce(new Vector2(300, 300));
 			//			rigidbody2D.AddForce(jumpForce);
@@ -242,19 +317,28 @@ public class KI : MonoBehaviour {
 
 	void JumpAblePlatform()
 	{
-		if(rigidbody2D.velocity.y >0.0F)
+		if(!isInJumpAbleSaveZone)
 		{
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
+			if(rigidbody2D.velocity.y >0.0F)
+			{
+				Debug.LogWarning(gameObject.name + " Collision: On!");
+//				Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+				Physics2D.IgnoreLayerCollision(18,gameObject.layer,true);
+				//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
+			}
+			else
+			{
+//				Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
+				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
+			}
+			
+			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 		}
-		else
-			Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
-		//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 	}
 	
-	void ForceJumpAblePlatform()
-	{
-		Debug.Log("Force Jump-Able-Platform");
-		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-	}
+//	void ForceJumpAblePlatform()
+//	{
+//		Debug.Log("Force Jump-Able-Platform");
+//		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
+//	}
 }
