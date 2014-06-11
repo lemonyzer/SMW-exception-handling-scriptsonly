@@ -321,7 +321,7 @@ public class KI : MonoBehaviour {
 		{
 			if(rigidbody2D.velocity.y >0.0F)
 			{
-				Debug.LogWarning(gameObject.name + " Collision: On!");
+//				Debug.LogWarning(gameObject.name + " Collision: On!");
 //				Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
 				Physics2D.IgnoreLayerCollision(18,gameObject.layer,true);
 				//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);

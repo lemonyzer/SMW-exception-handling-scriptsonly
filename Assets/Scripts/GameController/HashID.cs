@@ -13,14 +13,14 @@ public class HashID : MonoBehaviour {
 	public int runState;
 	public int changeRunDirectionState;
 	public int jumpState;
-
-	public int speedFloat;
+	
 	public int hSpeedFloat;
 	public int vSpeedFloat;
-	public int groundBool;
+	public int changeRunDirectionTrigger;
+
 	public int groundedBool;
-	public int wallBool;
 	public int walledBool;
+
 	public int hittedBool;
 	public int gameOverBool;
 	public int headJumpedBool;
@@ -43,6 +43,7 @@ public class HashID : MonoBehaviour {
 
 		hSpeedFloat = Animator.StringToHash("hSpeed");
 		vSpeedFloat = Animator.StringToHash("vSpeed");
+		changeRunDirectionTrigger = Animator.StringToHash("ChangeRunDirection");
 
 		groundedBool = Animator.StringToHash("Grounded");
 		walledBool = Animator.StringToHash("Walled");

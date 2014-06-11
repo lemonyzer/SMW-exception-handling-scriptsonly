@@ -1,10 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
+public class test : MonoBehaviour {
 
-	public GUIText debugging;
-	
 	/** 
 	 * Position Check 
 	 **/
@@ -61,21 +59,20 @@ public class PlayerController : MonoBehaviour {
 	 **/
 	public GameObject gameController;
 	public HashID hash;
-	
+
 	/**
 	 * Mobile: Android / iOs
 	 **/
 	
-	/**
+		/**
 		 * Input Flags (Jump Button)
 		 **/
 	int buttonTouchID=-1;			// ID of current jump touch (right screen)
 	int buttonTapCount=0;			// tap count current jump touch (right screen)
 	bool inputTouchJump = false;	// flag if player presses jump 		
 	bool buttonIsPressed = false;	// flag if player presses jump 		
-	bool buttonIsTapped = false;	// flag if player presses jump again		
 	
-	/**
+		/**
 		 * Input Flags (Analog Stick)
 		 **/
 	Touch analogStick;
@@ -98,7 +95,7 @@ public class PlayerController : MonoBehaviour {
 	
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
-	
+
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
@@ -125,7 +122,7 @@ public class PlayerController : MonoBehaviour {
 		                                   0);
 		isInJumpAbleSaveZone=false;
 	}
-	
+
 	void Update() {
 		
 		if (Application.platform == RuntimePlatform.Android)
@@ -171,7 +168,7 @@ public class PlayerController : MonoBehaviour {
 	void InputTouchCheck() 
 	{
 		AnalogStickAndButton();
-		inputTouchJump = buttonIsTapped;				//
+		inputTouchJump = buttonIsPressed;
 		inputTouchStick = analogStickIsStillPressed;
 	}
 	
@@ -224,8 +221,7 @@ public class PlayerController : MonoBehaviour {
 		else // if(!isBouncing)
 		{
 			// Platformen vereinen
-			velocity = (moveDirection.x + deltaX);
-			velocity *= maxSpeed;
+			velocity = (moveDirection.x + deltaX) * maxSpeed;
 		}
 		
 		/**
@@ -375,36 +371,27 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	void AnalogStickAndButton () {
-
-		string debugmsg="";
+		
 		buttonIsPressed = false;
-		buttonIsTapped = false;
 		analogStickIsStillPressed = false;
-		debugmsg += "Loop starting\n";
+		
 		foreach (Touch touch in Input.touches)
 		{
-			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
+			if(!buttonIsPressed)	// Button (rechte Seite) muss nur einmal gefunden werden
 			{
 				if(touch.position.x > (Screen.width * 0.5f))
 				{
-					debugmsg += "Jump found\n";
 					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
 					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
 						buttonTapCount = touch.tapCount;	
-						buttonIsTapped = true;				
-						buttonIsPressed = true;
-					}
-					else
-					{
-						buttonIsTapped = false;
-						buttonIsPressed = true;
+						buttonIsPressed = true;				// Button (rechte Seite) nicht weiter suchen
 					}
 				}
 			}
 			
 			if(!analogStickIsStillPressed)
 			{
-			/*
+				/*
 			 * Touch nach Touchphase auswerten:
 			 * 	1. Began
 			 *  2. Moved
@@ -422,7 +409,6 @@ public class PlayerController : MonoBehaviour {
 					//				}
 					if(touch.position.x < (Screen.width * 0.5f))
 					{
-						debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
 						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
@@ -495,9 +481,8 @@ public class PlayerController : MonoBehaviour {
 					break;
 					/* 2. */
 				case TouchPhase.Moved:
-					if(touch.fingerId == analogStickTouchID) 			/// needed??, for now yes! switch case geht über ganzen bildschirm
+					if(touch.fingerId == analogStickTouchID && analogStickTouchBegan) 			/// needed??
 					{
-						debugmsg += "AnalogStick moved()\n";
 						analogStickIsStillPressed = true;
 						float stickPosX=0;
 						float stickPosY=0;
@@ -546,18 +531,12 @@ public class PlayerController : MonoBehaviour {
 					
 					/* 3. */
 				case TouchPhase.Stationary:
-					if(touch.fingerId == analogStickTouchID) 
-					{
-						debugmsg += "AnalogStick stationary()\n";
-						analogStickIsStillPressed = true;
-					}
 					break;
 					
 					/* 4. */
 				case TouchPhase.Ended:
 					if(touch.fingerId == analogStickTouchID) 
 					{
-						debugmsg += "AnalogStick ended()\n";
 						// Analog Stick ausblenden (aus sichtfeld verschieben)
 						analogStickTexture.pixelInset = new Rect(0,
 						                                         0,
@@ -581,21 +560,17 @@ public class PlayerController : MonoBehaviour {
 		
 		if(!buttonIsPressed)
 		{
-			debugmsg += "kein Button gefunden\n";
 			//kein Button in der Schleife oben gefunden, zurücksetzen
 			buttonTouchID = -1;
 			buttonTapCount = 0;
 		}
 		if(!analogStickIsStillPressed)
 		{
-			debugmsg += "kein AnalogStick gefunden\n";
 			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
 			deltaX = 0f;
 			deltaY = 0f;
 		}
-
-		debugging.text = debugmsg;
-
+		
 		/**
 		 * Android Softbutton: Back
 		 **/

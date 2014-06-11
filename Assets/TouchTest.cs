@@ -19,16 +19,31 @@ public class TouchTest: MonoBehaviour {
 	public GUIText guitextstick;
 	public GUITexture analogStickTexture;
 	public GUITexture stickTexture;
-	public float analogStickTextureWidth=0;
-	public float analogStickTextureHeight=0;
+	float analogStickTextureWidth;
+	float analogStickTextureHeight;
+	float stickTextureWidth;
+	float stickTextureHeight;
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
 
 	bool buttonIsPressed;
 
 	void Start() {
+		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
+		stickTexture = (GUITexture) Instantiate(stickTexture);					// needed? pre-instantiete in hierachie?!
 		analogStickTextureWidth = analogStickTexture.pixelInset.width;
 		analogStickTextureHeight = analogStickTexture.pixelInset.height;
+		stickTextureWidth = stickTexture.pixelInset.width;
+		stickTextureHeight = stickTexture.pixelInset.height;
+		// Analog Stick ausblenden (aus sichtfeld verschieben)
+		analogStickTexture.pixelInset = new Rect(0,
+		                                         0,
+		                                         0,
+		                                         0);
+		stickTexture.pixelInset = new Rect(0,
+		                                   0,
+		                                   0,
+		                                   0);
 	}
 
 	void Update () {
@@ -155,9 +170,14 @@ public class TouchTest: MonoBehaviour {
 
 
 						//Analogstick um TouchBeganPosition (Mittelpunkt) zeichnen
-						analogStickTexture.pixelInset = new Rect(touchBeganPositionX-analogStickTextureWidth*0.5f,touchBeganPositionY-analogStickTextureHeight*0.5f,analogStickTextureWidth,analogStickTextureHeight);
-						Rect pixelInset = new Rect(touch.position.x-stickTexture.pixelInset.width*0.5f,touch.position.y-stickTexture.pixelInset.height*0.5f,stickTexture.pixelInset.width,stickTexture.pixelInset.height);
-						stickTexture.pixelInset = pixelInset;
+						analogStickTexture.pixelInset = new Rect(touchBeganPositionX-analogStickTextureWidth*0.5f,
+					                                         touchBeganPositionY-analogStickTextureHeight*0.5f,
+					                                         analogStickTextureWidth,
+					                                         analogStickTextureHeight);
+						stickTexture.pixelInset = new Rect(touch.position.x-stickTexture.pixelInset.width*0.5f,
+					                           touch.position.y-stickTexture.pixelInset.height*0.5f,
+					                           stickTextureWidth,
+					                           stickTextureHeight);
 					}
 					else
 					{
@@ -189,8 +209,10 @@ public class TouchTest: MonoBehaviour {
 					else
 						stickPosY = touch.position.y;
 
-					Rect pixelInset = new Rect(stickPosX-stickTexture.pixelInset.width*0.5f,stickPosY-stickTexture.pixelInset.height*0.5f,stickTexture.pixelInset.width,stickTexture.pixelInset.height);
-					stickTexture.pixelInset = pixelInset;
+					stickTexture.pixelInset = new Rect(stickPosX-stickTexture.pixelInset.width*0.5f,
+					                           stickPosY-stickTexture.pixelInset.height*0.5f,
+					                           stickTextureWidth,
+					                           stickTextureHeight);
 
 						deltaX = (touch.position.x - touchBeganPositionX)/(analogStickTextureWidth*0.5f);
 						if(deltaX > 1.0f)
@@ -219,6 +241,11 @@ public class TouchTest: MonoBehaviour {
 
 				/* 3. */
 				case TouchPhase.Stationary:
+									/*
+									 * 
+									 * WICHTIG analogStickStillTouched=true !
+									 * 
+									 **/
 				break;
 
 				/* 4. */
@@ -226,8 +253,8 @@ public class TouchTest: MonoBehaviour {
 					if(touch.fingerId == analogStickTouchID) 
 					{
 						// Analog Stick ausblenden (aus sichtfeld verschieben)
-						analogStickTexture.pixelInset = new Rect(-100,-100,analogStickTexture.pixelInset.width,analogStickTexture.pixelInset.height);
-						stickTexture.pixelInset = new Rect(-100,-100,stickTexture.pixelInset.width,stickTexture.pixelInset.height);
+						analogStickTexture.pixelInset = new Rect(0,0,0,0);
+						stickTexture.pixelInset = new Rect(0,0,0,0);
 						
 						// Analog Stick als nicht aktiv setzen
 						analogStickTouchBegan = false;
