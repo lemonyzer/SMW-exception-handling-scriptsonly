@@ -45,10 +45,12 @@ public class PlayerController : MonoBehaviour {
 	public Vector2 moveDirection = Vector2.zero;			// stores Input Key horizontal Movement
 	public float maxSpeed = 10.0f;							// max horizontal Speed
 	public Vector2 jumpForce = new Vector2(10.0F, 14.0F);	// jump Force : wall jump, jump
-	public float velocity = 0;
+	public float velocity = 0f;
 	public bool changedRunDirection = false;				
 	public bool inputPCJump = false;							// stores Input Key 
-	public bool inputPCMove = false;							// stores Input Key 
+	public bool inputPCMove = false;							// stores Input Key
+	public float pushForce;
+	public float pushTime = 0f;
 	
 	/** 
 	 * Player Animation 
@@ -138,8 +140,10 @@ public class PlayerController : MonoBehaviour {
 		}
 		else if (Application.platform == RuntimePlatform.WindowsEditor)
 		{
+			InputTouchCheck();
 			InputPCKeyboardCheck();
 		}
+
 		JumpAblePlatform();
 	}
 	void InputPCKeyboardCheck()
@@ -217,9 +221,44 @@ public class PlayerController : MonoBehaviour {
 			//Alte Kraft in X Richtung wird nicht komplett überschrieben!
 			// Platformen vereinen
 			velocity = (moveDirection.x + deltaX);
-			
-			velocity *= maxSpeed * 0.5f;
-			velocity += rigidbody2D.velocity.x;		//summand gegen null laufen lassen
+
+			if(pushForce > 0f)
+			{
+				if(velocity > 0f)
+				{
+					velocity *= maxSpeed;		// wenn Spieler in die gleiche Richtung wie pushForce sich bewegt,
+												// volle Geschwindigkeit nehmen  
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+			else if(pushForce < 0f)
+			{
+				if(velocity < 0f)
+				{
+					velocity *= maxSpeed;
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+
+			pushTime += Time.deltaTime;
+			float pushSpeed;
+			pushForce = pushForce - (pushForce * 4f * Time.deltaTime);
+			pushSpeed = pushForce;
+			Debug.LogError(this.gameObject.transform.name+ " pushSpeed = " + pushSpeed);
+			if(Mathf.Abs(pushSpeed) < 1)
+			{
+				Debug.LogError(this.gameObject.transform.name+ " pushSpeed = 0");
+				isBouncing = false;
+				pushTime = 0f;
+			}
+			else
+			{
+				velocity += pushSpeed;
+				Debug.LogError(this.gameObject.transform.name+ " velocity = " + velocity);
+			}
+
 		}
 		else // if(!isBouncing)
 		{
@@ -290,7 +329,7 @@ public class PlayerController : MonoBehaviour {
 			Flip();																		//Charakter drehen 
 			anim.SetBool(hash.groundedBool,false);
 			anim.SetBool(hash.walledBool,false);
-			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);								//<--- besser für JumpAblePlatforms
+			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
 		}
 		
 	}

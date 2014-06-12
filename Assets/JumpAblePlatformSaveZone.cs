@@ -57,7 +57,7 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 			{
 				playerController.isInJumpAbleSaveZone = true;
 			}
-			Debug.LogError( other.gameObject.name +  ": enters Save Zone => JumpAblePlatform Collision OFF! " + other.gameObject.layer);
+//			Debug.LogError( other.gameObject.name +  ": enters Save Zone => JumpAblePlatform Collision OFF! " + other.gameObject.layer);
 			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,true);
 			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,true);
             
@@ -119,7 +119,7 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 			{
 				playerController.isInJumpAbleSaveZone = false;
             }
-			Debug.LogError( other.gameObject.name +  ": leaving Save Zone => JumpAblePlatform Collision On! " + other.gameObject.layer);
+//			Debug.LogError( other.gameObject.name +  ": leaving Save Zone => JumpAblePlatform Collision On! " + other.gameObject.layer);
 			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,false);
 			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,false);
             

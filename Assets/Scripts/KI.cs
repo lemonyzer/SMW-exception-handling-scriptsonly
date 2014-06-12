@@ -4,13 +4,17 @@ using System.Collections;
 public class KI : MonoBehaviour {
 
 	public bool isDead=false;
+	public bool isInJumpAbleSaveZone=false;
+	public bool isBouncing = false;	// move speed changed while bouncing with other player 
+	public float pushForce;
+	public float pushTime = 0f;
 
 	public AudioClip jumpSound;
 	public AudioClip changeRunDirectionSound;
 	public AudioClip wallJumpSound;
-	public bool isInJumpAbleSaveZone=false;
-
+	
 	Animator anim;
+	public bool changedRunDirection = false;				
 
 	public Vector2 moveDirection = Vector2.zero;
 	//CharacterController characterController;
@@ -18,8 +22,8 @@ public class KI : MonoBehaviour {
 	public float maxSpeed = 6f;
 	public Vector2 jumpForce = new Vector2(10.0f, 14.0f);
 	float velocity = 0;
-	public bool inputJump = false;
-	bool facingRight = true;
+	public bool inputKIJump = false;
+	public bool facingRight = true;
 
 	bool grounded = false;
 	bool walled = false;
@@ -40,7 +44,7 @@ public class KI : MonoBehaviour {
 	public float targetDistance;
 	public float jumpRange=4.0f;
 	//intelegent, 
-	public float changeDirectionInterval=0.7f; // 0,7 sekunden
+	public float changeDirectionInterval=0.5f; // 0,7 sekunden
 	public bool ableToChangeDirection = false;
 	public float deltaLastDirectionChange;
 	public float deltaLastJump;
@@ -51,7 +55,6 @@ public class KI : MonoBehaviour {
 
 	void Awake() {
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		//stats = gameController.GetComponent("Stats") as Stats;
 		stats = gameController.GetComponent<Stats>();
 		hash = gameController.GetComponent<HashID>();
 	}
@@ -195,8 +198,8 @@ public class KI : MonoBehaviour {
 	
 	void CheckTimeBetweenLastDirectionChange() {
 		deltaLastDirectionChange += Time.deltaTime;
-		if(deltaLastDirectionChange > changeDirectionInterval)				//Bot leichter machen
-		{												//alle halbe Sekunde darf er Richtung wechseln
+		if(deltaLastDirectionChange > changeDirectionInterval)				// Bot leichter machen
+		{																	// alle halbe Sekunde darf er Richtung wechseln
 			ableToChangeDirection=true;
 			deltaLastDirectionChange=0.0F;
 		}
@@ -211,9 +214,7 @@ public class KI : MonoBehaviour {
 			CheckTimeBetweenLastDirectionChange();
 			FixSetAnim();
 			KiMove();
-			//		FixInputCheck();					//Tastatur
-			//		FixInputTouchCheck ();				//Mobile
-			FixMove();							//Jump, Wall-Jump, rechts, links Bewegung	
+			FixMove();							
 			JumpAblePlatform();
 		}
 	}
@@ -222,97 +223,164 @@ public class KI : MonoBehaviour {
 		Vector2 playerPos = new Vector2(rigidbody2D.transform.position.x,rigidbody2D.transform.position.y);
 		grounded = Physics2D.OverlapCircle (playerPos+groundCheckPosition, groundRadius, whatIsGround);
 		walled = Physics2D.OverlapCircle (playerPos+wallCheckPosition, wallRadius, whatIsWall);
-//		//Boden unter den Füßen
-//		grounded = Physics2D.OverlapCircle (groundCheck.position, groundRadius, whatIsGround);
-//		//Gesicht an Wand (nur Gesicht, kein Rücken!)
-//		walled = Physics2D.OverlapCircle (wallCheck.position, wallRadius, whatIsWall);
 	}
 	void FixSetAnim() 
 	{
-//		anim.SetBool ("Grounded", grounded);
 		anim.SetBool (hash.groundedBool, grounded);
-//		anim.SetBool ("Walled", walled);
 		anim.SetBool (hash.walledBool, walled);
-//		anim.SetFloat ("vSpeed", rigidbody2D.velocity.y);
 		anim.SetFloat (hash.vSpeedFloat, rigidbody2D.velocity.y);
 	}
 
 	void FixMove()
 	{
-		//rigidbody2D.velocity = new Vector2 (moveDirection.x * maxSpeed, rigidbody2D.velocity.y);
-		//Alte Kraft in X Richtung wird ignoriert!
-		//velocity enthält alte Kraft -/+
-		velocity = (moveDirection.x ) * maxSpeed;
-		//velocity = rigidbody2D.velocity.x + (moveDirection.x + deltaX) * maxSpeed;				//schwammig!!!! bei Flip() Kraftrichtung auch wechseln
-//		anim.SetFloat("hSpeed", Mathf.Abs (velocity));
-		anim.SetFloat(hash.hSpeedFloat, Mathf.Abs (velocity));
-		//abs für beide Richtungen!!! richtung behalten!!
-		if(Mathf.Abs(velocity) < maxSpeed)
+		if(isBouncing)
 		{
-			//rigidbody2D.AddForce( new Vector2 (velocity,0));
-			rigidbody2D.velocity = new Vector2 (velocity, rigidbody2D.velocity.y);
+			//Alte Kraft in X Richtung wird nicht komplett überschrieben!
+			// Platformen vereinen
+			velocity = (moveDirection.x);
+			
+			if(pushForce > 0f)
+			{
+				if(velocity > 0f)
+				{
+					velocity *= maxSpeed;		// wenn Spieler in die gleiche Richtung wie pushForce sich bewegt,
+					// volle Geschwindigkeit nehmen  
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+			else if(pushForce < 0f)
+			{
+				if(velocity < 0f)
+				{
+					velocity *= maxSpeed;
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+			
+			pushTime += Time.deltaTime;
+			float pushSpeed;
+			pushForce = pushForce - (pushForce * 4f * Time.deltaTime);
+			pushSpeed = pushForce;
+			Debug.LogError(this.gameObject.transform.name+ " pushSpeed = " + pushSpeed);
+			if(Mathf.Abs(pushSpeed) < 1)
+			{
+				Debug.LogError(this.gameObject.transform.name+ " pushSpeed = 0");
+				isBouncing = false;
+				pushTime = 0f;
+			}
+			else
+			{
+				velocity += pushSpeed;
+				Debug.LogError(this.gameObject.transform.name+ " velocity = " + velocity);
+			}
+			
 		}
-		else 
+		else // if(!isBouncing)
 		{
-			//rigidbody2D.AddForce( new Vector2 ((moveDirection.x + deltaX)*maxSpeed,0));
-			rigidbody2D.velocity = new Vector2 ((moveDirection.x)*maxSpeed, rigidbody2D.velocity.y);
+			// Platformen vereinen
+			velocity = (moveDirection.x);
+			velocity *= maxSpeed;
 		}
-		if (velocity > 0 && !facingRight)
-			Flip ();
-		else if (velocity < 0 && facingRight)
-			Flip ();
+
+		/**
+		 * maxSpeed check
+		 **/
+		if(Mathf.Abs(velocity) > maxSpeed)
+		{
+			// neue velocity überschreitet maxSpeed!!!
+			if(velocity < (-1.0f*maxSpeed))
+			{
+				velocity = -1.0f*maxSpeed;
+				//rigidbody2D.velocity = new Vector2((-1.0f)*maxSpeed, rigidbody2D.velocity.y);
+			}
+			else if(velocity > maxSpeed)
+			{
+				velocity = maxSpeed;
+				//rigidbody2D.velocity = new Vector2(maxSpeed, rigidbody2D.velocity.y);
+			}
+		}
 		
-		//mit CharacterController
-		//		moveDirection.y -= gravity; // nicht nötig, Physic2D!
-		//		if(characterController.isGrounded) 
-		//		{
-		//			if(inputJump)
-		//			{
-		//				characterController.Move(moveDirection * Time.deltaTime);
-		//			}
-		//		}
+		// gedrosselte velocity übernehmen
+		rigidbody2D.velocity = new Vector2(velocity, rigidbody2D.velocity.y);
+
+
+		/**
+		 * Animator status Update
+		 **/
+		if(anim != null)
+		{
+			anim.SetFloat(hash.hSpeedFloat, velocity);
+		}
+		else
+			Debug.LogError("Animator not set");
 		
-		if (grounded && inputJump) {
+		/**
+		 * Check Direction Change
+		 **/
+		if(velocity > 0f && !facingRight)
+		{
+			Flip();
+		}
+		else if(velocity < 0f && facingRight)
+		{
+			Flip();
+		}
+		else
+		{
+			changedRunDirection = false;
+		}
+		
+		if(grounded && inputKIJump) {
 			//Springen
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//Jump
-//			anim.SetBool("Grounded",false);
 			anim.SetBool(hash.groundedBool,false);
-			rigidbody2D.velocity = new Vector2(0.0F, jumpForce.y);
-			//igidbody2D.AddForce(new Vector2(0, jumpForce.y));
+			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
+			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 		}
 		/* WallJump */
-		else if (!grounded && walled && inputJump) {
+		else if(!grounded && walled && inputKIJump) {
 			//von Wand wegspringen
-			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);				//WallJump
-			rigidbody2D.velocity = new Vector2(0,0);		//alte Geschwindigkeit entfernen
-			Flip ();										//Charakter drehen 
-//			anim.SetBool("Walled",false);
+			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
+			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
+			Flip();																		//Charakter drehen 
+			anim.SetBool(hash.groundedBool,false);
 			anim.SetBool(hash.walledBool,false);
-			//rigidbody2D.velocity = jumpForce;
-			//			rigidbody2D.AddForce(new Vector2(300, 300));
-			//			rigidbody2D.AddForce(jumpForce);
-			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);
-			//rigidbody2D.AddForce(new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y)); //Kraft in Richtung localScale.x anwenden
+			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
 		}
 
 	}
-
-	void Flip() {
-		if(grounded)
-			AudioSource.PlayClipAtPoint(changeRunDirectionSound,transform.position,1);				//ChangeDirection
-		facingRight = !facingRight;
-		Vector3 theScale = transform.localScale;
-		theScale.x *= -1;
-		transform.localScale = theScale;
-	}
-
+	
 	void StartJump() {
 		if(JumpAllowed)
-			inputJump = true;
+			inputKIJump = true;
 	}
 	
 	void StopJump() {
-		inputJump = false;
+		inputKIJump = false;
+	}
+
+	void Flip() {
+
+		// Drift sound abspielen
+		if(grounded)
+		{
+			changedRunDirection = true;
+			anim.SetTrigger(hash.changeRunDirectionTrigger);	// Start Change Run Direction Animation
+			AudioSource.PlayClipAtPoint(changeRunDirectionSound,transform.position,1);				//ChangeDirection
+		}
+		
+		// Richtungvariable anpassen
+		facingRight = !facingRight;
+		
+		// WallCheck anpassen
+		wallCheckPosition *= -1;
+		
+		// Transform spiegeln
+		Vector3 theScale = transform.localScale;
+		theScale.x *= -1;
+		transform.localScale = theScale;
 	}
 
 	void JumpAblePlatform()
@@ -321,24 +389,12 @@ public class KI : MonoBehaviour {
 		{
 			if(rigidbody2D.velocity.y >0.0F)
 			{
-//				Debug.LogWarning(gameObject.name + " Collision: On!");
-//				Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
 				Physics2D.IgnoreLayerCollision(18,gameObject.layer,true);
-				//Physics2D.IgnoreCollision(platform.collider2D, collider2D,true);
 			}
 			else
 			{
-//				Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
 				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
 			}
-			
-			//Physics2D.IgnoreCollision(platform.collider2D, collider2D,false);
 		}
 	}
-	
-//	void ForceJumpAblePlatform()
-//	{
-//		Debug.Log("Force Jump-Able-Platform");
-//		Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-//	}
 }
