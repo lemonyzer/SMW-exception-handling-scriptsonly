@@ -50,7 +50,7 @@ public class SendDamageCollider : MonoBehaviour {
 							targetHead = targetCharacter.Find("Head");
 							//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
 							targetHead.GetComponent<HealthController>().ApplyDamage(damageValue,true);
-//							Debug.Log( myCharacter.name + ": " + "kollision mit Kopf von " + targetCharacter.name);
+							Debug.Log( myCharacter.name + ": " + "kollision mit Kopf von " + targetCharacter.name);
 							
 							/* SendMessage, Parameter vorher in Array packen!
 							 *  
