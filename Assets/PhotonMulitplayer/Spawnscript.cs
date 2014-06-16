@@ -9,12 +9,22 @@ public class Spawnscript : Photon.MonoBehaviour
 	public Transform playerPrefab;
 	private List<PlayerControllerPhoton> playerScripts = new List<PlayerControllerPhoton>();
 
+	/**
+	 * 
+	 * Master Client Funktion
+	 * 
+	 **/
 	void OnCreatedRoom()
 	{
 		//Spawn a player for the server itself
 		Spawnplayer(PhotonNetwork.player);
 	}
 
+	/**
+	 * 
+	 * Master Client Funktion
+	 * 
+	 **/
 	void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
 	{
 		
@@ -24,13 +34,23 @@ public class Spawnscript : Photon.MonoBehaviour
 			Spawnplayer(newPlayer);
 		}
 	}
-	
+
+	/**
+	 * 
+	 * Master &/ Client Funktion
+	 * 
+	 **/
 	void OnJoinedRoom()
 	{
 		Debug.Log("OnJoinedRoom()");
 		//Spawnplayer();
 	}
-	
+
+	/**
+	 * 
+	 * Master Client Funktion
+	 * 
+	 **/
 	void Spawnplayer(PhotonPlayer newPlayer)
 	{
 		//Called on the MasterClient only
@@ -50,7 +70,13 @@ public class Spawnscript : Photon.MonoBehaviour
 		//Call an RPC on this new PhotonView, set the PhotonPlayer who controls this new player
 		newObjectsview.RPC("SetPlayer", PhotonTargets.AllBuffered, newPlayer);//Set it on the owner
 	}
-	
+
+
+	/**
+	 * 
+	 * Master Client Funktion
+	 * 
+	 **/
 	void OnPhotonPlayerDisconnected(PhotonPlayer player)
 	{
 		Debug.Log("Clean up after player " + player);
@@ -70,7 +96,11 @@ public class Spawnscript : Photon.MonoBehaviour
 		}
 	}
 	
-	
+	/**
+	 * 
+	 * Client Funktion
+	 * 
+	 **/
 	void OnMasterClientSwitched(PhotonPlayer newMaster)
 	{
 		/* We have a design problem in this tutorial: ONLY the masterclient maintains the list of which 
@@ -84,7 +114,12 @@ public class Spawnscript : Photon.MonoBehaviour
 		
 		//After disconnection the scene will reload via OnDisconnectedFromPhoton.
 	}
-	
+
+	/**
+	 * 
+	 * Master &/ Client Funktion
+	 * 
+	 **/
 	void OnDisconnectedFromPhoton()
 	{
 		Debug.Log("Resetting the scene the easy way.");

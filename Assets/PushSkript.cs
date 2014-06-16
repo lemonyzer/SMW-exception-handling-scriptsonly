@@ -3,11 +3,9 @@ using System.Collections;
 
 public class PushSkript : MonoBehaviour {
 
-	string targetTag="Enemy";
-	string targetTag2="Player";
 	float pushForce=150.0f;
 
-	bool bounced;
+	bool isKI=false;
 
 	Transform myCharacter;
 	Rigidbody2D myRigidBody2D;
@@ -15,98 +13,267 @@ public class PushSkript : MonoBehaviour {
 	PlayerController myPlayerController;
 	PlayerController otherPlayerController;
 
+	KI myKIController;
+	KI otherKIController;
+
+	/** 
+	 * Connection with GameController 
+	 **/
+	GameObject gameController;
+	HashID hash;
+
+	void Awake()
+	{
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		hash = gameController.GetComponent<HashID>();
+	}
 
 	// Use this for initialization
 	void Start () {
-		bounced=false;
 		myCharacter = this.gameObject.transform;
-		if(myCharacter == null)
-			Debug.LogError("Character zum Script nicht gefunden");
-		else
-			Debug.Log("Character zum Script gefunden!!");
+
 
 		myRigidBody2D = myCharacter.rigidbody2D;
 		if(myRigidBody2D == null)
-			Debug.LogError("Character hat kein RigidBody2D");
+			Debug.LogError(myCharacter.name + " hat kein RigidBody2D");
 		else
-			Debug.LogError("RigidBody2D gefunden!!");
+			Debug.LogError(myCharacter.name + " hat ein RigidBody2D");
+
 
 		myPlayerController = GetComponent<PlayerController>();
 		if(myPlayerController == null)
-			Debug.LogError("Character hat kein PlayerController");
+			Debug.LogError(myCharacter.name + " hat kein PlayerController");
+		else
+			isKI = false;
+
+
+		myKIController = GetComponent<KI>();
+		if(myKIController == null)
+			Debug.LogError(myCharacter.name + " hat kein KIController");
+		else
+			isKI = true;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-//		if(bounced)
-//		{
-//			bounced = false;
-//			myRigidBody2D.velocity = new Vector2(10.0f,0.0f);
-//		}
-	}
+
 
 	void OnCollisionEnter2D(Collision2D collision) 
 	{
-
-		if(collision.gameObject.tag == targetTag)
+		/***
+		 * Compare layer > 10 & layer < 14 effektiver?
+		 * mit layermask layer 11,12,13,14 und verknüpfen und vergleichen?
+		 ***/
+		if((collision.gameObject.layer == 11) || 
+		   (collision.gameObject.layer == 12) ||
+		   (collision.gameObject.layer == 13) || 
+		   (collision.gameObject.layer == 14))
 		{
-			otherRigidBody2D = collision.transform.rigidbody2D;
-			bounced = true;
-			foreach(ContactPoint2D contact in collision.contacts)
+			Debug.Log(myCharacter.name + ": Collision's relative Velocity = " + collision.relativeVelocity);
+
+			float relativeVelocity = Mathf.Abs(collision.relativeVelocity.x);
+
+			Debug.DrawLine(myCharacter.position,
+			               myCharacter.position + new Vector3(0f,0.5f,0f),
+			               Color.blue,
+			               2,
+			               false);
+
+			Debug.DrawLine(collision.contacts[0].point,		// Start
+			               collision.contacts[1].point,		// End
+			               Color.red,						// Color
+			               2,								// Visible Time
+			               false);							// depthTest
+
+			if(myCharacter.position.x < collision.contacts[0].point.x)
 			{
-				Debug.DrawRay(contact.point, contact.normal, Color.red, 2, false);
+//				// Collision rechts
+//				// KI
+//				if(isKI)
+//				{
+//					if(myKIController.facingRight)
+//					{
+//						// Gesicht zeigt in Richtung der Collision
+//						//pushForce = -collision.relativeVelocity.x * 0.5;
+//					}
+//					else
+//					{
+//						// Rücken zeigt in Richtung der Collision
+//						//pushForce = -collision.relativeVelocity.x * 0.5;
+//					}
+//				}
+//				// Collision rechts
+//				// Player
+//				else
+//				{
+//					if(myPlayerController.facingRight)
+//					{
+//						// Gesicht zeigt in Richtung der Collision
+//						//pushForce = -collision.relativeVelocity.x * 0.5;
+//					}
+//					else
+//					{
+//						// Rücken zeigt in Richtung der Collision
+//						//pushForce = -collision.relativeVelocity.x * 0.5;
+//					}
+//				}
+
+				pushForce = -relativeVelocity;
+
+				if(!isKI)
+				{
+					myPlayerController.isBouncing = true;
+					myPlayerController.pushForce = pushForce;
+				}
+				else
+				{
+					myKIController.isBouncing = true;
+					myKIController.pushForce = pushForce;
+				}
 			}
-			Debug.Log("OnCollisionEnter2D: other=" + targetTag);
-			Debug.Log("velocity.x=" + collision.gameObject.rigidbody2D.velocity.x);
-			Debug.Log("velocity.x=" + collision.transform.rigidbody2D.velocity.x);
-			Debug.Log("velocity.x=" + collision.transform.gameObject.rigidbody2D.velocity.x);
+			else if(myCharacter.position.x > collision.contacts[0].point.x)
+			{
+//				// Collision links
+//				// KI
+//				if(isKI)
+//				{
+//					if(myKIController.facingRight)
+//					{
+//						// Gesicht zeigt in Richtung der Collision
+//						//pushForce = collision.relativeVelocity.x * 0.5;
+//					}
+//					else
+//					{
+//						// Rücken zeigt in Richtung der Collision
+//						//pushForce = collision.relativeVelocity.x * 0.5;
+//					}
+//				}
+//				// Collision links
+//				// Player
+//				else
+//				{
+//					if(myPlayerController.facingRight)
+//					{
+//						// Gesicht zeigt in Richtung der Collision
+//						//pushForce = collision.relativeVelocity.x * 0.5;
+//					}
+//					else
+//					{
+//						// Rücken zeigt in Richtung der Collision
+//						//pushForce = collision.relativeVelocity.x * 0.5;
+//					}
+//				}
+
+				pushForce = relativeVelocity;
+
+				if(!isKI)
+				{
+					myPlayerController.isBouncing = true;
+					myPlayerController.pushForce = pushForce;
+				}
+				else
+				{
+					myKIController.isBouncing = true;
+					myKIController.pushForce = pushForce;
+				}
+			}
+
+//			foreach(ContactPoint2D contact in collision.contacts)
+//			{
+//				Debug.DrawRay(contact.point, contact.normal, Color.red, 2, false);
+//				Debug.Log("Contact Point: " + contact.point);
+//			}
+
+			Debug.Log("PushSkript von: " + myCharacter.name);
+			otherRigidBody2D = collision.rigidbody;		// zgriff auf Physikeigenschaften des Gegenspielers
+
 			float myVelocityX = rigidbody2D.velocity.x;
 			float myVelocityY = rigidbody2D.velocity.y;
 			float otherVelocityX = otherRigidBody2D.velocity.x;
-			float otherVelocityY = otherRigidBody2D.velocity.x;
+			float otherVelocityY = otherRigidBody2D.velocity.y;
 
-			//myRigidBody2D.velocity = new Vector2(otherVelocityX,myVelocityY);
+			Debug.Log(myCharacter.name + " velocity.x= " + myRigidBody2D.velocity.x);
+			Debug.Log(collision.gameObject.name + " velocity.x= " + collision.rigidbody.velocity.x);
 
-			//otherRigidBody2D.velocity = new Vector2(-otherVelocityX,otherVelocityY);
-
-
-			if(otherVelocityX > 0.0F)
-			{
-				// Gegenspieler bewegt sich nach rechts
-//				myRigidBody2D.velocity = new Vector2(10.0f,0.0f);
-				//rigidbody2D.AddForce(new Vector2(100f*otherVelocityX,0.0f));
-				myRigidBody2D.AddForce(new Vector2(otherVelocityX*10.0f,20.0f),ForceMode2D.Impulse);
-				otherRigidBody2D.AddForce(new Vector2(-1.0f*otherVelocityX*10.0f,20.0f),ForceMode2D.Impulse);
-				//myRigidBody2D.velocity = new Vector2(otherVelocityX*10.0f,20.0f);
-				//otherRigidBody2D.velocity = new Vector2(-1.0f*otherVelocityX*10.0f,20.0f);
-
-				// bounces in other direction
-				//collision.transform.rigidbody2D.velocity = new Vector2(-pushForce,collision.gameObject.rigidbody2D.velocity.y); 	
-				
-				//ready ONLY!!!! (collision.gameObject.rigidbody2D)
-				//collision.gameObject.rigidbody2D.AddForce(new Vector2(-pushForce,0f));
-				//collision.gameObject.rigidbody2D.velocity = new Vector2(-pushForce,collision.gameObject.rigidbody2D.velocity.y); 		//ready ONLY!!!!
-			}
-			else if(collision.gameObject.rigidbody2D.velocity.x < 0.0F)
-			{
-				// Gegenspieler bewegt sich nach links
-//				myRigidBody2D.velocity = new Vector2(-10.0F,0.0F);
-				myRigidBody2D.velocity = new Vector2(otherVelocityX*10.0f,20.0f);
-				otherRigidBody2D.velocity = new Vector2(-1.0f*otherVelocityX*10.0f,20.0f);
-
-				// bounces in other direction
-				//collision.transform.rigidbody2D.velocity = new Vector2(pushForce,collision.gameObject.rigidbody2D.velocity.y); 		
-				
-				//ready ONLY!!!! (collision.gameObject.rigidbody2D)
-				//collision.gameObject.rigidbody2D.AddForce(new Vector2(pushForce,0f));
-				//collision.gameObject.rigidbody2D.velocity = new Vector2(pushForce,collision.gameObject.rigidbody2D.velocity.y);
-			}
-			else
-			{
-				// Gegenspieler bewegt sich nicht auf X Achse
-				
-				//collision.gameObject.rigidbody2D.AddForce(new Vector2(myVelocityX*10.0f,0f));
-			}
+//
+//			if(myRigidBody2D.velocity.x > 1f)
+//			{
+//				Debug.Log(myCharacter.name + " bewegte sich nach rechts und wird jetzt nach links gedrückt");
+//				// Spieler bewegt sich nach rechts
+//				// muss also nach links gestoßen werden
+//
+////				myRigidBody2D.velocity = new Vector2(-10.0f,0f);
+//				pushForce = -10f;
+//			}
+//			else if(myRigidBody2D.velocity.x < 1f)
+//			{
+//				Debug.Log(myCharacter.name + " bewegte sich nach links und wird jetzt nach rechts gedrückt");
+//				// Spieler bewegt sich nach links
+//				// muss also nach rechts gestoßen werden
+////				myRigidBody2D.velocity = new Vector2(10.0f,0f);
+//				pushForce = 10f;
+//			}
+//			else
+//			{
+//				// Spieler bewegt sich nicht auf x-Achse
+//				// Richtung wird von Gegenspieler vorgegeben
+//				if(otherVelocityX > 0f)
+//				{
+//					Debug.Log("Gegenspieler komm von rechts");
+//					// Gegenspieler bewegt sich nach rechts
+//					// Spieler wird in die gleiche Richtung gedrückt
+////					myRigidBody2D.velocity = new Vector2(10.0f,0f);
+//					pushForce = 10f;
+//				}
+//				else if(otherVelocityX < 0f)
+//				{
+//					Debug.Log("Gegenspieler komm von links");
+//					// Gegenspieler bewegt sich nach links
+//					// Spieler wird in die gleiche Richtung gedrückt
+////					myRigidBody2D.velocity = new Vector2(-10.0f,0f);
+//					pushForce = -10f;
+//				}
+//				else
+//				{
+//					// Gegenspieler bewegt sich nicht!
+//					// facingRight checken!
+//					if(!isKI)
+//					{
+//						if(otherPlayerController.facingRight)
+//						{
+//							pushForce = 10f;
+//						}
+//						else
+//							pushForce = -10f;
+//					}
+//					else
+//					{
+//						if(otherKIController.facingRight)
+//						{
+//							pushForce = 10f;
+//						}
+//						else
+//							pushForce = -10f;
+//					}
+//				}
+//			}
+//
+//			if(!isKI)
+//			{
+//				myPlayerController.isBouncing = true;
+//				myPlayerController.pushForce = pushForce;
+//			}
+//			else
+//			{
+//				myKIController.isBouncing = true;
+//				myKIController.pushForce = pushForce;
+//			}
+//
+////			try {
+////				otherKIController = collision.transform.GetComponent<KI>();
+////			} catch(UnityException e) { }
+////
+////			try
+////			{
+////				otherPlayerController = collision.transform.GetComponent<PlayerController>();
+////			} catch(UnityException e) { }
 		}
 	}
 }

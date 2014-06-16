@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class HealthControllerPhoton : MonoBehaviour {
+public class HealthControllerNew : MonoBehaviour {
 
 	public bool godmode=false;
 
@@ -195,8 +195,8 @@ public class HealthControllerPhoton : MonoBehaviour {
 		if(isKI)
 			myCharacter.GetComponent<KI>().enabled = false;
 		
-		if(myCharacter.GetComponent<PlayerControllerPhoton>() != null)
-			myCharacter.GetComponent<PlayerControllerPhoton>().enabled = false;
+		if(myCharacter.GetComponent<PlayerController>() != null)
+			myCharacter.GetComponent<PlayerController>().enabled = false;
 	}
 
 	void startControlls()
@@ -204,8 +204,8 @@ public class HealthControllerPhoton : MonoBehaviour {
 		if(isKI)
 			myCharacter.GetComponent<KI>().enabled = true;
 		
-		if(myCharacter.GetComponent<PlayerControllerPhoton>() != null)
-			myCharacter.GetComponent<PlayerControllerPhoton>().enabled = true;
+		if(myCharacter.GetComponent<PlayerController>() != null)
+			myCharacter.GetComponent<PlayerController>().enabled = true;
 	}
 
 

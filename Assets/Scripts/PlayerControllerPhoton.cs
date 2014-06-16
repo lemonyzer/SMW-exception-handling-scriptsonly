@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class PlayerControllerPhoton : Photon.MonoBehaviour {
-	
+
 	public GUIText debugging;
 
 	/**
@@ -13,6 +13,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	private float lastClientHInput = 0;
 	//private float lastClientVInput = 0;
 	private bool lastClientButtonInput = false;
+    Vector3 lastReceivedPosition;
 	
 	//The input values the server will execute on this object
 	private float serverCurrentHInput = 0;
@@ -59,10 +60,12 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	public Vector2 moveDirection = Vector2.zero;			// stores Input Key horizontal Movement
 	public float maxSpeed = 10.0f;							// max horizontal Speed
 	public Vector2 jumpForce = new Vector2(10.0F, 14.0F);	// jump Force : wall jump, jump
-	public float velocity = 0;
+	public float velocity = 0f;
 	public bool changedRunDirection = false;				
 	public bool inputPCJump = false;							// stores Input Key 
-	public bool inputPCMove = false;							// stores Input Key 
+	public bool inputPCMove = false;							// stores Input Key
+	public float pushForce;
+	public float pushTime = 0f;
 	
 	/** 
 	 * Player Animation 
@@ -115,6 +118,8 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	
 	void Awake()
 	{
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		hash = gameController.GetComponent<HashID>();
 		if (PhotonNetwork.isNonMasterClientInRoom)
 		{
 			// We are probably not the owner of this object: disable this script.
@@ -122,8 +127,6 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			// The server ALWAYS run this script though
 			enabled = false;	 // disable this script (this disables Update());	
 		}
-		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 	}
 	[RPC]
 	void SetPlayer(PhotonPlayer player)
@@ -135,6 +138,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			enabled = true;
 		}
 	}
+	
 	void Start() {
 		anim = GetComponent<Animator>();
 		
@@ -172,7 +176,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			else if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				InputPCKeyboardCheck();
-				InputTouchCheck();
+				InputTouchCheck();          // Unity Remote 4
 			}
 
 			//Only the client that owns this object executes this code
@@ -194,23 +198,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 				
 			}
 		}
-
-
-		// ->> FixedUpdate()
-//		//MasterCLient movement code
-//		//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
-//		if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){
-//			{            
-//				//Actually move the player using his/her input
-//				Vector3 moveDirection = new Vector3(serverCurrentHInput, 0, serverCurrentVInput);
-//				float speed = 5;
-//				transform.Translate(speed * moveDirection * Time.deltaTime);
-//			}
-//			
-//			/*if (PhotonNetwork.isNonMasterClientInGame)
-//        {
-//            transform.position = Vector3.Lerp(transform.position, lastReceivedPosition, 0.75f); //"lerp" to the posReceive by 75%
-//        }*/
+		JumpAblePlatform();
 	}
 	[RPC]
 	void SendMovementInput(float HInput, bool ButtonInput)
@@ -220,9 +208,6 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 		//serverCurrentVInput = VInput;
 		serverCurrentButtonInput = ButtonInput;
 	}
-
-	
-	Vector3 lastReceivedPosition;
 	
 	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
 	{
@@ -279,31 +264,26 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	void InputTouchCheck() 
 	{
 		AnalogStickAndButton();
-		//inputTouchJump = buttonIsTapped;				// jedes mal erneut drücken
-		inputTouchJump = buttonIsPressed;				// jedes mal erneut drücken
+		inputTouchJump = buttonIsTapped;				//
 		inputTouchStick = analogStickIsStillPressed;
 	}
 	
 	// FixedUpdate is called once per frame
 	void FixedUpdate () {
-		//MasterCLient movement code
-		//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
-		if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner)
-		{            
-			//Actually move the player using his/her input
-			if(!isDead)
+            
+		//Actually move the player using his/her input
+		if(!isDead)
+		{
+			FixCheckPosition();
+			FixSetAnim();
+			//MasterCLient movement code
+			//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
+			if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner)
 			{
-				FixCheckPosition();
-				FixSetAnim();
 				FixMove();							//Jump, Wall-Jump, rechts, links Bewegung					
-				JumpAblePlatform();
 			}
+			JumpAblePlatform();
 		}
-		
-		if (PhotonNetwork.isNonMasterClientInRoom)
-        {
-            transform.position = Vector3.Lerp(transform.position, lastReceivedPosition, 0.75f); //"lerp" to the posReceive by 75%
-        }
 	}
 	void FixCheckPosition()
 	{
@@ -325,6 +305,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			anim.SetBool(hash.groundedBool, grounded);
 			anim.SetBool(hash.walledBool, walled);
 			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
+			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
 		}
 		else
 			Debug.LogError("Animator not set");
@@ -332,21 +313,54 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	}
 	void FixMove()
 	{
+		// Platformen vereinen
+		//velocity = (moveDirection.x + deltaX);
+		velocity = (serverCurrentHInput);
+
 		if(isBouncing)
 		{
 			//Alte Kraft in X Richtung wird nicht komplett überschrieben!
-			// Platformen vereinen
-			//velocity = (moveDirection.x + deltaX);
-			velocity = (serverCurrentHInput);
-			
-			velocity *= maxSpeed * 0.5f;
-			velocity += rigidbody2D.velocity.x;		//summand gegen null laufen lassen
+
+			if(pushForce > 0f)
+			{
+				if(velocity > 0f)
+				{
+					velocity *= maxSpeed;		// wenn Spieler in die gleiche Richtung wie pushForce sich bewegt,
+												// volle Geschwindigkeit nehmen  
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+			else if(pushForce < 0f)
+			{
+				if(velocity < 0f)
+				{
+					velocity *= maxSpeed;
+				}
+				else
+					velocity *= maxSpeed * 0.2f;
+			}
+
+			pushTime += Time.deltaTime;
+			float pushSpeed;
+			pushForce = pushForce - (pushForce * 4f * Time.deltaTime);
+			pushSpeed = pushForce;
+//			Debug.LogError(this.gameObject.transform.name+ " pushSpeed = " + pushSpeed);
+			if(Mathf.Abs(pushSpeed) < 1)
+			{
+//				Debug.LogError(this.gameObject.transform.name+ " pushSpeed = 0");
+				isBouncing = false;
+				pushTime = 0f;
+			}
+			else
+			{
+				velocity += pushSpeed;
+//				Debug.LogError(this.gameObject.transform.name+ " velocity = " + velocity);
+			}
+
 		}
 		else // if(!isBouncing)
 		{
-			// Platformen vereinen
-			//velocity = (moveDirection.x + deltaX);
-			velocity = (serverCurrentHInput);
 			velocity *= maxSpeed;
 		}
 		
@@ -396,7 +410,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 		{
 			changedRunDirection = false;
 		}
-
+		
 		if(grounded && (inputPCJump || inputTouchJump || serverCurrentButtonInput)) {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
@@ -412,7 +426,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			Flip();																		//Charakter drehen 
 			anim.SetBool(hash.groundedBool,false);
 			anim.SetBool(hash.walledBool,false);
-			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);								//<--- besser für JumpAblePlatforms
+			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
 		}
 		
 	}
@@ -477,7 +491,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	}
 	
 	void AnalogStickAndButton () {
-		
+
 		string debugmsg="";
 		buttonIsPressed = false;
 		buttonIsTapped = false;
@@ -506,7 +520,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			
 			if(!analogStickIsStillPressed)
 			{
-				/*
+			/*
 			 * Touch nach Touchphase auswerten:
 			 * 	1. Began
 			 *  2. Moved
@@ -695,10 +709,10 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			deltaX = 0f;
 			deltaY = 0f;
 		}
+        
+        if(debugging != null)
+		  debugging.text = debugmsg;
 
-		if(debugging != null)
-			debugging.text = debugmsg;
-		
 		/**
 		 * Android Softbutton: Back
 		 **/

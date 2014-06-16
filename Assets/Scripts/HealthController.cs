@@ -54,18 +54,18 @@ public class HealthController : MonoBehaviour {
 
 		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
 		if(myCharacterCollider2D == null)
-			Debug.LogError("Character has no BoxCollider2D");
+			Debug.LogError(myCharacter.name + " has no BoxCollider2D");
 
 		feet = myCharacter.Find("Feet");
 		feetCollider2D = feet.GetComponent<BoxCollider2D>();
 		if(feetCollider2D == null)
-			Debug.LogError("Character's feet has no BoxCollider2D");
+			Debug.LogError(myCharacter.name + "'s feet has no BoxCollider2D");
 
 
 		head = myCharacter.Find("Head");
 		headCollider2D = head.GetComponent<BoxCollider2D>();
 		if(headCollider2D == null)
-			Debug.LogError("Character's head has no BoxCollider2D");
+			Debug.LogError(myCharacter.name + "'s head has no BoxCollider2D");
 
 		anim = myCharacter.GetComponent<Animator>();
 		if(lbl_life != null)
@@ -73,12 +73,12 @@ public class HealthController : MonoBehaviour {
 
 		myPlayerControllerScript = myCharacter.GetComponent<PlayerController>();
 		if(myPlayerControllerScript == null)
-			Debug.LogError("Character has no PlayerController Script");
+			Debug.LogError(myCharacter.name + " has no PlayerController Script");
 		
 		myKIScript = myCharacter.GetComponent<KI>();
 		if(myKIScript == null)
 		{
-			Debug.LogError("Character has no KI Script");
+			Debug.LogError(myCharacter.name + " has no KI Script");
 			isKI = false;
 		}
 		else
@@ -140,7 +140,7 @@ public class HealthController : MonoBehaviour {
 						Debug.LogError("keine Label für Leben gesetzt!");
 						
 					
-					Debug.Log (this.gameObject.name + ": takes damage of " + damage);
+//					Debug.Log (this.gameObject.name + ": takes damage of " + damage);
 					if (currentLifes <= 0)
 					{
 						/* Game Over...
@@ -187,7 +187,7 @@ public class HealthController : MonoBehaviour {
 
 	void HeadJumped() 
 	{
-		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
+//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
 
 		//myCharacter.renderer.enabled = false;
 
