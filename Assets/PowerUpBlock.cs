@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PowerUpBlock : MonoBehaviour {
+public class PowerUpBlock : Photon.MonoBehaviour {
 
 	public string targetTag = "Head";
 	public float powerUpRespawnTime = 8.0f;

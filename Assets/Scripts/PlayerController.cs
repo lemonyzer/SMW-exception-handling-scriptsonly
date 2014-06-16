@@ -1,9 +1,24 @@
 using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
+public class PlayerController : Photon.MonoBehaviour {
 
 	public GUIText debugging;
+
+	/**
+	 * Photon Netzwerk
+	 **/
+	public PhotonPlayer owner;
+	//Last input value, we're saving this to be able to save network messages/bandwidth.
+	private float lastClientHInput = 0;
+	//private float lastClientVInput = 0;
+	private bool lastClientButtonInput = false;
+    Vector3 lastReceivedPosition;
+	
+	//The input values the server will execute on this object
+	private float serverCurrentHInput = 0;
+	//private float serverCurrentVInput = 0;
+	private bool serverCurrentButtonInput = false;
 	
 	/** 
 	 * Position Check 
@@ -105,6 +120,23 @@ public class PlayerController : MonoBehaviour {
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
+		if (PhotonNetwork.isNonMasterClientInRoom)
+		{
+			// We are probably not the owner of this object: disable this script.
+			// RPC's and OnPhotonSerializeView will STILL get trough!
+			// The server ALWAYS run this script though
+			enabled = false;	 // disable this script (this disables Update());	
+		}
+	}
+	[RPC]
+	void SetPlayer(PhotonPlayer player)
+	{
+		owner = player;
+		if (player == PhotonNetwork.player)
+		{
+			//Hey thats us! We can control this player: enable this script (this enables Update());
+			enabled = true;
+		}
 	}
 	
 	void Start() {
@@ -129,23 +161,80 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	void Update() {
-		
-		if (Application.platform == RuntimePlatform.Android)
-		{
-			InputTouchCheck();
-		}
-		else if (Application.platform == RuntimePlatform.WindowsPlayer)
-		{
-			InputPCKeyboardCheck();
-		}
-		else if (Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			InputTouchCheck();
-			InputPCKeyboardCheck();
-		}
 
+		//Client code
+		if (PhotonNetwork.player == owner)
+		{
+			if (Application.platform == RuntimePlatform.Android)
+			{
+				InputTouchCheck();
+			}
+			else if (Application.platform == RuntimePlatform.WindowsPlayer)
+			{
+				InputPCKeyboardCheck();
+			}
+			else if (Application.platform == RuntimePlatform.WindowsEditor)
+			{
+				InputPCKeyboardCheck();
+				InputTouchCheck();          // Unity Remote 4
+			}
+
+			//Only the client that owns this object executes this code
+			float HInput = deltaX + moveDirection.x;
+			//float VInput = deltaY;
+//			bool ButtonInput = buttonIsPressed;		// mehr mals drücken 
+			bool ButtonInput = buttonIsPressed;			// einmal drücken und halten
+			
+			//Is our input different? Do we need to update the server?
+			//if (lastClientHInput != HInput || lastClientVInput != VInput)
+			if (lastClientHInput != HInput || lastClientButtonInput != ButtonInput)
+			{
+				lastClientHInput = HInput;
+				//lastClientVInput = VInput;
+				lastClientButtonInput = ButtonInput;
+				
+				SendMovementInput(HInput, ButtonInput); //Use this (and line 62) for simple "prediction"
+				photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, HInput, ButtonInput);
+				
+			}
+		}
 		JumpAblePlatform();
 	}
+	[RPC]
+	void SendMovementInput(float HInput, bool ButtonInput)
+	{
+		//Called on the server
+		serverCurrentHInput = HInput;
+		//serverCurrentVInput = VInput;
+		serverCurrentButtonInput = ButtonInput;
+	}
+	
+	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+	{
+		if (stream.isWriting)
+		{
+			//This is executed on the owner of the PhotonView
+			//The owner sends it's position over the network
+			
+			stream.SendNext(transform.position);//"Encode" it, and send it
+			
+		}
+		else
+		{
+			//Executed on all non-owners
+			//receive a position and set the object to it
+			
+			Vector3 lastReceivedPosition = (Vector3)stream.ReceiveNext();
+			
+			//We've just recieved the current servers position of this object in 'posReceive'.
+			
+//			transform.position = lastReceivedPosition;
+			//To reduce laggy movement a bit you could comment the line above and use position lerping below instead:	
+			//It would be even better to save the last received server position and lerp to it in Update because it is executed more often than OnPhotonSerializeView
+			
+		}
+	}
+
 	void InputPCKeyboardCheck()
 	{
 		/* Run */
@@ -181,11 +270,18 @@ public class PlayerController : MonoBehaviour {
 	
 	// FixedUpdate is called once per frame
 	void FixedUpdate () {
+            
+		//Actually move the player using his/her input
 		if(!isDead)
 		{
 			FixCheckPosition();
 			FixSetAnim();
-			FixMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+			//MasterCLient movement code
+			//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
+			if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner)
+			{
+				FixMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+			}
 			JumpAblePlatform();
 		}
 	}
@@ -209,6 +305,7 @@ public class PlayerController : MonoBehaviour {
 			anim.SetBool(hash.groundedBool, grounded);
 			anim.SetBool(hash.walledBool, walled);
 			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
+			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
 		}
 		else
 			Debug.LogError("Animator not set");
@@ -217,7 +314,8 @@ public class PlayerController : MonoBehaviour {
 	void FixMove()
 	{
 		// Platformen vereinen
-		velocity = (moveDirection.x + deltaX);
+		//velocity = (moveDirection.x + deltaX);
+		velocity = (serverCurrentHInput);
 
 		if(isBouncing)
 		{
@@ -313,7 +411,7 @@ public class PlayerController : MonoBehaviour {
 			changedRunDirection = false;
 		}
 		
-		if(grounded && (inputPCJump || inputTouchJump)) {
+		if(grounded && (inputPCJump || inputTouchJump || serverCurrentButtonInput)) {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
 			anim.SetBool(hash.groundedBool,false);
@@ -321,7 +419,7 @@ public class PlayerController : MonoBehaviour {
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 			
 		}
-		else if(!grounded && walled && (inputPCJump || inputTouchJump)) {
+		else if(!grounded && walled && (inputPCJump || inputTouchJump || serverCurrentButtonInput)) {
 			// Do WallJump
 			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
 			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
@@ -389,26 +487,6 @@ public class PlayerController : MonoBehaviour {
 				//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
 				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
 			}
-		}
-	}
-	
-	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-	{
-		if (stream.isWriting)
-		{
-			// Executed on the owner of this PhotonView; 
-			// The server sends it's position over the network
-			
-			stream.SendNext(transform.position);//"Encode" it, and send it
-			
-		}
-		else
-		{
-			// Executed on the others; 
-			// receive a position and set the object to it
-			
-			transform.position = (Vector3)stream.ReceiveNext();
-			
 		}
 	}
 	
@@ -631,8 +709,9 @@ public class PlayerController : MonoBehaviour {
 			deltaX = 0f;
 			deltaY = 0f;
 		}
-
-		debugging.text = debugmsg;
+        
+        if(debugging != null)
+		  debugging.text = debugmsg;
 
 		/**
 		 * Android Softbutton: Back
