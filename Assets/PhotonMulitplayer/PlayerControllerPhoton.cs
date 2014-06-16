@@ -172,12 +172,14 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			else if (Application.platform == RuntimePlatform.WindowsEditor)
 			{
 				InputPCKeyboardCheck();
+				InputTouchCheck();
 			}
 
 			//Only the client that owns this object executes this code
 			float HInput = deltaX + moveDirection.x;
 			//float VInput = deltaY;
-			bool ButtonInput = buttonIsTapped;
+//			bool ButtonInput = buttonIsPressed;		// mehr mals drücken 
+			bool ButtonInput = buttonIsPressed;			// einmal drücken und halten
 			
 			//Is our input different? Do we need to update the server?
 			//if (lastClientHInput != HInput || lastClientVInput != VInput)
@@ -187,12 +189,28 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 				//lastClientVInput = VInput;
 				lastClientButtonInput = ButtonInput;
 				
-				//SendMovementInput(HInput, VInput); //Use this (and line 62) for simple "prediction"
+				SendMovementInput(HInput, ButtonInput); //Use this (and line 62) for simple "prediction"
 				photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, HInput, ButtonInput);
 				
 			}
 		}
-		JumpAblePlatform();
+
+
+		// ->> FixedUpdate()
+//		//MasterCLient movement code
+//		//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
+//		if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){
+//			{            
+//				//Actually move the player using his/her input
+//				Vector3 moveDirection = new Vector3(serverCurrentHInput, 0, serverCurrentVInput);
+//				float speed = 5;
+//				transform.Translate(speed * moveDirection * Time.deltaTime);
+//			}
+//			
+//			/*if (PhotonNetwork.isNonMasterClientInGame)
+//        {
+//            transform.position = Vector3.Lerp(transform.position, lastReceivedPosition, 0.75f); //"lerp" to the posReceive by 75%
+//        }*/
 	}
 	[RPC]
 	void SendMovementInput(float HInput, bool ButtonInput)
@@ -225,7 +243,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			
 			//We've just recieved the current servers position of this object in 'posReceive'.
 			
-			transform.position = lastReceivedPosition;
+//			transform.position = lastReceivedPosition;
 			//To reduce laggy movement a bit you could comment the line above and use position lerping below instead:	
 			//It would be even better to save the last received server position and lerp to it in Update because it is executed more often than OnPhotonSerializeView
 			
@@ -261,7 +279,8 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	void InputTouchCheck() 
 	{
 		AnalogStickAndButton();
-		inputTouchJump = buttonIsTapped;				//
+		//inputTouchJump = buttonIsTapped;				// jedes mal erneut drücken
+		inputTouchJump = buttonIsPressed;				// jedes mal erneut drücken
 		inputTouchStick = analogStickIsStillPressed;
 	}
 	
@@ -269,7 +288,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 	void FixedUpdate () {
 		//MasterCLient movement code
 		//To also enable this on the client itself, use: " if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner){  "
-		if (PhotonNetwork.isMasterClient)
+		if (PhotonNetwork.isMasterClient || PhotonNetwork.player==owner)
 		{            
 			//Actually move the player using his/her input
 			if(!isDead)
@@ -281,10 +300,10 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			}
 		}
 		
-		/*if (PhotonNetwork.isNonMasterClientInGame)
+		if (PhotonNetwork.isNonMasterClientInRoom)
         {
             transform.position = Vector3.Lerp(transform.position, lastReceivedPosition, 0.75f); //"lerp" to the posReceive by 75%
-        }*/
+        }
 	}
 	void FixCheckPosition()
 	{
@@ -377,7 +396,7 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 		{
 			changedRunDirection = false;
 		}
-		
+
 		if(grounded && (inputPCJump || inputTouchJump || serverCurrentButtonInput)) {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
@@ -676,8 +695,9 @@ public class PlayerControllerPhoton : Photon.MonoBehaviour {
 			deltaX = 0f;
 			deltaY = 0f;
 		}
-		
-		debugging.text = debugmsg;
+
+		if(debugging != null)
+			debugging.text = debugmsg;
 		
 		/**
 		 * Android Softbutton: Back
