@@ -16,7 +16,7 @@ public class PlayerScript : Photon.MonoBehaviour
 
     void Awake()
     {
-        orgMaterial = renderer.material;
+//        orgMaterial = renderer.material;
 
         theScoreBoard = ScoreBoard.SP;
     }
@@ -32,8 +32,8 @@ public class PlayerScript : Photon.MonoBehaviour
          
 //            Destroy(GameObject.Find("LevelCamera"));
 
-//            Machinegun gun = transform.GetComponentInChildren < Machinegun>();
-//            gun.localPlayer = true;
+			SendDamageColliderPhoton feet = transform.GetComponentInChildren<SendDamageColliderPhoton>();
+            feet.localPlayer = true;
 
 
 
@@ -44,10 +44,10 @@ public class PlayerScript : Photon.MonoBehaviour
         {            
             name += msg.sender.name; 
 
-            transform.Find("CrateCamera").gameObject.SetActive(false);
+//            transform.Find("CrateCamera").gameObject.SetActive(false);
 
 			//disable local controls from remote Player 
-            PlatformerWalker4 tmp2 = GetComponent<PlatformerWalker4>() as PlatformerWalker4;
+			PlayerController tmp2 = GetComponent<PlayerController>() as PlayerController;
             tmp2.enabled = false;
 //            MouseLook tmp5 = GetComponent<MouseLook>() as MouseLook;
 //            tmp5.enabled = false;
@@ -67,11 +67,11 @@ public class PlayerScript : Photon.MonoBehaviour
     IEnumerator StartInvincibility()
     {
         invincible = true;
-        renderer.material = metalMaterial;
+//        renderer.material = metalMaterial;
 
         yield return new WaitForSeconds(10);
 
-        renderer.material = orgMaterial;
+//        renderer.material = orgMaterial;
         invincible = false;
     }
 

@@ -5,7 +5,7 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 
 	public bool isCorrectGameObject;
 	string playerLayer;
-	PlayerController playerController;
+	PlatformCharacter playerController;
 	KI kiController;
 
 	void Start()
@@ -46,17 +46,9 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
         
         if(isCorrectGameObject)
 		{
-			playerController = other.gameObject.GetComponent("PlayerController") as PlayerController;
-			if(playerController == null)
-			{
-				// Player muss KI sein
-				kiController  = other.gameObject.GetComponent("KI") as KI;
-				kiController.isInJumpAbleSaveZone = true;
-			}
-			else
-			{
-				playerController.isInJumpAbleSaveZone = true;
-			}
+			playerController = other.gameObject.GetComponent<PlatformCharacter>();
+			playerController.isInJumpAbleSaveZone = true;
+
 //			Debug.LogError( other.gameObject.name +  ": enters Save Zone => JumpAblePlatform Collision OFF! " + other.gameObject.layer);
 			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,true);
 			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,true);
@@ -108,17 +100,8 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 		
 		if(isCorrectGameObject)
 		{
-			playerController = other.gameObject.GetComponent("PlayerController") as PlayerController;
-			if(playerController == null)
-			{
-				// Player muss KI sein
-				kiController  = other.gameObject.GetComponent("KI") as KI;
-				kiController.isInJumpAbleSaveZone = false;
-			}
-			else
-			{
-				playerController.isInJumpAbleSaveZone = false;
-            }
+			playerController = other.gameObject.GetComponent<PlatformCharacter>();
+			playerController.isInJumpAbleSaveZone = false;
 //			Debug.LogError( other.gameObject.name +  ": leaving Save Zone => JumpAblePlatform Collision On! " + other.gameObject.layer);
 			//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),other.gameObject.layer,false);
 			Physics2D.IgnoreLayerCollision(18,other.gameObject.layer,false);

@@ -7,7 +7,7 @@ public class Spawnscript : Photon.MonoBehaviour
 	
 	
 	public Transform playerPrefab;
-	private List<PlayerController> playerScripts = new List<PlayerController>();
+	private List<PlayerControllerPhoton> playerScripts = new List<PlayerControllerPhoton>();
 
 	/**
 	 * 
@@ -61,7 +61,7 @@ public class Spawnscript : Photon.MonoBehaviour
 		//Get the networkview of this new transform
 		PhotonView newObjectsview = myNewTrans.GetComponent<PhotonView>();
 		
-		PlayerController playerScript = myNewTrans.GetComponent<PlayerController>();
+		PlayerControllerPhoton playerScript = myNewTrans.GetComponent<PlayerControllerPhoton>();
 		//Keep track of this new player so we can properly destroy it when required.
 		
 		playerScript.owner = newPlayer;
@@ -82,7 +82,7 @@ public class Spawnscript : Photon.MonoBehaviour
 		Debug.Log("Clean up after player " + player);
 		
 		for(int i =playerScripts.Count-1;i>=0;i--){
-			PlayerController script = playerScripts[i];        
+            PlayerControllerPhoton script = playerScripts[i];        
 			if (player == script.owner)
 			{
 				//We found the players object

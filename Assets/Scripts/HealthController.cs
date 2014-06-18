@@ -34,8 +34,8 @@ public class HealthController : MonoBehaviour {
 	Transform head;
 	BoxCollider2D headCollider2D;
 
-	PlayerController myPlayerControllerScript;
-	KI myKIScript;
+	PlatformCharacter myPlatformCharacterScript;
+//	KI myKIScript;
 
 	Animator anim;
 
@@ -71,18 +71,18 @@ public class HealthController : MonoBehaviour {
 		if(lbl_life != null)
 			lbl_life.text = myCharacter.name + ": " + currentLifes;
 
-		myPlayerControllerScript = myCharacter.GetComponent<PlayerController>();
-		if(myPlayerControllerScript == null)
-			Debug.LogError(myCharacter.name + " has no PlayerController Script");
+		myPlatformCharacterScript = myCharacter.GetComponent<PlatformCharacter>();
+		if(myPlatformCharacterScript == null)
+			Debug.LogError(myCharacter.name + " has no PlatformCharacter Script");
 		
-		myKIScript = myCharacter.GetComponent<KI>();
-		if(myKIScript == null)
-		{
-			Debug.LogError(myCharacter.name + " has no KI Script");
-			isKI = false;
-		}
-		else
-			isKI = true;
+//		myKIScript = myCharacter.GetComponent<KI>();
+//		if(myKIScript == null)
+//		{
+//			Debug.LogError(myCharacter.name + " has no KI Script");
+//			isKI = false;
+//		}
+//		else
+//			isKI = true;
 			 
 	}
 
@@ -286,36 +286,36 @@ public class HealthController : MonoBehaviour {
 
 	void stopControlls()
 	{
-		if(isKI)
-		{
-			myKIScript.isDead = true;
-			// myCharacter.GetComponent<KI>().enabled = false; // NICHT komplette Animator deaktivieren!
-			//myCharacter.GetComponent<KI>().JumpAllowed = false;
-			//myCharacter.GetComponent<KI>().MoveAllowed = false;
-		}
+//		if(isKI)
+//		{
+//			myKIScript.isDead = true;
+//			// myCharacter.GetComponent<KI>().enabled = false; // NICHT komplette Animator deaktivieren!
+//			//myCharacter.GetComponent<KI>().JumpAllowed = false;
+//			//myCharacter.GetComponent<KI>().MoveAllowed = false;
+//		}
 
-		if(myPlayerControllerScript != null)
+		if(myPlatformCharacterScript != null)
 		{
-			myPlayerControllerScript.isDead = true;
-			//myCharacter.GetComponent<PlayerController>().enabled = false;
+			myPlatformCharacterScript.isDead = true;
+			//myCharacter.GetComponent<PlatformCharacter>().enabled = false;
 		}
 
 	}
 
 	void startControlls()
 	{
-		if(isKI)
-		{
-			myKIScript.isDead = false;
-			// myCharacter.GetComponent<KI>().enabled = true; // NICHT komplette Animator deaktivieren!
-			//myCharacter.GetComponent<KI>().JumpAllowed = true;
-			//myCharacter.GetComponent<KI>().MoveAllowed = true;
-		}
+//		if(isKI)
+//		{
+//			myKIScript.isDead = false;
+//			// myCharacter.GetComponent<KI>().enabled = true; // NICHT komplette Animator deaktivieren!
+//			//myCharacter.GetComponent<KI>().JumpAllowed = true;
+//			//myCharacter.GetComponent<KI>().MoveAllowed = true;
+//		}
 		
-		if(myPlayerControllerScript != null)
+		if(myPlatformCharacterScript != null)
 		{
-			myPlayerControllerScript.isDead = false;
-			//myCharacter.GetComponent<PlayerController>().enabled = true;
+			myPlatformCharacterScript.isDead = false;
+			//myCharacter.GetComponent<PlatformCharacter>().enabled = true;
 		}
 	}
 

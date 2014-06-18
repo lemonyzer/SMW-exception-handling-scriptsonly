@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-
+public class PlatformerWalker4 : MonoBehaviour
+{
 	public GUIText debugging;
 	
 	/** 
@@ -129,7 +129,7 @@ public class PlayerController : MonoBehaviour {
 	}
 	
 	void Update() {
-		
+
 		if (Application.platform == RuntimePlatform.Android)
 		{
 			InputTouchCheck();
@@ -146,7 +146,7 @@ public class PlayerController : MonoBehaviour {
 		
 		JumpAblePlatform();
 	}
-	
+
 	void InputPCKeyboardCheck()
 	{
 		/* Run */
@@ -633,4 +633,5 @@ public class PlayerController : MonoBehaviour {
 			}
 		}
 	}
+
 }
