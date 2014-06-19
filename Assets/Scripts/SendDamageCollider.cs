@@ -26,7 +26,7 @@ public class SendDamageCollider : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void OnTriggerEnter2D (Collider2D other)
+	void OnTriggerEnter2D(Collider2D other)
 	{
 		if(myHead != null)
 		{

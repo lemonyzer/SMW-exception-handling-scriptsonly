@@ -3,6 +3,9 @@ using System.Collections;
 
 public class HashID : MonoBehaviour {
 
+	/**
+	 * Platform Character
+	 **/
 	public int hittedState;
 	public int deadState;
 	public int dieState;
@@ -28,8 +31,25 @@ public class HashID : MonoBehaviour {
 	public int deadBool;
 	public int hitTrigger;
 	public int spawnProtectionBool;
+	public int rageTrigger;
+	public int rageModusBool;
+
+	/**
+	 * Platform PowerUpBlock
+	 **/
+	public int hasPowerUpBool;
+
+	/**
+	 * CountDown
+	 **/
+	public int startCountDownTrigger;
+	public int countDownEnabledBool;
 	
 	void Awake() {
+
+		/**
+		 * Platform Character
+		 **/
 		hittedState =			Animator.StringToHash("Base Layer.Hitted");
 		deadState = 			Animator.StringToHash("Base Layer.Dead");
 		dieState = 				Animator.StringToHash("Base Layer.Die");
@@ -55,5 +75,19 @@ public class HashID : MonoBehaviour {
 		deadBool = Animator.StringToHash("Dead");
 		hitTrigger = Animator.StringToHash("HitTrigger");
 		spawnProtectionBool = Animator.StringToHash("SpawnProtection");
+		rageTrigger = Animator.StringToHash("RageTrigger");
+		rageModusBool = Animator.StringToHash("RageModus");
+
+		/**
+		 * Platform PowerUpBlock
+		 **/
+		hasPowerUpBool = Animator.StringToHash("hasPowerUp");
+		
+		/**
+		 * CountDown
+		 **/
+		startCountDownTrigger = Animator.StringToHash("startCountDown");
+		countDownEnabledBool = Animator.StringToHash("CountDownEnabled");
+
 	}
 }

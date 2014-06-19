@@ -31,6 +31,10 @@ public class Beam : MonoBehaviour {
 		{
 			beamableObject = true;
 		}
+		else if(other.gameObject.layer == LayerMask.NameToLayer("PowerUp"))
+		{
+			beamableObject = true;
+		}
 
 		if(beamableObject)
 		{

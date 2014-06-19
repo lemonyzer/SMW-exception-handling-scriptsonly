@@ -88,100 +88,102 @@ public class HealthController : MonoBehaviour {
 
 	public void ApplyDamage(float damage, bool headJumped)
 	{
-		if(!godmode)
+		if(!myPlatformCharacterScript.isInRageModus)
 		{
-			if(!isHit)		//nur wenn er noch nicht getroffen wurde
+			if(!godmode)
 			{
-				isHit = true;
-				anim.SetTrigger(hash.hitTrigger);
-				anim.SetBool(hash.hittedBool,true);
-				anim.SetBool(hash.deadBool,true);	// zu schnell!
-				anim.SetBool(hash.spawnBool,false);
-
-				// Death Sound abspielen
-				AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
-
-				// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-				myCharacterCollider2D.enabled = false;
-
-				// Fuß BoxCollider2D & SendDamageScript deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
-				// myCharacter.Find("Feet").gameObject.SetActive(false);
-				feet.gameObject.SetActive(false);
-				headCollider2D.enabled = false;
-				//head.gameObject.GetComponent<BoxCollider2D>().enabled = false;	//BAD PROGRAMMING!
-
-				// verhindern dass das GameObject durch die Gravität in Boden fällt
-				myCharacter.rigidbody2D.isKinematic = true;
-
-//				myCharacter.rigidbody2D.velocity = new Vector2(0.0f,0.0f);
-
-				/* Ki und Controlls deaktivieren */
-				stopControlls();
-
-//				StartCoroutine(DamageEffect());
-				
-				if (currentLifes > 0)
+				if(!isHit)		//nur wenn er noch nicht getroffen wurde
 				{
-					/* Leben vorhanden */
-					/* Schadenswert übernehmen */
-					currentLifes -= damage;
-					if(currentLifes == 1) 
-					{
-						/* nur noch ein Leben verbleibend */
-						AudioSource.PlayClipAtPoint(criticalHealthSound,transform.position,1);
-					}
+					isHit = true;
+					anim.SetTrigger(hash.hitTrigger);
+					anim.SetBool(hash.hittedBool,true);
+					anim.SetBool(hash.deadBool,true);	// zu schnell!
+					anim.SetBool(hash.spawnBool,false);
 
-					/* Leben auf GUI ausgeben */
-					if(lbl_life != null)
-					{
-						lbl_life.text = myCharacter.name + ": " + currentLifes;
-					}
-					else
-						Debug.LogError("keine Label für Leben gesetzt!");
-						
+					// Death Sound abspielen
+					AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
+
+					// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
+					myCharacterCollider2D.enabled = false;
+
+					// Fuß BoxCollider2D & SendDamageScript deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
+					// myCharacter.Find("Feet").gameObject.SetActive(false);
+					feet.gameObject.SetActive(false);
+					headCollider2D.enabled = false;
+					//head.gameObject.GetComponent<BoxCollider2D>().enabled = false;	//BAD PROGRAMMING!
+
+					// verhindern dass das GameObject durch die Gravität in Boden fällt
+					myCharacter.rigidbody2D.isKinematic = true;
+
+	//				myCharacter.rigidbody2D.velocity = new Vector2(0.0f,0.0f);
+
+					/* Ki und Controlls deaktivieren */
+					stopControlls();
+
+	//				StartCoroutine(DamageEffect());
 					
-//					Debug.Log (this.gameObject.name + ": takes damage of " + damage);
-					if (currentLifes <= 0)
+					if (currentLifes > 0)
 					{
-						/* Game Over...
-						 * Player hat alle Leben verloren */
-						anim.SetBool (hash.gameOverBool, true);
-						currentLifes = 0;
-						GameOver();
-					}
-					else
-					{
-						/* Spieler hat schaden genommen aber
-					 	* noch verbleibende Leben */
-						if(headJumped)
+						/* Leben vorhanden */
+						/* Schadenswert übernehmen */
+						currentLifes -= damage;
+						if(currentLifes == 1) 
 						{
-							/* Spieler wurde per Kopfsprung getötet
-						 	* 
-						 	*/
+							/* nur noch ein Leben verbleibend */
+							AudioSource.PlayClipAtPoint(criticalHealthSound,transform.position,1);
+						}
 
-							//Animation setzen
-							anim.SetBool(hash.headJumpedBool,true);
-							//Animation 3 sekunden laufen lassen
-							HeadJumped();
-							StartCoroutine(SpawnDelay());
+	//					/* Leben auf GUI ausgeben */
+	//					if(lbl_life != null)
+	//					{
+	//						lbl_life.text = myCharacter.name + ": " + currentLifes;
+	//					}
+	//					else
+	//						Debug.LogError("keine Label für Leben gesetzt!");
+							
+						
+	//					Debug.Log (this.gameObject.name + ": takes damage of " + damage);
+						if (currentLifes <= 0)
+						{
+							/* Game Over...
+							 * Player hat alle Leben verloren */
+							anim.SetBool (hash.gameOverBool, true);
+							currentLifes = 0;
+							GameOver();
 						}
 						else
 						{
-							/* Spieler wurde NICHT per Kopfsprung getötet
-						 	* 
-						 	*/
-							Debug.Log (this.gameObject.name + ": shooted, timout,... my bad!");
+							/* Spieler hat schaden genommen aber
+						 	* noch verbleibende Leben */
+							if(headJumped)
+							{
+								/* Spieler wurde per Kopfsprung getötet
+							 	* 
+							 	*/
+
+								//Animation setzen
+								anim.SetBool(hash.headJumpedBool,true);
+								//Animation 3 sekunden laufen lassen
+								HeadJumped();
+								StartCoroutine(SpawnDelay());
+							}
+							else
+							{
+								/* Spieler wurde NICHT per Kopfsprung getötet
+							 	* 
+							 	*/
+								Debug.Log (this.gameObject.name + ": shooted, timout,... my bad!");
+							}
+							
 						}
-						
 					}
 				}
-			}
-			else
-			{
-				Debug.LogWarning("is already Hitted!");
+				else
+				{
+					Debug.LogWarning("is already Hitted!");
+				}
 			}
 		}
-
 
 	}
 
@@ -228,9 +230,10 @@ public class HealthController : MonoBehaviour {
 		myCharacter.gameObject.transform.position = new Vector3(newPositionX,newPositionY,oldPositionZ);
 	}
 
-	void ReSpawn()
+	public void ReSpawn()
 	{
 		//ReSpawn...
+		anim.SetBool(hash.spawnBool, true);
 		Debug.Log (this.gameObject.name + ": ReSpawn()");
 
 		SetSpawnPoint();
@@ -260,7 +263,9 @@ public class HealthController : MonoBehaviour {
 /*		anim.SetBool("HeadJumped", false);
 		anim.SetBool ("Spawn", true);
 */
-		respawn=true;
+		//respawn=true;
+		ReSpawn();
+		StartCoroutine(SpawnAnimationTime());
 	}
 
 	IEnumerator SpawnAnimationTime()
@@ -322,14 +327,14 @@ public class HealthController : MonoBehaviour {
 
 	void Update()
 	{
-		if(respawn)
-		{
-			respawn=false;
-			anim.SetBool(hash.spawnBool, true);
-			ReSpawn();
-			// Ki und Controlls nach SpawnTime (SpawnAnimation) aktivieren
-			StartCoroutine(SpawnAnimationTime());
-		}
+//		if(respawn)
+//		{
+//			respawn=false;
+//			anim.SetBool(hash.spawnBool, true);
+//			ReSpawn();
+//			// Ki und Controlls nach SpawnTime (SpawnAnimation) aktivieren
+//			StartCoroutine(SpawnAnimationTime());
+//		}
 		if(enableControlls) {
 			anim.SetBool(hash.spawnBool, false);
 			anim.SetBool(hash.spawnProtectionBool, true);

@@ -4,6 +4,7 @@ using System.Collections;
 public class PlayerController1 : Photon.MonoBehaviour {
 
 	public GUIText debugging;
+	private string debugmsg="";
 
 	/**
 	 * Photon Netzwerk
@@ -492,7 +493,6 @@ public class PlayerController1 : Photon.MonoBehaviour {
 	
 	void AnalogStickAndButton () {
 
-		string debugmsg="";
 		buttonIsPressed = false;
 		buttonIsTapped = false;
 		analogStickIsStillPressed = false;

@@ -9,6 +9,7 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
+	private string debugmsg="";
 
 	/** 
 	 * Player Movement 
@@ -79,10 +80,9 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 	}
 
 	void AnalogStick() {
-		
-		string debugmsg="";
+		debugmsg = "";
 		analogStickIsStillPressed = false;
-		debugmsg += "Loop starting\n";
+		debugmsg = "Loop starting\n";
 		foreach (Touch touch in Input.touches)
 		{
 			if(!analogStickIsStillPressed)

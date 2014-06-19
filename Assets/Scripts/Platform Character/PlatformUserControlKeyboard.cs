@@ -9,7 +9,7 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
-	public string debugmsg="";
+	private string debugmsg="";
 	
 	/** 
 	 * Input
@@ -63,7 +63,7 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	
 	void Keyboard() {
 		inputVelocity = Input.GetAxis("Horizontal");
-		inputJump = Input.GetKeyDown(KeyCode.Space);
+		inputJump = Input.GetKey(KeyCode.Space);
 		if(debugging != null)
 			debugging.text = debugmsg;
 //		Debug.LogWarning("Velocity: " + inputVelocity);

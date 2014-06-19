@@ -3,6 +3,12 @@ using System.Collections;
 
 public class PlatformCharacter : MonoBehaviour {
 
+	/**
+	 * Debugging GUI Element
+	 **/
+	public GUIText debugging;
+	private string debugmsg="";
+
 	/** 
 	 * Character Position Check 
 	 **/
@@ -23,6 +29,7 @@ public class PlatformCharacter : MonoBehaviour {
 	public bool moveAllowed = true;				// denies/allows player&bots to move horizontally
 	public bool isInJumpAbleSaveZone = false;	// is Player currently in save Zone (prevent's colliding with Platform) 
 	public bool isBouncing = false;				// move speed changed while bouncing with other player
+	public bool isInRageModus = false;
 	
 	/** 
 	 * Character Inventory 
@@ -40,7 +47,7 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Movement 
 	 **/
-	private float maxSpeed = 6.0f;							// max horizontal Speed
+	private float maxSpeed = 8.0f;							// max horizontal Speed
 	private Vector2 jumpForce = new Vector2(10.0F, 14.0F);	// jump Force : wall jump, jump
 
 	/// <summary>
@@ -98,6 +105,37 @@ public class PlatformCharacter : MonoBehaviour {
 	{
 		this.inputTouchVelocity = moveHorizontal;
 		this.inputTouchJump = jump;
+	}
+
+	void Update()
+	{
+		if(InventoryManager.inventory != null)
+		{
+			if(InventoryManager.inventory.GetItems("Star(Clone)") > 0f)
+			{
+				if(this.gameObject.layer == 11)
+				{
+					isInRageModus = true;
+					anim.SetBool(hash.rageModusBool,true);
+					anim.SetTrigger(hash.rageTrigger);
+					Debug.LogError("isInRageModus: On");
+					InventoryManager.inventory.SetItems("Star(Clone)",0f);
+					StartCoroutine(RageTime());
+
+				}
+			}
+		}
+	}
+
+	IEnumerator RageTime()
+	{
+		yield return new WaitForSeconds(8.0f);
+		isInRageModus = false;
+		Debug.LogError("isInRageModus: Off");
+		anim.SetBool(hash.rageModusBool,false);
+
+		//anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
+		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
 	}
 
 	// FixedUpdate is called once per frame
@@ -327,5 +365,40 @@ public class PlatformCharacter : MonoBehaviour {
 				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
 			}
 		}
+	}
+
+	void OnTriggerEnter2D (Collider2D other)
+	{
+		if(isInRageModus)
+		{
+			if(this.gameObject.layer != other.gameObject.layer)
+			{
+				bool enemyObject = false;
+				if(other.gameObject.layer == LayerMask.NameToLayer("Player1"))
+				{
+					enemyObject = true;
+				}
+				else if(other.gameObject.layer == LayerMask.NameToLayer("Player2"))
+				{
+					enemyObject = true;
+				}
+				else if(other.gameObject.layer == LayerMask.NameToLayer("Player3"))
+				{
+					enemyObject = true;
+				}
+				else if(other.gameObject.layer == LayerMask.NameToLayer("Player4"))
+				{
+					enemyObject = true;
+				}
+//				else if(other.gameObject.layer == LayerMask.NameToLayer("PowerUpEnemy"))
+//				{
+//					enemyObject = true;
+//				}
+
+				if(enemyObject)
+					other.gameObject.transform.Find(Tags.head).GetComponent<HealthController>().ApplyDamage(1.0f,true);
+			}
+		}
+		
 	}
 }

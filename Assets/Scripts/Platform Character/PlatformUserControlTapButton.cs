@@ -9,6 +9,7 @@ public class PlatformUserControlTapButton : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
+	private string debugmsg="";
 	
 	/**
 	 * Mobile: Android / iOs
@@ -35,11 +36,11 @@ public class PlatformUserControlTapButton : MonoBehaviour {
 
 	void TapButton() {
 		
-		string debugmsg="";
+		debugmsg = "";
 		buttonIsPressed = false;
 		buttonIsTapped = false;
 
-		debugmsg += "Loop starting\n";
+		debugmsg = "Loop starting\n";
 		foreach (Touch touch in Input.touches)
 		{
 			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden

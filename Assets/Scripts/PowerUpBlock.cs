@@ -1,18 +1,32 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PowerUpBlock : Photon.MonoBehaviour {
+public class PowerUpBlock : MonoBehaviour {
 
 	public string targetTag = "Head";
-	public float powerUpRespawnTime = 8.0f;
+	public float powerUpRespawnTime = 15.0f;
 	public bool hasPowerUp = true;
+
+	public AudioClip powerUpReleaseSound;
+	public AudioClip powerUpReloadedSound;
 
 	public GameObject powerup;
 	public float powerUpStayTime = 8.0f;
 
+	private Animator anim;
+	GameObject gameController;
+	private HashID hash;
+
 	// Use this for initialization
-	void Start () {
-	
+	void Awake() {
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		hash = gameController.GetComponent<HashID>();
+		anim = GetComponent<Animator>();
+	}
+
+	void Start() 
+	{
+		anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
 	}
 	
 	// Update is called once per frame
@@ -28,8 +42,9 @@ public class PowerUpBlock : Photon.MonoBehaviour {
 			{
 				if(hasPowerUp)
 				{
-
+					AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
 					hasPowerUp = false;
+					anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
 					StartCoroutine(ReloadPowerUpBlock());
 					//Vector3 offset = new Vector3(.5f,.5f,0.0f);
 					Vector3 offset = new Vector3(0,1,0);
@@ -47,5 +62,7 @@ public class PowerUpBlock : Photon.MonoBehaviour {
 	{
 		yield return new WaitForSeconds(powerUpRespawnTime);
 		hasPowerUp=true;
+		anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
+		AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
 	}
 }

@@ -9,10 +9,11 @@ public class PlatformAIControl : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
-	public string debugmsg;
+	private string debugmsg="";
 
-
-	/* KI Variablen */
+	/**
+	 * AI Variablen
+	 **/
 	public bool JumpAllowed=true;
 	public bool MoveAllowed=true;
 	public GameObject target;

@@ -4,7 +4,7 @@ using System.Collections;
 public class PlayerController : MonoBehaviour {
 
 	public GUIText debugging;
-	
+	private string debugmsg="";
 	/** 
 	 * Position Check 
 	 **/
@@ -398,7 +398,7 @@ public class PlayerController : MonoBehaviour {
 	
 	void AnalogStickAndButton () {
 		
-		string debugmsg="";
+
 		buttonIsPressed = false;
 		buttonIsTapped = false;
 		analogStickIsStillPressed = false;

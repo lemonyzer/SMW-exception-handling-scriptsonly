@@ -9,7 +9,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
-	public string debugmsg="";
+	private string debugmsg="";
 
 	/**
 	 * Mobile: Android / iOs
@@ -107,11 +107,11 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 	}
 
 	void AnalogStickAndButton() {
-
+		debugmsg = "";
 		buttonIsPressed = false;
 		buttonIsTapped = false;
 		analogStickIsStillPressed = false;
-		debugmsg += "Loop starting\n";
+		debugmsg = "Loop starting\n";
 		foreach (Touch touch in Input.touches)
 		{
 			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
