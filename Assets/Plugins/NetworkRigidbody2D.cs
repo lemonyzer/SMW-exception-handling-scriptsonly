@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class NetworkRigidbody : MonoBehaviour {
+public class NetworkRigidbody2D : MonoBehaviour {
 
 	public double m_InterpolationBackTime = 0.1;
 	public double m_ExtrapolationLimit = 0.5;
@@ -11,7 +11,7 @@ public class NetworkRigidbody : MonoBehaviour {
 		internal double timestamp;
 		internal Vector3 pos;
 		internal Vector3 velocity;
-		internal Quaternion rot;
+		internal float rot;
 		internal float angularVelocity;
 	}
 
@@ -25,8 +25,8 @@ public class NetworkRigidbody : MonoBehaviour {
 		// Send data to server
 		if (stream.isWriting)
 		{
-			Vector3 pos = rigidbody2D.transform.position;
-			Quaternion rot = rigidbody2D.transform.rotation;
+			Vector3 pos = rigidbody2D.position;
+			float rot = rigidbody2D.rotation;
 			Vector3 velocity = rigidbody2D.velocity;
 			float angularVelocity = rigidbody2D.angularVelocity;
 			stream.Serialize(ref pos);
@@ -39,8 +39,8 @@ public class NetworkRigidbody : MonoBehaviour {
 		{
 			Vector3 pos = Vector3.zero;
 			Vector3 velocity = Vector3.zero;
-			Quaternion rot = Quaternion.identity;
-			float angularVelocity = 0;
+			float rot = 0f;
+			float angularVelocity = 0f;
 			stream.Serialize(ref pos);
 			stream.Serialize(ref velocity);
 			stream.Serialize(ref rot);
@@ -58,6 +58,7 @@ public class NetworkRigidbody : MonoBehaviour {
 			state.rot = rot;
 			state.angularVelocity = angularVelocity;
 			m_BufferedState[0] = state;
+
 			// Update used slot count, however never exceed the buffer size
 			// Slots aren't actually freed so this just makes sure the buffer is
 			// filled up and that uninitalized slots aren't used.
@@ -107,7 +108,7 @@ public class NetworkRigidbody : MonoBehaviour {
 						t = (float)((interpolationTime - lhs.timestamp) / length);
 					// if t=0 => lhs is used directly
 					transform.localPosition = Vector3.Lerp(lhs.pos, rhs.pos, t);
-					transform.localRotation = Quaternion.Slerp(lhs.rot, rhs.rot, t);
+//					transform.localRotation = Quaternion.Slerp(lhs.rot, rhs.rot, t);
 					return;
 				}
 			}
@@ -121,9 +122,9 @@ public class NetworkRigidbody : MonoBehaviour {
 			if (extrapolationLength < m_ExtrapolationLimit)
 			{
 				float axisLength = extrapolationLength * latest.angularVelocity * Mathf.Rad2Deg;
-				Quaternion angularRotation = Quaternion.AngleAxis(axisLength, new Vector3(0,0,latest.angularVelocity));
-				rigidbody2D.transform.position = latest.pos + latest.velocity * extrapolationLength;
-				rigidbody2D.transform.rotation = angularRotation * latest.rot;
+//				Quaternion angularRotation = Quaternion.AngleAxis(axisLength, latest.angularVelocity);
+				rigidbody2D.position = latest.pos + latest.velocity * extrapolationLength;
+//				rigidbody2D.rotation = angularRotation * latest.rot;
 				rigidbody2D.velocity = latest.velocity;
 				rigidbody2D.angularVelocity = latest.angularVelocity;
 			}

@@ -3,6 +3,9 @@ using System.Collections;
 
 public class DestroyAbleBlock : MonoBehaviour {
 
+	private bool destroyed = false;
+	private Vector3 destroyPosition;
+
 	public string targetTag = "Head";
 	public float powerUpRespawnTime = 8.0f;
 
@@ -28,7 +31,36 @@ public class DestroyAbleBlock : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+		if(destroyed)
+		{
+			AudioSource.PlayClipAtPoint(destroyBlockSound,transform.position,1);
+			myBlock.renderer.enabled = false;
+			myBlockCollider.enabled = false;
+			myTriggerZone.enabled = false;
+
+			Vector3 offset = new Vector3(0f,0f,0f);
+			GameObject cloneTopLeft = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
+			cloneTopLeft.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
+			cloneTopLeft.rigidbody2D.AddTorque(1000f);
+			
+			GameObject cloneTopRight = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
+			cloneTopRight.rigidbody2D.AddForce(new Vector2(+250.0f,350.0f));
+			cloneTopRight.rigidbody2D.AddTorque(-1000f);
+			
+			GameObject cloneBottomLeft = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
+			cloneBottomLeft.rigidbody2D.AddForce(new Vector2(-150.0f,150.0f));
+			cloneBottomLeft.rigidbody2D.AddTorque(1000f);
+			
+			GameObject cloneBottomRight = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
+			cloneBottomRight.rigidbody2D.AddForce(new Vector2(+150.0f,150.0f));
+			cloneBottomRight.rigidbody2D.AddTorque(-1000f);
+
+			Destroy(cloneTopLeft,destroyedBlockPrefabStayTime);
+			Destroy(cloneTopRight,destroyedBlockPrefabStayTime);
+			Destroy(cloneBottomLeft,destroyedBlockPrefabStayTime);
+			Destroy(cloneBottomRight,destroyedBlockPrefabStayTime);
+			this.enabled = false;
+		}
 	}
 
 	void OnTriggerEnter2D(Collider2D other)
@@ -37,40 +69,40 @@ public class DestroyAbleBlock : MonoBehaviour {
 		{
 			if(other.gameObject.tag == targetTag)
 			{
-				other.gameObject.transform.parent.rigidbody2D.velocity = new Vector2(other.gameObject.transform.parent.rigidbody2D.velocity.x,0f);
-				AudioSource.PlayClipAtPoint(destroyBlockSound,transform.position,1);
+//				other.gameObject.transform.parent.rigidbody2D.velocity = new Vector2(other.gameObject.transform.parent.rigidbody2D.velocity.x,0f);
+				destroyed = true;
 
 //				foreach(BoxCollider2D collider in myColliders)
 //				{
 //					collider.enabled = false;
 //				}
-				myBlock.renderer.enabled = false;
-				myBlockCollider.enabled = false;
-				myTriggerZone.enabled = false;
-
-				Vector3 offset = new Vector3(0f,0f,0f);
-				GameObject cloneTopLeft = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
-				cloneTopLeft.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
-				cloneTopLeft.rigidbody2D.AddTorque(1000f);
-				
-				GameObject cloneTopRight = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
-				cloneTopRight.rigidbody2D.AddForce(new Vector2(+250.0f,350.0f));
-				cloneTopRight.rigidbody2D.AddTorque(-1000f);
-
-				GameObject cloneBottomLeft = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
-				cloneBottomLeft.rigidbody2D.AddForce(new Vector2(-150.0f,150.0f));
-				cloneBottomLeft.rigidbody2D.AddTorque(1000f);
-				
-				GameObject cloneBottomRight = (GameObject)Instantiate(destroyedBlockPrefab,transform.position+offset, Quaternion.identity);
-				cloneBottomRight.rigidbody2D.AddForce(new Vector2(+150.0f,150.0f));
-				cloneBottomRight.rigidbody2D.AddTorque(-1000f);
 
 
-				Destroy(cloneTopLeft,destroyedBlockPrefabStayTime);
-				Destroy(cloneTopRight,destroyedBlockPrefabStayTime);
-				Destroy(cloneBottomLeft,destroyedBlockPrefabStayTime);
-				Destroy(cloneBottomRight,destroyedBlockPrefabStayTime);
 			}
+		}
+	}
+
+	void OnSerializeNetworkView( BitStream stream )
+	{
+		//write position, direction, and speed to network
+		if( stream.isWriting )
+		{
+			//destroyPosition
+			Vector3 pos = transform.position;
+			bool destroy = this.destroyed;
+			stream.Serialize( ref pos );
+			stream.Serialize( ref destroy );
+		}
+		// read position, direction, and speed from network
+		else
+		{
+			//destroyPosition
+			Vector3 pos = Vector3.zero;
+			bool destroy = false;
+			stream.Serialize( ref pos );
+			stream.Serialize( ref destroy );
+			this.destroyed = destroy;
+			this.destroyPosition = pos;
 		}
 	}
 

@@ -62,6 +62,19 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	}
 	
 	void Keyboard() {
+
+		if (Input.GetKey(KeyCode.Escape))
+		{
+			MasterServer.UnregisterHost();
+			for(int i=0;i<Network.connections.Length;i++)
+			{
+				Network.CloseConnection(Network.connections[i],true);
+			}
+			Network.Disconnect();
+			Application.LoadLevel("MainMenuOld");
+			return;
+		}
+
 		inputVelocity = Input.GetAxis("Horizontal");
 		inputJump = Input.GetKey(KeyCode.Space);
 		if(debugging != null)

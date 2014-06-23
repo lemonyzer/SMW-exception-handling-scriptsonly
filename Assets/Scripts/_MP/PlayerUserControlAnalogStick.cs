@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
+public class PlayerUserControlAnalogStick : MonoBehaviour {
 
-	private PlatformCharacter character;
-	
+//	private PlatformCharacter character;
+
+	public float MoveSpeed = 5f;
+
 	/**
 	 * Debugging GUI Element
 	 **/
@@ -14,14 +16,6 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 	/**
 	 * Mobile: Android / iOs
 	 **/
-	
-		/**
-		 * Input Flags (Jump Button)
-		 **/
-	int buttonTouchID=-1;			// ID of current jump touch (right screen)
-	int buttonTapCount=0;			// tap count current jump touch (right screen)
-	bool buttonIsPressed = false;	// flag if player presses jump 		
-	bool buttonIsTapped = false;	// flag if player presses jump again		
 	
 		/**
 		 * Input Flags (Analog Stick)
@@ -46,14 +40,9 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
 
-	void Awake()
-	{
-		ApplicationPlatformCheck();		// Touchfunction only on mobile devices
-	}
-
 	// Use this for initialization
 	void Start() {
-		character = GetComponent<PlatformCharacter>();
+//		character = GetComponent<PlatformCharacter>();
 
 		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
 		stickTexture = (GUITexture) Instantiate(stickTexture);					// needed? pre-instantiete in hierachie?!
@@ -71,68 +60,23 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		                                   0,
 		                                   0);
 	}
-
-	void ApplicationPlatformCheck()
-	{
-		/**
-		 * Android
-		 **/
-		if (Application.platform == RuntimePlatform.Android)
-		{
-			
-		}
-		else if (Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			
-		}
-		else if (Application.platform == RuntimePlatform.OSXEditor)
-		{
-			
-		}
-		else if (Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			
-		}
-		else
-		{
-			Debug.LogWarning(this.name + ": disabled!!!");
-			this.enabled = false;		// disable this script
-		}
-	}
-
+	
 	// Update is called once per frame
 	void Update() {
-		AnalogStickAndButton();
-		character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+
+		if( networkView == null || networkView.isMine )
+		{
+			AnalogStick();
+			transform.Translate( new Vector3( deltaX, deltaY, 0f ) * MoveSpeed * Time.deltaTime );
+		}
 	}
 
-	void AnalogStickAndButton() {
+	void AnalogStick() {
 		debugmsg = "";
-		buttonIsPressed = false;
-		buttonIsTapped = false;
 		analogStickIsStillPressed = false;
 		debugmsg = "Loop starting\n";
 		foreach (Touch touch in Input.touches)
 		{
-			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
-			{
-				if(touch.position.x > (Screen.width * 0.5f))
-				{
-					debugmsg += "Jump found\n";
-					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
-					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
-						buttonTapCount = touch.tapCount;	
-						buttonIsTapped = true;				
-						buttonIsPressed = true;
-					}
-					else
-					{
-						buttonIsTapped = false;
-						buttonIsPressed = true;
-					}
-				}
-			}
-			
 			if(!analogStickIsStillPressed)
 			{
 				/*
@@ -151,7 +95,9 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 					//				{
 					//					buttonIsPressed=true;
 					//				}
-					if(touch.position.x < (Screen.width * 0.5f))
+					//float rightEnd = (Screen.width * 0.5f);		// nur linke Bildschirmhälfte
+					float rightEnd = (Screen.width);				// kompletter Bildschirm
+					if(touch.position.x < rightEnd)
 					{
 						debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
@@ -172,16 +118,16 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 						 * 
 						 * 
 						 * */
-						if((touch.position.x > textureSizeWithSaveZoneX) && (touch.position.x < ((Screen.width*0.5)-textureSizeWithSaveZoneX)))
+						if((touch.position.x > textureSizeWithSaveZoneX) && (touch.position.x < (rightEnd-textureSizeWithSaveZoneX)))
 						{
 							// X position korrekt (ohne SaveZone)
 							touchBeganPositionX = touch.position.x;
 						}
-						else if(touch.position.x > ((Screen.width*0.5f)-textureSizeWithSaveZoneX))
+						else if(touch.position.x > (rightEnd-textureSizeWithSaveZoneX))
 						{
 							// zu weit rechts am Rand
 							// X position muss korrigiert werden (ohne SaveZone)
-							touchBeganPositionX = ((Screen.width*0.5f)-textureSizeWithSaveZoneX);
+							touchBeganPositionX = (rightEnd-textureSizeWithSaveZoneX);
 						}
 						else if(touch.position.x < textureSizeWithSaveZoneX)
 						{
@@ -309,25 +255,9 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 			}
 		}
 
-		if(!buttonIsPressed)
-		{
-			debugmsg += "kein Button gefunden\n";
-			//kein Button in der Schleife oben gefunden, zurücksetzen
-			buttonTouchID = -1;
-			buttonTapCount = 0;
-		}
-
-		if(!analogStickTouchBegan)
-		{
-			debugmsg += "kein AnalogStick gefunden (analogStickTouchBegan)\n";
-			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
-			deltaX = 0f;
-			deltaY = 0f;
-		}
-
 		if(!analogStickIsStillPressed)
 		{
-			debugmsg += "kein AnalogStick gefunden (analogStickIsStillPressed)\n";
+			debugmsg += "kein AnalogStick gefunden\n";
 			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
 			deltaX = 0f;
 			deltaY = 0f;
@@ -345,8 +275,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 			{
 				// Insert Code Here (I.E. Load Scene, Etc)
 				// OR Application.Quit();
-				Network.Disconnect();
-				Application.LoadLevel(Application.loadedLevel-1);
+				Application.LoadLevel("MainMenuOld");
 				return;
 			}
 		}

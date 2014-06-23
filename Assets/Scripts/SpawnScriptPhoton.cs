@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class SpawnScript : MonoBehaviour {
+public class SpawnScriptPhoton : MonoBehaviour {
 
 	public bool startGameTrigger = false;
 	public bool gameStarted = false;

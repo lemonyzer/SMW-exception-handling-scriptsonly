@@ -3,6 +3,13 @@ using System.Collections;
 
 public class PlatformCharacter : MonoBehaviour {
 
+	// the position read from the network
+	// used for interpolation
+	private Vector3 readNetworkPos;
+	// whether this paddle can accept player input
+	public bool AcceptsInput = true;
+//	public float gravity=10;
+
 	/**
 	 * Debugging GUI Element
 	 **/
@@ -89,6 +96,10 @@ public class PlatformCharacter : MonoBehaviour {
 	void Start() {
 		anim = GetComponent<Animator>();
 		isInJumpAbleSaveZone=false;
+
+		// if this is our paddle, it accepts input
+		// otherwise, if it is someone else’s paddle, it does not
+		AcceptsInput = networkView.isMine;
 	}
 	
 	// The Move function is designed to be called from a separate component
@@ -146,7 +157,25 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			CheckPosition();
 			SetAnim();
-			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+			if(networkView == null || networkView.isMine)
+			{
+				FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+			}
+			else
+			{
+				/**
+				 * Check Direction Change
+				 **/
+				Debug.Log (rigidbody2D.velocity.x + " " + facingRight);
+				if(rigidbody2D.velocity.x > 0f && !facingRight)
+				{
+					Flip();
+				}
+				else if(rigidbody2D.velocity.x < 0f && facingRight)
+				{
+					Flip();
+				}
+			}
 			JumpAblePlatform();
 		}
 	}
@@ -179,6 +208,15 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void FixedMove()
 	{
+		// does not accept input, interpolate network pos
+		// jetzt über NetworkRigidBody2D
+//		if( !AcceptsInput )
+//		{
+//			//transform.position = Vector3.Lerp( transform.position, readNetworkPos, 100f * Time.deltaTime );
+//			transform.position = readNetworkPos;
+//			// don’t use player input
+//			return;
+//		}
 		inputJump = inputPCJump || inputTouchJump;
 		if(!jumpAllowed)
 			inputJump = false;
@@ -305,6 +343,7 @@ public class PlatformCharacter : MonoBehaviour {
 			anim.SetBool(hash.walledBool,false);
 			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
 		}
+//		rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,rigidbody2D.velocity.y-gravity);		//<--- besser für JumpAblePlatforms	
 		
 	}
 	
@@ -401,4 +440,21 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		
 	}
+
+//	void OnSerializeNetworkView( BitStream stream )
+//	{
+//		// writing information, push current paddle position
+//		if( stream.isWriting )
+//		{
+//			Vector3 pos = transform.position;
+//			stream.Serialize( ref pos );
+//		}
+//		// reading information, read paddle position
+//		else
+//		{
+//			Vector3 pos = Vector3.zero;
+//			stream.Serialize( ref pos );
+//			readNetworkPos = pos;
+//		}
+//	}
 }
