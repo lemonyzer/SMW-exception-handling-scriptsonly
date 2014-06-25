@@ -340,19 +340,25 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		if(debugging != null)
 			debugging.text = debugmsg;
 		
-		/**
-		 * Android Softbutton: Back
-		 **/
-		if (Application.platform == RuntimePlatform.Android)
-		{
-			if (Input.GetKey(KeyCode.Escape))
-			{
-				// Insert Code Here (I.E. Load Scene, Etc)
-				// OR Application.Quit();
-				Network.Disconnect();
-				Application.LoadLevel(Application.loadedLevel-1);
-				return;
-			}
-		}
+//		/**
+//		 * Android Softbutton: Back
+//		 **/
+//		if (Application.platform == RuntimePlatform.Android)
+//		{
+//			if (Input.GetKey(KeyCode.Escape))
+//			{
+//				if(Network.isServer)
+//				{
+//					MasterServer.UnregisterHost();
+//					for(int i=0;i<Network.connections.Length;i++)
+//					{
+//						Network.CloseConnection(Network.connections[i],true);
+//					}
+//				}
+//				Network.Disconnect();
+//				Application.LoadLevel("mp_Multiplayer");
+//				return;
+//			}
+//		}
 	}
 }
