@@ -313,21 +313,45 @@ public class CharacterSelection2D : MonoBehaviour {
 		 * 
 		 * ACHTUNG!!!! Server hat ID 0, NetworkPlayer geht bei 1 los!
 		 * //foreach(NetworkPlayer player in Network.connections)
+		 * 
+		 * wenn player 2 disconnected, wird slot nicht direkt freigegeben!
 		 */
 
-		Debug.Log("Verbindungsanzahl: " + Network.connections.Length);
-		for(int i=0; i<= Network.connections.Length; i++)
+		Debug.LogWarning("Verbindungsanzahl: " + Network.connections.Length);
+
+		string key;
+		int value;
+
+		// Charactere der Clients checken
+		foreach(NetworkPlayer player in Network.connections)
 		{
-			string key = i + "_PrefabID";		// Key um in PlayerPrefs nach einträgen zu schauen
+			key = player.ToString() + "_PrefabID";		// Key um in PlayerPrefs nach einträgen zu schauen
 			key = key.ToLower();
-			int value = PlayerPrefs.GetInt(key);			// Value 
+			value = PlayerPrefs.GetInt(key);			// Value 
 			if(value == characterPrefabID)
 			{
-				// ein anderer Spieler hat diesen Character bereits, Schleife ggf. abbrechen
-                return true;
-            }
-        }
+				return true;
+			}
+		}
+		// Charactere des Master Clients (Server) checken
+		key = "0_PrefabID";
+		key = key.ToLower();
+		if(PlayerPrefs.GetInt(key) == characterPrefabID)
+			return true;
 		return false;
+
+//		for(int i=0; i<= Network.connections.Length; i++)
+//		{
+//			key = i + "_PrefabID";		// Key um in PlayerPrefs nach einträgen zu schauen
+//			key = key.ToLower();
+//			value = PlayerPrefs.GetInt(key);			// Value 
+//			if(value == characterPrefabID)
+//			{
+//				// ein anderer Spieler hat diesen Character bereits, Schleife ggf. abbrechen
+//                return true;
+//            }
+//        }
+//		return false;
     }
 
 //	/**

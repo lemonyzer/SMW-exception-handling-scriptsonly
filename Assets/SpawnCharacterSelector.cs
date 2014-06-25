@@ -7,6 +7,11 @@ public class SpawnCharacterSelector : MonoBehaviour {
 
 	private LobbyCharacterManager lobbyCharacterManager;
 
+	void Awake()
+	{
+		PlayerPrefs.DeleteAll();
+	}
+
 	void Start()
 	{
 		lobbyCharacterManager = GetComponent<LobbyCharacterManager>();
@@ -70,11 +75,21 @@ public class SpawnCharacterSelector : MonoBehaviour {
 	
 	void OnPlayerDisconnected( NetworkPlayer disconnectedPlayer )
 	{
+		string key;
+		int value;
+		key = disconnectedPlayer.ToString() + "_PrefabID";		// Character wieder freigeben
+		key = key.ToLower();
+		value = PlayerPrefs.GetInt(key);			// Value
+		PlayerPrefs.DeleteKey(key);
+		Debug.Log("Character PrefabID: " + value + " wieder freigegeben!");
+
 		// tell all players
 		networkView.RPC( "PlayerDisconnectedFromLobby", RPCMode.All, disconnectedPlayer );
 
         Debug.Log(disconnectedPlayer.ipAddress + " disconnected!");
 //		SetPlayerTextToScreen(disconnectedPlayer, text);										// Local auf Server ausführen
+		Debug.Log("Clean up after player " + disconnectedPlayer);
+		Network.RemoveRPCs(disconnectedPlayer);
 		Network.DestroyPlayerObjects(disconnectedPlayer);
 	}
 
