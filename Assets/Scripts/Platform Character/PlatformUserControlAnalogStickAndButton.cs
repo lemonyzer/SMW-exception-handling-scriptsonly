@@ -102,8 +102,12 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update() {
-		AnalogStickAndButton();
-		character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+		if( networkView == null || networkView.isMine )
+		{
+			AnalogStickAndButton();
+			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+
+		}
 	}
 
 	void AnalogStickAndButton() {

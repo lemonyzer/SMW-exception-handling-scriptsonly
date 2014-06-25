@@ -77,6 +77,7 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Animation 
 	 **/
+	private SpriteController spriteController;
 	public Animator anim;									// Animator State Machine
 	public bool facingRight = true;							// keep DrawCalls low, Flip textures scale: texture can be used for both directions 
 	public bool changedRunDirection = false;
@@ -89,6 +90,7 @@ public class PlatformCharacter : MonoBehaviour {
 	
 	void Awake()
 	{
+		spriteController = GetComponent<SpriteController>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 	}
@@ -127,8 +129,13 @@ public class PlatformCharacter : MonoBehaviour {
 				if(this.gameObject.layer == 11)
 				{
 					isInRageModus = true;
-					anim.SetBool(hash.rageModusBool,true);
-					anim.SetTrigger(hash.rageTrigger);
+					if(spriteController != null)
+						spriteController.setAnimation(SpriteController.AnimationType.jump);
+					else
+					{
+						anim.SetBool(hash.rageModusBool,true);
+						anim.SetTrigger(hash.rageTrigger);
+					}
 					Debug.LogError("isInRageModus: On");
 					InventoryManager.inventory.SetItems("Star(Clone)",0f);
 					StartCoroutine(RageTime());
@@ -143,7 +150,12 @@ public class PlatformCharacter : MonoBehaviour {
 		yield return new WaitForSeconds(8.0f);
 		isInRageModus = false;
 		Debug.LogError("isInRageModus: Off");
-		anim.SetBool(hash.rageModusBool,false);
+		if(spriteController != null)
+			spriteController.setAnimation(SpriteController.AnimationType.jump);
+		else
+		{
+			anim.SetBool(hash.rageModusBool,false);
+		}
 
 		//anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
 		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
@@ -329,7 +341,10 @@ public class PlatformCharacter : MonoBehaviour {
 		if(grounded && inputJump) {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
-			anim.SetBool(hash.groundedBool,false);
+			if(spriteController != null)
+				spriteController.setAnimation(SpriteController.AnimationType.jump);
+			else
+				anim.SetBool(hash.groundedBool,false);
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 			
@@ -338,9 +353,14 @@ public class PlatformCharacter : MonoBehaviour {
 			// Do WallJump
 			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
 			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
-			Flip();																		//Charakter drehen 
-			anim.SetBool(hash.groundedBool,false);
-			anim.SetBool(hash.walledBool,false);
+			Flip();																		//Charakter drehen
+			if(spriteController != null)
+				spriteController.setAnimation(SpriteController.AnimationType.jump);
+			else
+			{
+				anim.SetBool(hash.groundedBool,false);
+				anim.SetBool(hash.walledBool,false);
+			}
 			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
 		}
 //		rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,rigidbody2D.velocity.y-gravity);		//<--- besser für JumpAblePlatforms	
@@ -363,7 +383,12 @@ public class PlatformCharacter : MonoBehaviour {
 		if(grounded)
 		{
 			changedRunDirection = true;
-			anim.SetTrigger(hash.changeRunDirectionTrigger);	// Start Change Run Direction Animation
+			if(spriteController != null)
+				spriteController.setAnimation(SpriteController.AnimationType.changeRunDirection);
+			else
+			{
+				anim.SetTrigger(hash.changeRunDirectionTrigger);	// Start Change Run Direction Animation
+			}
 			AudioSource.PlayClipAtPoint(changeRunDirectionSound,transform.position,1);				//ChangeDirection
 		}
 		

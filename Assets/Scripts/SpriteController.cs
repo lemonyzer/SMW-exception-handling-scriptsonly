@@ -4,27 +4,53 @@ using System.Collections.Generic;			//für Liste
 
 public class SpriteController : MonoBehaviour {
 
-	public bool LeftRightMirrow=true;
-	public List<Texture2D> animationIdleRight;
-	public List<Texture2D> animationIdleLeft;
-	public List<Texture2D> animationGoRight;
-	public List<Texture2D> animationGoLeft;
-	public List<Texture2D> animationJumpRight;
-	public List<Texture2D> animationJumpLeft;
-	public List<Texture2D> animationAttackRight;
-	public List<Texture2D> animationAttackLeft;
-	public float speed = 1;
-	public AnimationType currentAnimationType = AnimationType.idleRight;
+	public bool LeftRightMirrow=true;				// nur eine Textur für beide Richtungen
+
+	public List<Sprite> animations;
+	public List<Sprite> animationIdle;
+	public List<Sprite> animationRun;
+	public List<Sprite> animationJump;
+	public List<Sprite> animationChangeRunDirection;
+	public List<Sprite> animationDie;
+	public List<Sprite> animationDeadCorp;
+	public List<Sprite> animationSpawn;
+
+	public float animationSpeed = 10;
+
+	private AnimationType currentAnimationType = AnimationType.idle;
+
+	private SpriteRenderer spriteRenderer;
+
+	void Awake()
+	{
+		spriteRenderer = GetComponent<SpriteRenderer>();
+
+		// Idle
+		animationIdle.Add(animations[0]);
+
+		// Run
+		animationRun.Add(animations[0]);
+		animationRun.Add(animations[1]);
+
+		// Jump
+		animationJump.Add(animations[2]);
+
+		// ChangeRunDirection (Skid, Drift)
+		animationChangeRunDirection.Add(animations[3]);
+
+		// Die
+		animationDie.Add(animations[4]);
+
+		// DeadCrop
+		animationDeadCorp.Add(animations[5]);
+	}
 
 	public enum AnimationType {
-		idleRight,
-		idleLeft,
-		goRight,
-		goLeft,
-		jumpRight,
-		jumpLeft,
-		attackRight,
-		attackLeft,
+		idle,
+		run,
+		changeRunDirection,
+		jump
+
 	}
 
 	// Use this for initialization
@@ -36,39 +62,31 @@ public class SpriteController : MonoBehaviour {
 	void Update () {
 		switch(currentAnimationType)
 		{
-			case AnimationType.idleRight:
-				setTexture(animationIdleRight);
+			case AnimationType.idle:
+				setTexture(animationIdle);
 				break;
-			case AnimationType.idleLeft:
-				setTexture(animationIdleLeft);
+			
+			case AnimationType.run:
+				setTexture(animationRun);
 				break;
-			case AnimationType.goRight:
-				setTexture(animationGoRight);
+
+			case AnimationType.changeRunDirection:
+				setTexture(animationChangeRunDirection);
 				break;
-			case AnimationType.goLeft:
-				setTexture(animationGoLeft);
+
+			case AnimationType.jump:
+				setTexture(animationJump);
 				break;
-			case AnimationType.jumpRight:
-				setTexture(animationJumpRight);
-				break;
-			case AnimationType.jumpLeft:
-				setTexture(animationJumpLeft);
-				break;
-			case AnimationType.attackRight:
-				setTexture(animationAttackRight);
-				break;
-			case AnimationType.attackLeft:
-				setTexture(animationAttackLeft);
-				break;
+
 		}
 
 	}
 
-	void setTexture(List<Texture2D> animationSprite)
+	void setTexture(List<Sprite> animationSprite)
 	{
-		int index = (int)(Time.time * speed);
+		int index = (int)(Time.time * animationSpeed);
 		index = index % animationSprite.Count;
-		renderer.material.mainTexture = animationSprite[index];
+		spriteRenderer.sprite = animationSprite[index];
 	}
 
 	public void setAnimation(AnimationType animationType)

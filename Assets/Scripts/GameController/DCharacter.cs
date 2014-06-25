@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class Character : MonoBehaviour {
+public class DCharacter : MonoBehaviour {
 
 	Dictionary<int, GameObject> items = new Dictionary<int , GameObject>();
 	

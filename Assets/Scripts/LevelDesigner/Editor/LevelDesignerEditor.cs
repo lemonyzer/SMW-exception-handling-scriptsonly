@@ -10,6 +10,7 @@ public class LevelDesignerEditor : Editor {
 	BatchMode batchmode = BatchMode.None;
 	bool leftControl = false;
 	Vector2 oldTilePos = new Vector2();
+	bool usePrefix = true;
 
 	enum BatchMode
 	{
@@ -52,11 +53,18 @@ public class LevelDesignerEditor : Editor {
 		EditorGUILayout.EndHorizontal();
 
 		EditorGUILayout.BeginHorizontal();
+		EditorGUILayout.PrefixLabel("Use Name Prefix");
+		usePrefix = EditorGUILayout.Toggle (usePrefix);							// Prefix Checkbox / Toggle
+		EditorGUILayout.EndHorizontal();
+
+		EditorGUILayout.BeginHorizontal();
 		EditorGUILayout.PrefixLabel("Depth");
 		script.depth = EditorGUILayout.Slider (script.depth, -5,5);
 		EditorGUILayout.EndHorizontal();
 
 		script.rotation = EditorGUILayout.Vector3Field("Rotation", script.rotation);
+
+//		script.layer = EditorGUILayout.LayerField("Sprite Layer",
 
 		if(GUI.changed)
 			EditorUtility.SetDirty(target);
@@ -115,7 +123,15 @@ public class LevelDesignerEditor : Editor {
 		{
 			if(script.prefab != null)
 			{
-				string name = string.Format(script.prefab.name + "_{0}_{1}_{2}",script.depth,tilePos.y,tilePos.x);
+				string name;
+				if(usePrefix)
+				{
+					name = string.Format(script.prefab.name + "_{0}_{1}_{2}",script.depth,tilePos.y,tilePos.x);
+				}
+				else
+				{
+					name = string.Format(script.prefab.name);
+				}
 				if((current.button == 0) || (batchmode == BatchMode.Create))
 				{
 					//Create (linke Maustaste)
@@ -130,7 +146,15 @@ public class LevelDesignerEditor : Editor {
 			}
 			else if(script.sprite != null)
 			{
-				string name = string.Format(script.sprite.name + "_{0}_{1}_{2}",script.depth,tilePos.y,tilePos.x);
+				string name;
+				if(usePrefix)
+				{
+					name = string.Format(script.sprite.name + "_{0}_{1}_{2}",script.depth,tilePos.y,tilePos.x);
+				}
+				else
+				{
+					name = string.Format(script.sprite.name);
+				}
 				if((current.button == 0) || (batchmode == BatchMode.Create))
 				{
 					//Create (linke Maustaste)

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ConnectToGameLobby : MonoBehaviour
+public class ConnectToGame : MonoBehaviour
 {
 	private string ip = "192.168.0.129";
 	private int port = 25005;
@@ -168,14 +168,14 @@ public class ConnectToGameLobby : MonoBehaviour
 	{
 		Debug.Log( "Connected to server" );
 		// this is the NetworkLevelLoader we wrote earlier in the chapter – pauses the network, loads the level, waits for the level to finish, and then unpauses the network
-		NetworkLevelLoader.Instance.LoadLevel( "mp_CharacterSelection",0 );
+		NetworkLevelLoader.Instance.LoadLevel( "mp_classic",0 );
 	}
 	
 	void OnServerInitialized()
 	{
 		Debug.Log( "Server initialized" );
 		MasterServer.RegisterHost(gameTypeName,gameName,comment);
-		NetworkLevelLoader.Instance.LoadLevel( "mp_CharacterSelection",0 );
+		NetworkLevelLoader.Instance.LoadLevel( "mp_classic",0 );
 	}
 	
 	void OnFailedToConnectToMasterServer(NetworkConnectionError info) {

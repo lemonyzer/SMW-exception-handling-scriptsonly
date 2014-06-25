@@ -38,7 +38,7 @@ public class NetworkLevelLoader : MonoBehaviour
 		
 		Network.SetLevelPrefix( prefix );
 		Application.LoadLevel( name );
-		yield return null;
+		yield return null;									// wait 2 frames (level load takes 2 frames)
 		yield return null;
 		
 		Network.isMessageQueueRunning = true;

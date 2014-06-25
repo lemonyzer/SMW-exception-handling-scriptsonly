@@ -9,6 +9,8 @@ public class Layer : MonoBehaviour {
 	public const string player4 = "Player4";
 	public const string enemy = "Enemy";
 
+	public const string floor = "Floor";
+
 	public const string jumpAblePlatform = "JumpAblePlatform";
 	public const string jumpAblePlatformSaveZone = "JumpAblePlatformSaveZone";
 	public const string feet = "Feet";

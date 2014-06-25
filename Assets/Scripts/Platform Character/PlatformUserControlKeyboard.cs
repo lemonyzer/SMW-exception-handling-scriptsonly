@@ -65,10 +65,13 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 
 		if (Input.GetKey(KeyCode.Escape))
 		{
-			MasterServer.UnregisterHost();
-			for(int i=0;i<Network.connections.Length;i++)
+			if(Network.isServer)
 			{
-				Network.CloseConnection(Network.connections[i],true);
+				MasterServer.UnregisterHost();
+				for(int i=0;i<Network.connections.Length;i++)
+				{
+					Network.CloseConnection(Network.connections[i],true);
+				}
 			}
 			Network.Disconnect();
 			Application.LoadLevel("MainMenuOld");

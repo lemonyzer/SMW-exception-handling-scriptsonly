@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 using System.Collections;
 
 public class NetworkedPlayer : MonoBehaviour
@@ -11,8 +12,7 @@ public class NetworkedPlayer : MonoBehaviour
 	{
 		public Vector3 Position;
 		public double Timestamp;
-
-		// constructor
+		
 		public networkState( Vector3 pos, double time )
 		{
 			this.Position = pos;
@@ -20,12 +20,124 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 	}
 	
+	// represents a move command sent to the server
+	private struct move
+	{
+		public float HorizontalAxis;
+		public float VerticalAxis;
+		public double Timestamp;
+		
+		public move( float horiz, float vert, double timestamp )
+		{
+			this.HorizontalAxis = horiz;
+			this.VerticalAxis = vert;
+			this.Timestamp = timestamp;
+		}
+	}
+	
 	// we'll keep a buffer of 20 states
 	networkState[] stateBuffer = new networkState[ 20 ];
 	int stateCount = 0; // how many states have been recorded
 	
+	// a history of move commands sent from the client to the server
+	List<move> moveHistory = new List<move>();
+	
+	Player playerScript;
+	
+	void Start()
+	{
+		playerScript = GetComponent<Player>();
+	}
+	
+	void FixedUpdate()
+	{
+		if( networkView.isMine )
+		{
+			// get current move state
+			move moveState = new move( playerScript.horizAxis, playerScript.vertAxis, Network.time );
+			
+			// buffer move state
+			moveHistory.Insert( 0, moveState );
+			
+			// cap history at 200
+			if( moveHistory.Count > 200 )
+			{
+				moveHistory.RemoveAt( moveHistory.Count - 1 );
+			}
+			
+			// simulate
+			playerScript.Simulate();
+			
+			// send state to server
+			networkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.VerticalAxis, transform.position );
+		}
+	}
+	
+	[RPC]
+	void ProcessInput( float horizAxis, float vertAxis, Vector3 position, NetworkMessageInfo info )
+	{
+		if( networkView.isMine )
+			return;
+		
+		if( !Network.isServer )
+			return;
+		
+		// execute input
+		playerScript.horizAxis = horizAxis;
+		playerScript.vertAxis = vertAxis;
+		playerScript.Simulate();
+		
+		// compare results
+		if( Vector3.Distance( transform.position, position ) > 0.1f )
+		{
+			// error is too big, tell client to rewind and replay
+			networkView.RPC( "CorrectState", info.sender, transform.position );
+		}
+	}
+	
+	[RPC]
+	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
+	{
+		// find past state based on timestamp
+		int pastState = 0;
+		for( int i = 0; i < moveHistory.Count; i++ )
+		{
+			if( moveHistory[ i ].Timestamp <= info.timestamp )
+			{
+				pastState = i;
+				break;
+			}
+		}
+		
+		// rewind
+		transform.position = correctPosition;
+		
+		// replay
+		for( int i = 0; i <= pastState; i++ )
+		{
+			playerScript.horizAxis = moveHistory[ i ].HorizontalAxis;
+			playerScript.vertAxis = moveHistory[ i ].VerticalAxis;
+			playerScript.Simulate();
+		}
+		
+		// clear
+		moveHistory.Clear();
+	}
+	
+	private float updateTimer = 0f;
 	void Update()
 	{
+		// is this the server? send out position updates every 1/10 second
+		if( Network.isServer )
+		{
+			updateTimer += Time.deltaTime;
+			if( updateTimer >= 0.1f )
+			{
+				updateTimer = 0f;
+				networkView.RPC( "netUpdate", RPCMode.Others, transform.position );
+			}
+		}
+		
 		if( networkView.isMine ) return; // don't run interpolation on the local object
 		if( stateCount == 0 ) return; // no states to interpolate
 		
@@ -61,17 +173,11 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 	}
 	
-	void OnSerializeNetworkView( BitStream stream, NetworkMessageInfo info )
+	[RPC]
+	void netUpdate( Vector3 position, NetworkMessageInfo info )
 	{
-		Vector3 position = Vector3.zero;
-		if( stream.isWriting )
+		if( !networkView.isMine )
 		{
-			position = transform.position;
-			stream.Serialize( ref position );
-		}
-		else
-		{
-			stream.Serialize( ref position );
 			bufferState( new networkState( position, info.timestamp ) );
 		}
 	}
@@ -79,15 +185,15 @@ public class NetworkedPlayer : MonoBehaviour
 	// save new state to buffer
 	void bufferState( networkState state )
 	{
-		// shift buffer contents to accomodate new received state
+		// shift buffer contents to accomodate new state
 		for( int i = stateBuffer.Length - 1; i > 0; i-- )
 		{
 			stateBuffer[ i ] = stateBuffer[ i - 1 ];
 		}
 		
-		// save new received state to slot 0
+		// save state to slot 0
 		stateBuffer[ 0 ] = state;
-
+		
 		// increment state count (up to buffer size)
 		stateCount = Mathf.Min( stateCount + 1, stateBuffer.Length );
 	}

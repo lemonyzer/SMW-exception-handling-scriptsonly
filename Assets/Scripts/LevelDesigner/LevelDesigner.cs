@@ -13,6 +13,8 @@ public class LevelDesigner : MonoBehaviour {
 	void OnDrawGizmos()
 	{
 		Gizmos.color = gizmoColor;
-		Gizmos.DrawWireCube(new Vector3(gizmoPosition.x+0.5F, gizmoPosition.y-0.5F, depth), new Vector3(1,1,1)); 
+		float offsetX = -0.5f;
+		float offsetY = -0.5f;
+		Gizmos.DrawWireCube(new Vector3(gizmoPosition.x, gizmoPosition.y, depth), new Vector3(1,1,1)); 
 	}
 }
