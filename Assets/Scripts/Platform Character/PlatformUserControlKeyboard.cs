@@ -63,20 +63,7 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	
 	void Keyboard() {
 
-		if (Input.GetKey(KeyCode.Escape))
-		{
-			if(Network.isServer)
-			{
-				MasterServer.UnregisterHost();
-				for(int i=0;i<Network.connections.Length;i++)
-				{
-					Network.CloseConnection(Network.connections[i],true);
-				}
-			}
-			Network.Disconnect();
-			Application.LoadLevel("MainMenuOld");
-			return;
-		}
+		//BackButton();			// jetzt in GameScene!
 
 		inputVelocity = Input.GetAxis("Horizontal");
 		inputJump = Input.GetKey(KeyCode.Space);
@@ -85,4 +72,24 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 //		Debug.LogWarning("Velocity: " + inputVelocity);
 //		Debug.LogWarning("Jump: " + inputJump);
 	}
+
+	//In Game Scene! Besser um weg zurück zu finden
+
+//	void BackButton()
+//	{
+//		if (Input.GetKey(KeyCode.Escape))
+//		{
+//			if(Network.isServer)
+//			{
+//				MasterServer.UnregisterHost();
+//				for(int i=0;i<Network.connections.Length;i++)
+//				{
+//					Network.CloseConnection(Network.connections[i],true);
+//				}
+//			}
+//			Network.Disconnect();
+//			Application.LoadLevel("MainMenuOld");
+//			return;
+//		}
+//	}
 }

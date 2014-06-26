@@ -110,6 +110,32 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		}
 	}
 
+
+	// In Game Scene jetzt!
+//	void BackButton()
+//	{
+//		/**
+//		 * Android Softbutton: Back
+//		 **/
+//		if (Application.platform == RuntimePlatform.Android)
+//		{
+//			if (Input.GetKey(KeyCode.Escape))
+//			{
+//				if(Network.isServer)
+//				{
+//					MasterServer.UnregisterHost();
+//					for(int i=0;i<Network.connections.Length;i++)
+//					{
+//						Network.CloseConnection(Network.connections[i],true);
+//					}
+//				}
+//				Network.Disconnect();
+//				Application.LoadLevel("mp_Multiplayer");
+//				return;
+//			}
+//		}
+//	}
+
 	void AnalogStickAndButton() {
 		debugmsg = "";
 		buttonIsPressed = false;
@@ -339,26 +365,6 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		
 		if(debugging != null)
 			debugging.text = debugmsg;
-		
-//		/**
-//		 * Android Softbutton: Back
-//		 **/
-//		if (Application.platform == RuntimePlatform.Android)
-//		{
-//			if (Input.GetKey(KeyCode.Escape))
-//			{
-//				if(Network.isServer)
-//				{
-//					MasterServer.UnregisterHost();
-//					for(int i=0;i<Network.connections.Length;i++)
-//					{
-//						Network.CloseConnection(Network.connections[i],true);
-//					}
-//				}
-//				Network.Disconnect();
-//				Application.LoadLevel("mp_Multiplayer");
-//				return;
-//			}
-//		}
+
 	}
 }

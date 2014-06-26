@@ -52,6 +52,34 @@ public class CharacterSelection2D : MonoBehaviour {
 		}
 	}
 
+	void BackButton()
+	{
+		if (Input.GetKey(KeyCode.Escape))
+		{
+			if(Network.isServer)
+			{
+				MasterServer.UnregisterHost();
+				Debug.LogWarning("MasterServer.UnregisterHost();");
+				
+				foreach(NetworkPlayer player in Network.connections)
+				{
+					Network.CloseConnection(player,true);
+					Debug.LogWarning("Network.CloseConnection("+player.ToString()+",true);");
+				}
+				// schlecht!
+				//					for(int i=0;i<Network.connections.Length;i++)
+				//					{
+				//						Network.CloseConnection(Network.connections[i],true);
+				//						Debug.LogWarning("Network.CloseConnection(Network.connections["+i+"],true);");
+				//					}
+			}
+			Network.Disconnect();
+			Debug.LogWarning("Network.Disconnect();");
+			Application.LoadLevel("mp_Multiplayer");
+			return;
+		}
+	}
+
 	// Update is called once per frame
 	void Update () {
 
@@ -61,30 +89,7 @@ public class CharacterSelection2D : MonoBehaviour {
 		if(networkView == null || networkView.isMine)
 		{
 
-			if (Input.GetKey(KeyCode.Escape))
-			{
-				if(Network.isServer)
-				{
-					MasterServer.UnregisterHost();
-					Debug.LogWarning("MasterServer.UnregisterHost();");
-
-					foreach(NetworkPlayer player in Network.connections)
-					{
-						Network.CloseConnection(player,true);
-						Debug.LogWarning("Network.CloseConnection("+player.ToString()+",true);");
-					}
-// schlecht!
-//					for(int i=0;i<Network.connections.Length;i++)
-//					{
-//						Network.CloseConnection(Network.connections[i],true);
-//						Debug.LogWarning("Network.CloseConnection(Network.connections["+i+"],true);");
-//					}
-				}
-				Network.Disconnect();
-				Debug.LogWarning("Network.Disconnect();");
-				Application.LoadLevel("mp_Multiplayer");
-				return;
-			}
+			BackButton();
 
 			//debugmsg = networkView.owner.ToString() + "\n";
 			//Debug.Log(networkView.owner.ToString());		// Server: 0
@@ -285,6 +290,8 @@ public class CharacterSelection2D : MonoBehaviour {
 				// RPCMode.All wird auch auf Server ausgeführt															// allen Clients Characterauswahl des Clients(playerClickedID) mitteilen
 				//			AllowSelectedCharacter(playerClickedID, recvPos);											// RPC auch am Server ausführen
 				// auch Master Clients Characterauswahl des Clients(playerClickedID) mitteilen
+				Vector3 pos = new Vector3(0f, 6.75f, 0f);
+				networkView.RPC( "net_DoSpawn", info.sender, pos, characterName);
 			}
 			else
 			{
@@ -333,6 +340,7 @@ public class CharacterSelection2D : MonoBehaviour {
 				
 				// Zuteilung allen Clients mitteilen
 				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterName );							// allen Clients Serverauswahl mitteilen (MasterClient bekommt diese RPC auch!)
+				DoSpawnServerPlayer(getRandomPosition(),characterName);
 			}
 			else
 			{
@@ -351,8 +359,38 @@ public class CharacterSelection2D : MonoBehaviour {
 	}
 
 
+
+//	The owner of a NetworkView is defined by the owner of the NetworkViewID. The owner of a NetworkViewID can't be changed. The owner is set to the peer that creates the ViewID.
+//
+//	Whenever someone calls Network.Instantiate and the instantiated object contains a NetworkView, Unity will automatically create / allocate a ViewID for each NetworkView. Those get send to the other users via RPC. The person that calls Network.Instantiate is automatically the owner of the object.
+//
+//	To create / allocate a ViewID manually you can use Network.AllocateViewID, but you have to take care of distributing it across the Network, usually with RPCs. This would be the only way to "change" the owner after an object has been instantiated.
+//
+//	So in your case just make sure the objects get instantiated by the desired owner.
+//
+//	If you want to change the owner of a NetworkView, you have to use an RPC and send a new NetworkViewID (allocated by the new owner) to everyone and replace the old one. Keep in mind when your prefab contains multiple NetworkViews, you need a new ViewID for each of them.
+
+//	[RPC]
+//	void AllocateSelectedCharacter(string characterPrefabName, NetworkMessageInfo info)
+//	{
+////		if(networkView.owner.ToString() == networkPlayerID)
+////		{
+//			// anfragender Client
+//			GameObject myCharacter = GameObject.Find (characterPrefabName);
+//			Debug.Log("Old myCharacter.networkView.viewID: " + myCharacter.networkView.viewID.ToString());
+//			NetworkViewID nvID = Network.AllocateViewID();
+//			myCharacter.networkView.viewID = nvID;
+//			Debug.Log("Now myCharacter.networkView.viewID: " + myCharacter.networkView.viewID.ToString());
+//			myCharacter.GetComponent<PlatformCharacter>().enabled = true;
+//			myCharacter.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
+//			myCharacter.GetComponent<PlatformUserControlKeyboard>().enabled = true;
+////		}
+//	}
+
+
 	/**
-	 * RPC des Clients, (Server fordert Client auf diese Funktion zu starten)
+	 * RPC des Clients, (Server fordert Clients auf diese Funktion zu starten)
+	 * Server teilt Clients mit welcher Player einen neuen Character gewählt hat
 	 **/
 	[RPC]
 	void AllowSelectedCharacter(string networkPlayerID, string characterPrefabName, NetworkMessageInfo info)
@@ -362,14 +400,6 @@ public class CharacterSelection2D : MonoBehaviour {
 		//		transform.position = recvPos;
 		//		renderer.enabled = true;
 	}
-//	void AllowSelectedCharacter(string networkPlayerID, Vector3 recvPos)
-//	{
-//		Debug.LogWarning("AllowSelectedCharacter");
-//		MarkCharacter(networkPlayerID, recvPos);
-//		//		transform.position = recvPos;
-//		//		renderer.enabled = true;
-//	}
-
 
 	/**
 	 * RPC des Clients, (Server fordert Client auf diese Funktion zu starten)
@@ -398,13 +428,16 @@ public class CharacterSelection2D : MonoBehaviour {
 		Debug.Log("Player " + networkPlayerID + " hat Character " + characterPrefabName + " gewählt");
 		AudioSource.PlayClipAtPoint(characterSelected,transform.position,1);
 
+
+		lobbyCharacterManager.SetPlayerSprite(networkPlayerID, characterPrefabName);
 		//Network.Instantiate();..
-		net_DoSpawn( getRandomPosition(), characterPrefabName );
+//		net_DoSpawn( getRandomPosition(), characterPrefabName );
 	}
+
 
 	Vector3 getRandomPosition()
 	{
-		return new Vector3(Random.Range(0.0f, 19.0f), Random.Range(2f, 15.0f), 0f);
+		return new Vector3(Random.Range(-9.0f, 9.0f), Random.Range(2f, 15.0f), 0f);
 	}
 
 	[RPC]
@@ -412,7 +445,20 @@ public class CharacterSelection2D : MonoBehaviour {
 	{
 		// The object PikachuLanRigidBody2D must be a prefab in the project view.
 		// spawn the player paddle
-		GameObject myCharacter = GameObject.Find (characterPrefabName);
+
+// wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
+//		GameObject myCharacter = GameObject.Find (characterPrefabName);
+
+		GameObject myCharacter = (GameObject) Resources.Load(characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+//		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
+//		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
+
+		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
+	}
+
+	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
+	{
+		GameObject myCharacter = (GameObject) Resources.Load(characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 

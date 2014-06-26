@@ -8,10 +8,15 @@ public class LobbyCharacterManager : MonoBehaviour {
 	public GUIText player2GUIText;
 	public GUIText player3GUIText;
 
-	public Sprite player0CharacterSprite;
-	public Sprite player1CharacterSprite;
-	public Sprite player2CharacterSprite;
-	public Sprite player3CharacterSprite;
+	public GUITexture player0GUITexture;
+	public GUITexture player1GUITexture;
+	public GUITexture player2GUITexture;
+	public GUITexture player3GUITexture;
+
+	public SpriteRenderer player0SpriteRenderer;
+	public SpriteRenderer player1SpriteRenderer;
+	public SpriteRenderer player2SpriteRenderer;
+	public SpriteRenderer player3SpriteRenderer;
 
 	private string debugmsg="";
 
@@ -42,6 +47,72 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 	}
 
+
+	public GUITexture GetPlayerGUITexture(string playerID)
+	{
+		if(playerID == "0")
+		{
+			// Server
+			return player0GUITexture;
+		}
+		else if(playerID == "1")
+		{
+			return player1GUITexture;
+		}
+		else if(playerID == "2")
+		{
+			return player2GUITexture;
+		}
+		else if(playerID == "3")
+		{
+			return player3GUITexture;
+		}
+		else
+			return null;
+	}
+
+	public void SetPlayerSprite(string playerID, string characterPrefabName)
+	{
+		GameObject character = GameObject.Find(characterPrefabName);
+		if(character == null)
+			return;
+		Sprite characterSprite = character.GetComponent<SpriteRenderer>().sprite;
+		if(characterSprite == null)
+			return;
+		SpriteRenderer targetSpriteRenderer = GetPlayerSpriteRenderer(playerID);
+		if(targetSpriteRenderer != null)
+		{
+			targetSpriteRenderer.sprite = characterSprite;
+		}
+		else
+		{
+			Debug.LogError("LobbyCharacterManager, Player " + playerID + " hat kein SpriteRenderer"); 
+		}
+
+	}
+
+	public SpriteRenderer GetPlayerSpriteRenderer(string playerID)
+	{
+		if(playerID == "0")
+		{
+			// Server
+			return player0SpriteRenderer;
+		}
+		else if(playerID == "1")
+		{
+			return player1SpriteRenderer;
+		}
+		else if(playerID == "2")
+		{
+			return player2SpriteRenderer;
+		}
+		else if(playerID == "3")
+		{
+			return player3SpriteRenderer;
+		}
+		else
+			return null;
+	}
 
 	/**
 	 * Client / Server Funktion

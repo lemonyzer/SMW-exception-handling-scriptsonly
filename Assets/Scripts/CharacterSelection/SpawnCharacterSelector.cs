@@ -14,31 +14,35 @@ public class SpawnCharacterSelector : MonoBehaviour {
 		PlayerPrefs.DeleteAll();
 	}
 
+	void SpawnServerSpawnCharacterSelector()
+	{
+		// server doesn’t trigger OnPlayerConnected, manually spawn
+		Network.Instantiate( characterSelectorPrefab, Vector3.zero, Quaternion.identity,0 );
+		Debug.Log("Server CharacterSelector erzeugt");
+	}
+
+	void SetServerPlayerTextToScreen()
+	{
+		string text = "Player " + 0 + "\nconnected";									
+		if(lobbyCharacterManager.player0GUIText != null)
+			lobbyCharacterManager.player0GUIText.text = text ;
+	}
+
 	void Start()
 	{
 		lobbyCharacterManager = GetComponent<LobbyCharacterManager>();
 		if( Network.isServer )
 		{
-			// server doesn’t trigger OnPlayerConnected, manually spawn
-			Network.Instantiate( characterSelectorPrefab, Vector3.zero, Quaternion.identity,0 );
-			Debug.Log("Server CharacterSelector erzeugt");
-
-			string text = "Player " + 0 + "\nconnected";									// Wird durchgehend aktuallisiert!
-			if(lobbyCharacterManager.player0GUIText != null)
-				lobbyCharacterManager.player0GUIText.text = text ;
-
-			// nobody has joined yet, display "Waiting..." for player 2
-			//			Player2ScoreDisplay.text = "Waiting...";
+			SpawnServerSpawnCharacterSelector();
 		}
 		else
 		{
 			if(Network.peerType == NetworkPeerType.Client)
 			{
-				string text = "Player " + 0 + "\nconnected";								// Wird durchgehend aktuallisiert!
-				if(lobbyCharacterManager.player0GUIText != null)
-					lobbyCharacterManager.player0GUIText.text = text ;
+
 			}
 		}
+		SetServerPlayerTextToScreen();
 	}
 
 	void OnPlayerConnected( NetworkPlayer connectedPlayer )

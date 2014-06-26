@@ -3,6 +3,8 @@ using System.Collections;
 
 public class RequireNetwork : MonoBehaviour
 {
+	public bool forceStartServer = false;
+
 	public int serverSlots = 7;
 	private int port = 25005;
 	private string gameTypeName="mpSMW";
@@ -17,9 +19,15 @@ public class RequireNetwork : MonoBehaviour
 		Network.natFacilitatorIP = "192.168.0.174";
 		Network.natFacilitatorPort = 50005;
 
-		if( Network.peerType == NetworkPeerType.Disconnected )
+		if( Network.peerType == NetworkPeerType.Disconnected && !forceStartServer)
 		{
-			Debug.Log( "Server forced to initialize" );
+			Application.LoadLevel("mp_Multiplayer");
+			Debug.Log( "No connection, loading mp_Multiplayer" );
+		}
+
+		if( Network.peerType == NetworkPeerType.Disconnected  && forceStartServer)
+		{
+			Debug.Log( "No connection, Server forced to initialize" );
 			Network.InitializeServer( serverSlots, port, false );
 			MasterServer.RegisterHost(gameTypeName,gameName,comment);
 		}
