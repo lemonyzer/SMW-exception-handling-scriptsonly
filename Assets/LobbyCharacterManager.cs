@@ -20,6 +20,9 @@ public class LobbyCharacterManager : MonoBehaviour {
 
 	void Awake()
 	{
+
+		PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
+
 		// Disable screen dimming
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
@@ -65,8 +68,19 @@ public class LobbyCharacterManager : MonoBehaviour {
 		{
 			if(hit.collider.name != "Platform")
 			{
-				Debug.Log(hit.collider.name);
-				return hit.collider.name;
+				if(hit.collider.name == "Feet" ||
+				   hit.collider.name == "Head")								// Layer Hash
+				{
+					// Kopf oder Füße getroffen -> Parent GameObject Name
+					Debug.Log("LobbyCharacterManager: " + hit.collider.transform.parent.name );
+					return hit.collider.transform.parent.name;
+				}
+				else
+				{
+					Debug.Log("LobbyCharacterManager: " + hit.collider.name);
+					return hit.collider.name;
+				}
+
 			}
 		}
 		return null;
