@@ -3,6 +3,8 @@ using System.Collections;
 
 public class SpawnCharacterSelector : MonoBehaviour {
 
+	public static string playerPrefs_PrefabIdString = "_PrefabID";
+
 	public GameObject characterSelectorPrefab;
 
 	private LobbyCharacterManager lobbyCharacterManager;
