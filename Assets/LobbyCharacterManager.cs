@@ -34,7 +34,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 			for(int i=0; i < characterArray.Length; i=i+6)
 			{
 				debugmsg+=characterArray[i].name + "\n";
-				Debug.Log(characterArray[i].name);
+//				Debug.Log(characterArray[i].name);
 			}
 		}
 	}

@@ -8,6 +8,7 @@ public class CharacterSelection2D : MonoBehaviour {
 
 	private Vector3 clickedPosition = Vector3.zero;
 	public AudioClip characterInUseSound;
+	public AudioClip characterSelected;				// Prefab Sound später abspielen
 
 //	public GUIText player0GUIText;
 //	public GUIText player1GUIText;
@@ -36,8 +37,21 @@ public class CharacterSelection2D : MonoBehaviour {
 
 	}
 
+	// ArgumentException: You can only call GUI functions from inside OnGUI.
+	void OnGUI()
+	{
+		if(EveryPlayerHasCharacter())
+		{
+			if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
+			{
+				networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
+			}
+		}
+	}
+
 	// Update is called once per frame
 	void Update () {
+
 
 		// Client Funktion
 		// setze Clickposition und sende an Server (mit RPC)
@@ -110,6 +124,54 @@ public class CharacterSelection2D : MonoBehaviour {
 		}
 	}
 
+	bool PlayerHasCharacter( string player )
+	{
+		string prefix = "_PrefabID";
+		string key = player.ToString();
+		key = key+prefix;
+		key = key.ToLower();
+		int value = PlayerPrefs.GetInt(key);
+		if(value >= 0)
+			return true;							// was wenn kein int zu key existiert?
+		return false;
+	}
+
+	bool ServerPlayerHasCharacter()
+	{
+		// Server Character
+		string playerID = "0";
+		if(!PlayerHasCharacter(playerID))
+		{
+			return false;
+		}
+		return true;
+	}
+
+	bool EveryPlayerHasCharacter()
+	{
+		// Server Character
+		if(!ServerPlayerHasCharacter())
+		{
+			return false;
+		}
+
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			if(!PlayerHasCharacter(player.ToString()))
+				return false;
+		}
+		return true;
+	}
+
+	[RPC]
+	void StartGame(string sceneName)
+	{
+		// starte das gewünschte Level auf allen Clients
+		// Hash / static string scenename/levelname
+		NetworkLevelLoader.Instance.LoadLevel(sceneName,0);
+	}
+
 	/**
 	 * Client Funktion, mit RPC an Server
 	 **/
@@ -125,7 +187,7 @@ public class CharacterSelection2D : MonoBehaviour {
 			RaycastHit2D hit = Physics2D.Raycast(origin,direction,distance);
 			if(hit.collider != null)
 			{
-				//				Debug.Log(hit.collider.name);
+//				Debug.Log(hit.collider.name);
 				if(hit.collider.name != "Platform")
 				{
 					clickedPosition = Input.mousePosition;
@@ -301,7 +363,7 @@ public class CharacterSelection2D : MonoBehaviour {
 	{
 		// Character Sound 
 		Debug.Log("Player " + networkPlayerID + " hat einen Character gewählt: " + recvPos);
-
+		AudioSource.PlayClipAtPoint(characterSelected,transform.position,1);
 	}
 
 	/**
