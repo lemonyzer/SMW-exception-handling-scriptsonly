@@ -14,11 +14,13 @@ public class PushSkript : MonoBehaviour {
 	 **/
 	GameObject gameController;
 	HashID hash;
+	Layer layer;
 
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
+		layer = gameController.GetComponent<Layer>();
 	}
 
 	// Use this for initialization
@@ -41,10 +43,10 @@ public class PushSkript : MonoBehaviour {
 		 * Compare layer > 10 & layer < 14 effektiver?
 		 * mit layermask layer 11,12,13,14 und verknüpfen und vergleichen?
 		 ***/
-		if((collision.gameObject.layer == 11) || 
-		   (collision.gameObject.layer == 12) ||
-		   (collision.gameObject.layer == 13) || 
-		   (collision.gameObject.layer == 14))
+		if((collision.gameObject.layer == layer.player1) || 
+		   (collision.gameObject.layer == layer.player2) ||
+		   (collision.gameObject.layer == layer.player3) || 
+		   (collision.gameObject.layer == layer.player4))
 		{
 //			Debug.Log(myCharacter.name + ": Collision's relative Velocity = " + collision.relativeVelocity);
 

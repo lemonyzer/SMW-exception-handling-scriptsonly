@@ -35,7 +35,6 @@ public class HealthController : MonoBehaviour {
 	BoxCollider2D headCollider2D;
 
 	PlatformCharacter myPlatformCharacterScript;
-//	KI myKIScript;
 
 	Animator anim;
 
@@ -74,16 +73,6 @@ public class HealthController : MonoBehaviour {
 		myPlatformCharacterScript = myCharacter.GetComponent<PlatformCharacter>();
 		if(myPlatformCharacterScript == null)
 			Debug.LogError(myCharacter.name + " has no PlatformCharacter Script");
-		
-//		myKIScript = myCharacter.GetComponent<KI>();
-//		if(myKIScript == null)
-//		{
-//			Debug.LogError(myCharacter.name + " has no KI Script");
-//			isKI = false;
-//		}
-//		else
-//			isKI = true;
-			 
 	}
 
 	public void ApplyDamage(float damage, bool headJumped)

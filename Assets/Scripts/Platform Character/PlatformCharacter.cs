@@ -77,7 +77,7 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Animation 
 	 **/
-	private SpriteController spriteController;
+//	private SpriteController spriteController;
 	public Animator anim;									// Animator State Machine
 	public bool facingRight = true;							// keep DrawCalls low, Flip textures scale: texture can be used for both directions 
 	public bool changedRunDirection = false;
@@ -85,14 +85,16 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Connection to GameController 
 	 **/
-	public GameObject gameController;
-	public HashID hash;
+	private GameObject gameController;
+	private HashID hash;
+	private Layer layer;
 	
 	void Awake()
 	{
-		spriteController = GetComponent<SpriteController>();
+
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
+		layer = gameController.GetComponent<Layer>();
 	}
 	
 	void Start() {
@@ -129,11 +131,12 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			if(InventoryManager.inventory.GetItems("Star(Clone)") > 0f)
 			{
-				if(this.gameObject.layer == 11)
+				if(this.gameObject.layer == layer.player1)
 				{
 					isInRageModus = true;
-					if(spriteController != null)
-						spriteController.invincible = isInRageModus;
+					if(anim == null)
+					{
+					}
 					else
 					{
 						anim.SetBool(hash.rageModusBool,true);
@@ -153,8 +156,9 @@ public class PlatformCharacter : MonoBehaviour {
 		yield return new WaitForSeconds(8.0f);
 		isInRageModus = false;
 		Debug.LogError("isInRageModus: Off");
-		if(spriteController != null)
-			spriteController.invincible = isInRageModus;
+		if(anim == null)
+		{
+		}
 		else
 		{
 			anim.SetBool(hash.rageModusBool,false);
@@ -172,26 +176,27 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			CheckPosition();
 			SetAnim();
-			if(networkView == null || networkView.isMine)
-			{
-				FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
-			}
-			else
-			{
-				/**
-				 * Check Direction Change
-				 **/
-				Debug.Log (rigidbody2D.velocity.x + " " + facingRight);
-				if(rigidbody2D.velocity.x > 0f && !facingRight)
-				{
-					Flip();
-				}
-				else if(rigidbody2D.velocity.x < 0f && facingRight)
-				{
-					Flip();
-				}
-			}
+			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
 			JumpAblePlatform();
+//			if(AcceptsInput)
+//			{
+//				FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
+//			}
+//			else
+//			{
+//				/**
+//				 * Check Direction Change
+//				 **/
+//				Debug.Log (rigidbody2D.velocity.x + " " + facingRight);
+//				if(rigidbody2D.velocity.x > 0f && !facingRight)
+//				{
+//					Flip();
+//				}
+//				else if(rigidbody2D.velocity.x < 0f && facingRight)
+//				{
+//					Flip();
+//				}
+//			}
 		}
 	}
 
@@ -208,39 +213,31 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void SetAnim() 
 	{
-		if(spriteController != null )
+		if(anim == null)
 		{
-			spriteController.grounded = grounded;
-			spriteController.walled = walled;
-			spriteController.rigidbody2DvelocityX = rigidbody2D.velocity.x;
-			spriteController.rigidbody2DvelocityY = rigidbody2D.velocity.y;
+			Debug.LogError("Animator not set");
 		}
 		else
 		{
-			if(anim != null)
-			{
-				anim.SetBool(hash.groundedBool, grounded);
-				anim.SetBool(hash.walledBool, walled);
-				anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
-				anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
-			}
-			else
-				Debug.LogError("Animator not set");
+			anim.SetBool(hash.groundedBool, grounded);
+			anim.SetBool(hash.walledBool, walled);
+			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
+			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
 		}
 	}
 
 
 	void FixedMove()
 	{
-		// does not accept input, interpolate network pos
-		// jetzt über NetworkRigidBody2D
-//		if( !AcceptsInput )
-//		{
-//			//transform.position = Vector3.Lerp( transform.position, readNetworkPos, 100f * Time.deltaTime );
+//		 does not accept input, interpolate network pos
+//		 jetzt über NetworkRigidBody2D
+		if( !AcceptsInput )
+		{
+			//transform.position = Vector3.Lerp( transform.position, readNetworkPos, 100f * Time.deltaTime );
 //			transform.position = readNetworkPos;
-//			// don’t use player input
-//			return;
-//		}
+			// don’t use player input
+			return;
+		}
 		inputJump = inputPCJump || inputTouchJump;
 		if(!jumpAllowed)
 			inputJump = false;
@@ -253,7 +250,6 @@ public class PlatformCharacter : MonoBehaviour {
 			inputVelocity = 1f;
 		else if(inputVelocity < -1f)
 			inputVelocity = -1f;
-
 
 
 		if(isBouncing)
@@ -327,18 +323,13 @@ public class PlatformCharacter : MonoBehaviour {
 		/**
 		 * Animator status Update
 		 **/
-		if(spriteController != null)
+		if(anim == null)
 		{
-			spriteController.userInputvelocityX = inputVelocity;
+			Debug.LogError("Animator not set");
 		}
 		else
 		{
-			if(anim != null)
-			{
-				anim.SetFloat(hash.hSpeedFloat, inputVelocity);
-			}
-			else
-				Debug.LogError("Animator not set");
+			anim.SetFloat(hash.hSpeedFloat, inputVelocity);
 		}
 			
 		/**
@@ -360,10 +351,14 @@ public class PlatformCharacter : MonoBehaviour {
 		if(grounded && inputJump) {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
-			if(spriteController != null)
-				spriteController.grounded = false;
+			if(anim == null)
+			{
+				Debug.LogError("Animator not set");
+			}
 			else
+			{
 				anim.SetBool(hash.groundedBool,false);
+			}
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 			
@@ -373,10 +368,9 @@ public class PlatformCharacter : MonoBehaviour {
 			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
 			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
 			Flip();																		//Charakter drehen
-			if(spriteController != null)
+			if(anim == null)
 			{
-				spriteController.grounded = false;
-				spriteController.walled = false;
+				Debug.LogError("Animator not set");
 			}
 			else
 			{
@@ -405,8 +399,10 @@ public class PlatformCharacter : MonoBehaviour {
 		if(grounded)
 		{
 			changedRunDirection = true;
-			if(spriteController != null)
-				spriteController.changeRunDirectionTrigger = changedRunDirection;
+			if(anim == null)
+			{
+				Debug.LogError("Animator not set");
+			}
 			else
 			{
 				anim.SetTrigger(hash.changeRunDirectionTrigger);	// Start Change Run Direction Animation
@@ -440,68 +436,55 @@ public class PlatformCharacter : MonoBehaviour {
 			//			Debug.LogWarning(gameObject.name + ": velocity.y=" + rigidbody2D.velocity.y);
 			if(rigidbody2D.velocity.y >0.1F)
 			{
-				//				Debug.LogWarning(gameObject.name + ": JumpAblePlatform Collision: Off!" + gameObject.layer);
-				//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,true);
-				Physics2D.IgnoreLayerCollision(18,gameObject.layer,true);
+				Physics2D.IgnoreLayerCollision(layer.jumpAblePlatform,gameObject.layer,true);		// Kollisionsdetection ausschalten
 			}
 			else if(rigidbody2D.velocity.y <0.1F)
 			{
-				//				Debug.LogWarning(gameObject.name + ": JumpAblePlatform Collision: On!" + gameObject.layer);
-				//Physics2D.IgnoreLayerCollision(LayerMask.NameToLayer("JumpAblePlatform"),gameObject.layer,false);
-				Physics2D.IgnoreLayerCollision(18,gameObject.layer,false);
+				Physics2D.IgnoreLayerCollision(layer.jumpAblePlatform,gameObject.layer,false);		// Kollisionsdetection einschalten
 			}
 		}
 	}
 
 	void OnTriggerEnter2D (Collider2D other)
 	{
-		if(isInRageModus)
+		if(Network.isServer)
 		{
-			if(this.gameObject.layer != other.gameObject.layer)
-			{
-				bool enemyObject = false;
-				if(other.gameObject.layer == LayerMask.NameToLayer("Player1"))
-				{
-					enemyObject = true;
-				}
-				else if(other.gameObject.layer == LayerMask.NameToLayer("Player2"))
-				{
-					enemyObject = true;
-				}
-				else if(other.gameObject.layer == LayerMask.NameToLayer("Player3"))
-				{
-					enemyObject = true;
-				}
-				else if(other.gameObject.layer == LayerMask.NameToLayer("Player4"))
-				{
-					enemyObject = true;
-				}
-//				else if(other.gameObject.layer == LayerMask.NameToLayer("PowerUpEnemy"))
-//				{
-//					enemyObject = true;
-//				}
 
-				if(enemyObject)
-					other.gameObject.transform.Find(Tags.head).GetComponent<HealthController>().ApplyDamage(1.0f,true);
+			if(isInRageModus)
+			{
+				if(this.gameObject.layer != other.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
+				{
+					bool enemyObject = false;
+					if(other.gameObject.layer == layer.player1)
+					{
+						enemyObject = true;
+					}
+					else if(other.gameObject.layer == layer.player2)
+					{
+						enemyObject = true;
+					}
+					else if(other.gameObject.layer == layer.player3)
+					{
+						enemyObject = true;
+					}
+					else if(other.gameObject.layer == layer.player4)
+					{
+						enemyObject = true;
+					}
+	//				else if(other.gameObject.layer == layer.powerUp)
+	//				{
+	//					enemyObject = true;
+	//				}
+
+					if(enemyObject)
+					{
+						//networkView.RPC
+						//other.gameObject.GetComponent<NetworkView>().RPC(
+						other.gameObject.GetComponent<HealthController>().ApplyDamage(1.0f,true);
+					}
+				}
 			}
 		}
 		
 	}
-
-//	void OnSerializeNetworkView( BitStream stream )
-//	{
-//		// writing information, push current paddle position
-//		if( stream.isWriting )
-//		{
-//			Vector3 pos = transform.position;
-//			stream.Serialize( ref pos );
-//		}
-//		// reading information, read paddle position
-//		else
-//		{
-//			Vector3 pos = Vector3.zero;
-//			stream.Serialize( ref pos );
-//			readNetworkPos = pos;
-//		}
-//	}
 }
