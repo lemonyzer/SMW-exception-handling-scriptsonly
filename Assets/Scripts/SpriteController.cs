@@ -34,9 +34,16 @@ public class SpriteController : MonoBehaviour {
 	public List<Sprite> animationDead;
 	public List<Sprite> animationSpawn;
 
+	public bool currentAnimationStarted = false;
+	public bool currentAnimationCompletedOnce = false;
+	public bool currentAnimationComplete = false;
+	public bool currentAnimationAtLastFrame = false; 
 	public float animationSpeed = 10;
 
 	private AnimationType currentAnimationType = AnimationType.idle;
+	private AnimationType oldAnimationType = AnimationType.idle;
+
+	private float myTime = 0f;
 
 	private SpriteRenderer spriteRenderer;
 
@@ -86,6 +93,7 @@ public class SpriteController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void FixedUpdate () {
+
 		SelectCurrentAnimation();
 		StartCurrentAnimation();
 	}
@@ -103,7 +111,7 @@ public class SpriteController : MonoBehaviour {
 			{
 				if(headJumped)
 				{
-					setAnimation(AnimationType.headJumped);
+					setAnimation(AnimationType.headJumped);		//instantiate deadPrefab...
 				}
 				// !gameOver
 				if(dead)
@@ -115,10 +123,15 @@ public class SpriteController : MonoBehaviour {
 					// !dead
 					if(spawn)
 					{
+//						currentAnimationAtLastFrame = false;
 						setAnimation(AnimationType.spawn);
+						if(currentAnimationCompletedOnce)
+						{
+							spawnProtection = true;
+						}
 						if(spawnProtection)
 						{
-							setAnimation(AnimationType.spawnProtection);
+							setAnimation(AnimationType.jump);		// 50% transparenz auf alles :D
 						}
 					}
 				}
@@ -187,13 +200,67 @@ public class SpriteController : MonoBehaviour {
 
 	void setSprite(List<Sprite> animationSprite)
 	{
-		int index = (int)(Time.time * animationSpeed);
-		index = index % animationSprite.Count;
+		myTime += Time.deltaTime;
+		int index = (int)(myTime * animationSpeed);
+
+		if(animationSprite.Count != 0)
+			index = index % animationSprite.Count;
+		else
+			Debug.LogError("Current AnimationType: " + currentAnimationType + " Spirte list is empty!");
+
 		spriteRenderer.sprite = animationSprite[index];
+		if(!currentAnimationStarted)
+		{
+			currentAnimationStarted = true;
+			currentAnimationAtLastFrame = false;
+			if(index == 0)
+			{
+
+			}
+		}
+		else
+		{
+			// currentAnimation läuft schon
+			if(currentAnimationAtLastFrame)
+			{
+				if(index == 0)
+				{
+					currentAnimationStarted = false;
+					currentAnimationCompletedOnce = true;
+					currentAnimationComplete = true;
+				}
+			}
+			else
+			{
+				currentAnimationComplete = false;
+			}
+
+			if(index == animationSprite.Count-1)
+			{
+				// letzter frame, Animation danach einmal durchgelaufen
+				currentAnimationAtLastFrame = true;
+
+				if(animationSprite.Count > 1)
+					Debug.Log("index " + index + " list.count: " + animationSprite.Count);
+			}
+		}
+
+
+
 	}
 
 	public void setAnimation(AnimationType animationType)
 	{
 		currentAnimationType = animationType;
+		if(oldAnimationType != currentAnimationType)
+		{
+			oldAnimationType = currentAnimationType;
+			myTime = 0f;
+			currentAnimationStarted = false;
+			currentAnimationAtLastFrame = false;
+			currentAnimationComplete = false;
+			currentAnimationCompletedOnce = false;
+		}
+
 	}
 }
