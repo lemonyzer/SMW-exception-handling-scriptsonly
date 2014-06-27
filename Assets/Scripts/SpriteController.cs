@@ -17,13 +17,19 @@ public class SpriteController : MonoBehaviour {
 	public bool walled = false;
 	public bool changeRunDirectionTrigger = false;
 
+	public bool invincible = false;
+	
+	public bool currentAnimationStarted = false;
+	public bool currentAnimationCompletedOnce = false;
+	public bool currentAnimationComplete = false;
+	public bool currentAnimationAtLastFrame = false; 
+	public float animationSpeed = 10;
+	public bool animationStopAble = false;
+
 	public float rigidbody2DvelocityX = 0f;
 	public float rigidbody2DvelocityY = 0f;
 	public float userInputvelocityX = 0f;
 	public float userInputvelocityY = 0f;
-
-
-	public bool invincible = false;
 
 	public List<Sprite> animations;
 	public List<Sprite> animationIdle;
@@ -34,11 +40,7 @@ public class SpriteController : MonoBehaviour {
 	public List<Sprite> animationDead;
 	public List<Sprite> animationSpawn;
 
-	public bool currentAnimationStarted = false;
-	public bool currentAnimationCompletedOnce = false;
-	public bool currentAnimationComplete = false;
-	public bool currentAnimationAtLastFrame = false; 
-	public float animationSpeed = 10;
+
 
 	private AnimationType currentAnimationType = AnimationType.idle;
 	private AnimationType oldAnimationType = AnimationType.idle;
@@ -150,6 +152,10 @@ public class SpriteController : MonoBehaviour {
 				{
 					//changeRunDirectionTrigger = false;
 					setAnimation(AnimationType.changeRunDirection);
+					if(currentAnimationCompletedOnce)
+					{
+						changeRunDirectionTrigger = false;
+					}
 				}
 				// grounded
 				if(Mathf.Abs(rigidbody2DvelocityX) > 0.1f)
@@ -177,6 +183,7 @@ public class SpriteController : MonoBehaviour {
 			break;
 			
 		case AnimationType.changeRunDirection:
+			animationStopAble = false;
 			setSprite(animationChangeRunDirection);
 			break;
 			
@@ -200,13 +207,30 @@ public class SpriteController : MonoBehaviour {
 
 	void setSprite(List<Sprite> animationSprite)
 	{
+		float framesPerSecond = 1.0f/Time.maximumDeltaTime;
+		float minFrames = (animationSprite.Count * framesPerSecond) / animationSpeed;
+		Debug.Log("maxDeltaTime= " + Time.maximumDeltaTime);
+		Debug.Log("FramesPerSecond= " + framesPerSecond);
+		Debug.Log("minFrames= " + minFrames);
+		
 		myTime += Time.deltaTime;
 		int index = (int)(myTime * animationSpeed);
 
+		if(!animationStopAble)
+		{
+			if(index < minFrames)
+				return;
+		}
+
+		
+
 		if(animationSprite.Count != 0)
+		{
 			index = index % animationSprite.Count;
+			Debug.Log("index= " + index + ", myTime= " + myTime);
+		}
 		else
-			Debug.LogError("Current AnimationType: " + currentAnimationType + " Spirte list is empty!");
+			Debug.LogError("Current AnimationType: " + currentAnimationType + " Sprite list is empty!");
 
 		spriteRenderer.sprite = animationSprite[index];
 		if(!currentAnimationStarted)
@@ -227,22 +251,23 @@ public class SpriteController : MonoBehaviour {
 				{
 					currentAnimationStarted = false;
 					currentAnimationCompletedOnce = true;
-					currentAnimationComplete = true;
+//					currentAnimationComplete = true;
 				}
 			}
-			else
-			{
-				currentAnimationComplete = false;
-			}
-
-			if(index == animationSprite.Count-1)
+			else if(!currentAnimationAtLastFrame && index == animationSprite.Count-1)
 			{
 				// letzter frame, Animation danach einmal durchgelaufen
 				currentAnimationAtLastFrame = true;
-
+				
 				if(animationSprite.Count > 1)
-					Debug.Log("index " + index + " list.count: " + animationSprite.Count);
+				Debug.Log("index " + index + " list.count: " + animationSprite.Count);
 			}
+//			else
+//			{
+//				currentAnimationComplete = false;
+//			}
+
+
 		}
 
 
