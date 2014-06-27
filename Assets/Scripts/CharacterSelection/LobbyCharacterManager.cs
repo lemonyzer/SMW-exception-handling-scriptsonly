@@ -3,15 +3,18 @@ using System.Collections;
 
 public class LobbyCharacterManager : MonoBehaviour {
 
+	public static string suffixName = "_Prefab_Name";
+	public static string noCharacter = "noCharacter";
+
 	public GUIText player0GUIText;
 	public GUIText player1GUIText;
 	public GUIText player2GUIText;
 	public GUIText player3GUIText;
 
-	public GUITexture player0GUITexture;
-	public GUITexture player1GUITexture;
-	public GUITexture player2GUITexture;
-	public GUITexture player3GUITexture;
+//	public GUITexture player0GUITexture;
+//	public GUITexture player1GUITexture;
+//	public GUITexture player2GUITexture;
+//	public GUITexture player3GUITexture;
 
 	public SpriteRenderer player0SpriteRenderer;
 	public SpriteRenderer player1SpriteRenderer;
@@ -47,38 +50,233 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 	}
 
-
-	public GUITexture GetPlayerGUITexture(string playerID)
+	// ArgumentException: You can only call GUI functions from inside OnGUI.
+	void OnGUI()
 	{
-		if(playerID == "0")
+		if(Network.isServer)
 		{
-			// Server
-			return player0GUITexture;
+			if(EveryPlayerHasValidCharacter())
+			{
+				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
+				{
+					networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
+				}
+			}
 		}
-		else if(playerID == "1")
-		{
-			return player1GUITexture;
-		}
-		else if(playerID == "2")
-		{
-			return player2GUITexture;
-		}
-		else if(playerID == "3")
-		{
-			return player3GUITexture;
-		}
-		else
-			return null;
 	}
 
+	[RPC]
+	void StartGame(string sceneName)
+	{
+		// starte das gewünschte Level auf allen Clients
+		// Hash / static string scenename/levelname
+		NetworkLevelLoader.Instance.LoadLevel(sceneName,0);
+	}
+
+	public string GetPlayerPrefsKey( string playerID)
+	{
+		string key = playerID + suffixName;
+		key = key.ToLower();
+		return key;
+	}
+
+	public void SetPlayerCharacter( string playerId, string characterPrefabName)
+	{
+		PlayerPrefs.SetString(GetPlayerPrefsKey(playerId), characterPrefabName);
+	}
+
+	public void RemovePlayerCharacter( string playerId )
+	{
+		if(PlayerHasValidCharacter(playerId))
+		{
+			Debug.Log("Character PrefabID: " + GetPlayerCharacter(playerId) + " wieder freigegeben!");
+			PlayerPrefs.DeleteKey(GetPlayerPrefsKey(playerId));
+		}
+
+	}
+	
+	public bool PlayerHasValidCharacter( string playerId )
+	{
+		string key = GetPlayerPrefsKey(playerId);
+
+		if(PlayerPrefs.HasKey(key))
+		{
+			string value = PlayerPrefs.GetString(key);
+			if(value == "")															// PrefabName = "" --> ERROR
+			{
+				Debug.LogError("PlayerPrefs " + key + " value is an empty string"); 
+				return false;
+			}
+			if(GameObject.Find(value) != null)										// GameObject with PrefabName found? no --> ERROR
+			{
+				return true;
+			}
+			else
+			{
+				Debug.LogError("PlayerPrefs " + key + " with value " + value + " no GameObject in Scene found");
+				return false;
+			}
+		}
+		else
+		{
+			Debug.LogError("Player " + playerId + " has no character selected");
+			return false;
+		}
+		
+	}
+
+	public bool ServerPlayerHasValidCharacter()
+	{
+		// Server Character
+		string playerID = "0";
+		if(PlayerHasValidCharacter(playerID))
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	public bool EveryPlayerHasValidCharacter()
+	{
+		// Server Character
+		if(!ServerPlayerHasValidCharacter())
+		{
+			return false;
+		}
+		
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			if(!PlayerHasValidCharacter(player.ToString()))
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Check in PlayerPrefs
+	 **/
+	public bool CheckPrefabInUse(string characterPrefabName)
+	{
+		/*
+		 * ACHTUNG!!!! Server hat ID 0, NetworkPlayer geht bei 1 los!
+		 * //foreach(NetworkPlayer player in Network.connections)
+		 * 
+		 * wenn player 2 disconnected, wird slot nicht direkt freigegeben!
+		 * Debug.LogWarning("Verbindungsanzahl: " + Network.connections.Length);
+		 */
+		
+		// Charactere der Clients checken
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			if(PlayerHasValidCharacter(player.ToString()))
+			{
+				if(GetPlayerCharacter(player.ToString()) == characterPrefabName)
+				{
+					return true;
+				}
+			}
+		}
+		// Charactere des Master Clients (Server) checken
+		if(ServerPlayerHasValidCharacter())
+		{
+			if(GetPlayerCharacter("0") == characterPrefabName)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public string GetPlayerCharacter(string playerId)
+	{
+		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
+	}
+
+//	public GUITexture GetPlayerGUITexture(string playerID)
+//	{
+//		if(playerID == "0")
+//		{
+//			// Server
+//			return player0GUITexture;
+//		}
+//		else if(playerID == "1")
+//		{
+//			return player1GUITexture;
+//		}
+//		else if(playerID == "2")
+//		{
+//			return player2GUITexture;
+//		}
+//		else if(playerID == "3")
+//		{
+//			return player3GUITexture;
+//		}
+//		else
+//			return null;
+//	}
+
+	public void SetAllPlayerSprites(NetworkPlayer target)
+	{
+		// Server (Master Client)
+		string playerID = "0"; 
+		if(ServerPlayerHasValidCharacter())
+			networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+		else
+			networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerID = player.ToString();
+			if(PlayerHasValidCharacter(playerID))
+			{
+				networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+			}
+			else
+				networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		}
+	}
+
+	public void SetAllPlayerSprites(RPCMode target)
+	{
+		// Server (Master Client)
+		string playerID = "0"; 
+		if(ServerPlayerHasValidCharacter())
+			networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+		else
+			networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerID = player.ToString();
+			if(PlayerHasValidCharacter(playerID))
+			{
+				networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+			}
+			else
+				networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		}
+	}
+
+	[RPC]
 	public void SetPlayerSprite(string playerID, string characterPrefabName)
 	{
-		GameObject character = GameObject.Find(characterPrefabName);
-		if(character == null)
-			return;
-		Sprite characterSprite = character.GetComponent<SpriteRenderer>().sprite;
-		if(characterSprite == null)
-			return;
+		GameObject character;
+		Sprite characterSprite;
+		if(characterPrefabName == noCharacter)
+		{
+			characterSprite = null;
+		}
+		else
+		{
+			character = GameObject.Find(characterPrefabName);
+			if(character == null)
+				return;
+			characterSprite = character.GetComponent<SpriteRenderer>().sprite;
+			if(characterSprite == null)
+				return;
+		}
 		SpriteRenderer targetSpriteRenderer = GetPlayerSpriteRenderer(playerID);
 		if(targetSpriteRenderer != null)
 		{
@@ -88,7 +286,6 @@ public class LobbyCharacterManager : MonoBehaviour {
 		{
 			Debug.LogError("LobbyCharacterManager, Player " + playerID + " hat kein SpriteRenderer"); 
 		}
-
 	}
 
 	public SpriteRenderer GetPlayerSpriteRenderer(string playerID)
@@ -112,17 +309,6 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 		else
 			return null;
-	}
-
-	/**
-	 * Client / Server Funktion
-	 **/
-	public int GetSelectedCharacterPrefabID(Vector3 clickedPosition)
-	{
-		string spriteName = GetSelectedCharacterName(clickedPosition);
-		int prefabID = GetCharacterPrefabIDfromName(spriteName);
-
-		return prefabID;
 	}
 
 	/**
@@ -156,25 +342,43 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 		return null;
 	}
-	
-	
-	/**
-	 * Prefab ID - Prefab Filename
-	 **/
-	public int GetCharacterPrefabIDfromName(string name)
-	{
-		if(name == null)
-			return -1;
-		for(int i=0; i < characterArray.Length; i++)
-		{
-			if(characterArray[i].name == name)
-			{
-				Debug.Log("Prefab ID for " + name + " found: " + i);
-				return i;
-			}
-		}
-		Debug.LogError("Prefab ID for " + name + " not found!!!");
-		return -1;
-	}
-	
+
+
+//	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
+//		string player0Text;
+//		string player1Text;
+//		string player2Text;
+//		string player3Text;
+//
+//		string player0PrefabName;
+//		string player1PrefabName;
+//		string player2PrefabName;
+//		string player3PrefabName;
+//
+//		if (stream.isWriting) {
+//			player0Text = this.player0GUIText.text;
+//			player1Text = this.player1GUIText.text;
+//			player2Text = this.player2GUIText.text;
+//			player3Text = this.player3GUIText.text;
+//
+//			stream.Serialize(ref player0Text);
+//			stream.Serialize(ref player1Text);
+//			stream.Serialize(ref player2Text);
+//			stream.Serialize(ref player3Text);
+//		} else {
+//			player0Text = "";
+//			player1Text = "";
+//			player2Text = "";
+//			player3Text = "";
+//			stream.Serialize(ref player0Text);
+//			stream.Serialize(ref player1Text);
+//			stream.Serialize(ref player2Text);
+//			stream.Serialize(ref player3Text);
+//
+//			this.player0GUIText.text = player0Text;
+//			this.player1GUIText.text = player1Text;
+//			this.player2GUIText.text = player2Text;
+//			this.player3GUIText.text = player3Text;
+//		}
+//	}
 }

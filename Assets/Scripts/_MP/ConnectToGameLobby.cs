@@ -5,7 +5,7 @@ public class ConnectToGame : MonoBehaviour
 {
 	private string ip = "192.168.0.129";
 	private int port = 25005;
-	public int serverSlots = 7;
+	public int serverSlots = 3;
 
 	private string gameTypeName="mpSMW";
 	private string gameName="pers0rs bouncy bude";

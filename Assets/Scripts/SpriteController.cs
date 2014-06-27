@@ -4,7 +4,26 @@ using System.Collections.Generic;			//für Liste
 
 public class SpriteController : MonoBehaviour {
 
-	public bool LeftRightMirrow=true;				// nur eine Textur für beide Richtungen
+	private bool LeftRightMirrow=true;				// nur eine Textur für beide Richtungen
+
+
+	public bool hittedTrigger = false;
+	public bool headJumped = false;
+	public bool dead = false;
+	public bool spawn = false;
+	public bool spawnProtection = false;
+	public bool gameOver = false;
+	public bool grounded = false;
+	public bool walled = false;
+	public bool changeRunDirectionTrigger = false;
+
+	public float rigidbody2DvelocityX = 0f;
+	public float rigidbody2DvelocityY = 0f;
+	public float userInputvelocityX = 0f;
+	public float userInputvelocityY = 0f;
+
+
+	public bool invincible = false;
 
 	public List<Sprite> animations;
 	public List<Sprite> animationIdle;
@@ -12,7 +31,7 @@ public class SpriteController : MonoBehaviour {
 	public List<Sprite> animationJump;
 	public List<Sprite> animationChangeRunDirection;
 	public List<Sprite> animationDie;
-	public List<Sprite> animationDeadCorp;
+	public List<Sprite> animationDead;
 	public List<Sprite> animationSpawn;
 
 	public float animationSpeed = 10;
@@ -42,15 +61,22 @@ public class SpriteController : MonoBehaviour {
 		animationDie.Add(animations[4]);
 
 		// DeadCrop
-		animationDeadCorp.Add(animations[5]);
+		animationDead.Add(animations[5]);
 	}
+
 
 	public enum AnimationType {
 		idle,
 		run,
 		changeRunDirection,
-		jump
-
+		jump,
+		invincible,
+		headJumped,
+		die,
+		dead,
+		spawn,
+		spawnProtection,
+		gameOver
 	}
 
 	// Use this for initialization
@@ -59,30 +85,107 @@ public class SpriteController : MonoBehaviour {
 	}
 	
 	// Update is called once per frame
-	void Update () {
-		switch(currentAnimationType)
-		{
-			case AnimationType.idle:
-				setTexture(animationIdle);
-				break;
-			
-			case AnimationType.run:
-				setTexture(animationRun);
-				break;
-
-			case AnimationType.changeRunDirection:
-				setTexture(animationChangeRunDirection);
-				break;
-
-			case AnimationType.jump:
-				setTexture(animationJump);
-				break;
-
-		}
-
+	void FixedUpdate () {
+		SelectCurrentAnimation();
+		StartCurrentAnimation();
 	}
 
-	void setTexture(List<Sprite> animationSprite)
+	private void SelectCurrentAnimation()
+	{
+		if(hittedTrigger)
+		{
+			//hittedTrigger = false;
+			if(gameOver)
+			{
+				setAnimation(AnimationType.gameOver);
+			}
+			else
+			{
+				if(headJumped)
+				{
+					setAnimation(AnimationType.headJumped);
+				}
+				// !gameOver
+				if(dead)
+				{
+					setAnimation(AnimationType.dead);
+				}
+				else
+				{
+					// !dead
+					if(spawn)
+					{
+						setAnimation(AnimationType.spawn);
+						if(spawnProtection)
+						{
+							setAnimation(AnimationType.spawnProtection);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			if(!grounded)
+			{
+				// am Fallen oder Springen
+				setAnimation(AnimationType.jump);
+			}
+			else
+			{
+				if(changeRunDirectionTrigger)
+				{
+					//changeRunDirectionTrigger = false;
+					setAnimation(AnimationType.changeRunDirection);
+				}
+				// grounded
+				if(Mathf.Abs(rigidbody2DvelocityX) > 0.1f)
+				{
+					setAnimation(AnimationType.run);
+				}
+				else
+				{
+					setAnimation(AnimationType.idle);
+				}
+			}
+		}
+	}
+
+	private void StartCurrentAnimation()
+	{
+		switch(currentAnimationType)
+		{
+		case AnimationType.idle:
+			setSprite(animationIdle);
+			break;
+			
+		case AnimationType.run:
+			setSprite(animationRun);
+			break;
+			
+		case AnimationType.changeRunDirection:
+			setSprite(animationChangeRunDirection);
+			break;
+			
+		case AnimationType.jump:
+			setSprite(animationJump);
+			break;
+
+		case AnimationType.headJumped:
+			setSprite(animationDead);
+			break;
+
+		case AnimationType.gameOver:
+			setSprite(animationDie);
+			break;
+
+		case AnimationType.spawn:
+			setSprite(animationSpawn);
+			break;
+		}
+	}
+
+	void setSprite(List<Sprite> animationSprite)
 	{
 		int index = (int)(Time.time * animationSpeed);
 		index = index % animationSprite.Count;

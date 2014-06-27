@@ -101,7 +101,10 @@ public class PlatformCharacter : MonoBehaviour {
 
 		// if this is our paddle, it accepts input
 		// otherwise, if it is someone else’s paddle, it does not
-		AcceptsInput = networkView.isMine;
+		if(Network.peerType == NetworkPeerType.Disconnected)
+			AcceptsInput = true;
+		else
+			AcceptsInput = networkView.isMine;
 	}
 	
 	// The Move function is designed to be called from a separate component
@@ -130,7 +133,7 @@ public class PlatformCharacter : MonoBehaviour {
 				{
 					isInRageModus = true;
 					if(spriteController != null)
-						spriteController.setAnimation(SpriteController.AnimationType.jump);
+						spriteController.invincible = isInRageModus;
 					else
 					{
 						anim.SetBool(hash.rageModusBool,true);
@@ -151,7 +154,7 @@ public class PlatformCharacter : MonoBehaviour {
 		isInRageModus = false;
 		Debug.LogError("isInRageModus: Off");
 		if(spriteController != null)
-			spriteController.setAnimation(SpriteController.AnimationType.jump);
+			spriteController.invincible = isInRageModus;
 		else
 		{
 			anim.SetBool(hash.rageModusBool,false);
@@ -205,16 +208,25 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void SetAnim() 
 	{
-		if(anim != null)
+		if(spriteController != null )
 		{
-			anim.SetBool(hash.groundedBool, grounded);
-			anim.SetBool(hash.walledBool, walled);
-			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
-			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
+			spriteController.grounded = grounded;
+			spriteController.walled = walled;
+			spriteController.rigidbody2DvelocityX = rigidbody2D.velocity.x;
+			spriteController.rigidbody2DvelocityY = rigidbody2D.velocity.y;
 		}
 		else
-			Debug.LogError("Animator not set");
-		
+		{
+			if(anim != null)
+			{
+				anim.SetBool(hash.groundedBool, grounded);
+				anim.SetBool(hash.walledBool, walled);
+				anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
+				anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
+			}
+			else
+				Debug.LogError("Animator not set");
+		}
 	}
 
 
@@ -315,13 +327,20 @@ public class PlatformCharacter : MonoBehaviour {
 		/**
 		 * Animator status Update
 		 **/
-		if(anim != null)
+		if(spriteController != null)
 		{
-			anim.SetFloat(hash.hSpeedFloat, inputVelocity);
+			spriteController.userInputvelocityX = inputVelocity;
 		}
 		else
-			Debug.LogError("Animator not set");
-		
+		{
+			if(anim != null)
+			{
+				anim.SetFloat(hash.hSpeedFloat, inputVelocity);
+			}
+			else
+				Debug.LogError("Animator not set");
+		}
+			
 		/**
 		 * Check Direction Change
 		 **/
@@ -342,7 +361,7 @@ public class PlatformCharacter : MonoBehaviour {
 			// Do Jump
 			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
 			if(spriteController != null)
-				spriteController.setAnimation(SpriteController.AnimationType.jump);
+				spriteController.grounded = false;
 			else
 				anim.SetBool(hash.groundedBool,false);
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
@@ -355,7 +374,10 @@ public class PlatformCharacter : MonoBehaviour {
 			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
 			Flip();																		//Charakter drehen
 			if(spriteController != null)
-				spriteController.setAnimation(SpriteController.AnimationType.jump);
+			{
+				spriteController.grounded = false;
+				spriteController.walled = false;
+			}
 			else
 			{
 				anim.SetBool(hash.groundedBool,false);
@@ -384,7 +406,7 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			changedRunDirection = true;
 			if(spriteController != null)
-				spriteController.setAnimation(SpriteController.AnimationType.changeRunDirection);
+				spriteController.changeRunDirectionTrigger = changedRunDirection;
 			else
 			{
 				anim.SetTrigger(hash.changeRunDirectionTrigger);	// Start Change Run Direction Animation

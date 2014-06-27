@@ -5,7 +5,7 @@ public class RequireNetwork : MonoBehaviour
 {
 	public bool forceStartServer = false;
 
-	public int serverSlots = 7;
+	public int serverSlots = 3;
 	private int port = 25005;
 	private string gameTypeName="mpSMW";
 	private string gameName="pers0rs bouncy bude";

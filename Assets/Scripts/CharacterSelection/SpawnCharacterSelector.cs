@@ -50,6 +50,7 @@ public class SpawnCharacterSelector : MonoBehaviour {
 		// when a player joins, tell them to spawn
 		networkView.RPC( "net_DoSpawn", connectedPlayer, Vector3.zero );
 
+		lobbyCharacterManager.SetAllPlayerSprites(connectedPlayer);
 
 		foreach(NetworkPlayer player in Network.connections)
 		{
@@ -81,13 +82,10 @@ public class SpawnCharacterSelector : MonoBehaviour {
 	
 	void OnPlayerDisconnected( NetworkPlayer disconnectedPlayer )
 	{
-		string key;
-		int value;
-		key = disconnectedPlayer.ToString() + "_PrefabID";		// Character wieder freigeben
-		key = key.ToLower();
-		value = PlayerPrefs.GetInt(key);			// Value
-		PlayerPrefs.DeleteKey(key);
-		Debug.Log("Character PrefabID: " + value + " wieder freigegeben!");
+		// Character in PlayerPrefs freigeben
+		lobbyCharacterManager.RemovePlayerCharacter(disconnectedPlayer.ToString());
+
+		lobbyCharacterManager.SetAllPlayerSprites(RPCMode.All);
 
 		// tell all players
 		networkView.RPC( "PlayerDisconnectedFromLobby", RPCMode.All, disconnectedPlayer );
