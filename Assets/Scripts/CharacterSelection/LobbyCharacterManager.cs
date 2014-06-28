@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class LobbyCharacterManager : MonoBehaviour {
 
@@ -24,30 +25,33 @@ public class LobbyCharacterManager : MonoBehaviour {
 
 	private string debugmsg="";
 
+	private Dictionary<string,string> characterDictionary;
+
 	//Texture2D[] characterArray;
-	Sprite[] characterArray;
+//	Sprite[] characterArray;
 
 	void Awake()
 	{
-
+		DontDestroyOnLoad(transform.gameObject);
+		characterDictionary = new Dictionary<string, string>();
 //		PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
 
 		// Disable screen dimming
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
 		debugmsg="";
-		characterArray = Resources.LoadAll<Sprite>("Skins");			// alle Sliced Sprites (Spritename_0) ...
+//		characterArray = Resources.LoadAll<Sprite>("Skins");			// alle Sliced Sprites (Spritename_0) ...
 		//characterArray = Resources.LoadAll<Texture2D>("Skins");		// nur ganze Bilder 
 		
 		//if(Network.isServer)
 		if(networkView.isMine)
 		{
 			
-			for(int i=0; i < characterArray.Length; i=i+6)
-			{
-				debugmsg+=characterArray[i].name + "\n";
-//				Debug.Log(characterArray[i].name);
-			}
+//			for(int i=0; i < characterArray.Length; i=i+6)
+//			{
+//				debugmsg+=characterArray[i].name + "\n";
+////				Debug.Log(characterArray[i].name);
+//			}
 		}
 	}
 
@@ -95,9 +99,17 @@ public class LobbyCharacterManager : MonoBehaviour {
 		return key;
 	}
 
+	public bool PlayerPrefsHasKey( string playerID )
+	{
+		//return PlayerPrefs.HasKey(GetPlayerPrefsKey(playerID));
+		return characterDictionary.ContainsKey(GetPlayerPrefsKey(playerID));
+	}
+
 	public void SetPlayerCharacter( string playerId, string characterPrefabName)
 	{
-		PlayerPrefs.SetString(GetPlayerPrefsKey(playerId), characterPrefabName);
+		characterDictionary.Add(GetPlayerPrefsKey(playerId), characterPrefabName);
+		//PlayerPrefs.SetString(GetPlayerPrefsKey(playerId), characterPrefabName);
+		//Debug.Log("Key: " + GetPlayerPrefsKey(playerId) + " mit Value: " + GetPlayerCharacter(GetPlayerPrefsKey(playerId)) + " in PlayerPrefs eingetragen!");
 		Debug.Log("Key: " + GetPlayerPrefsKey(playerId) + " mit Value: " + GetPlayerCharacter(GetPlayerPrefsKey(playerId)) + " in PlayerPrefs eingetragen!");
 	}
 
@@ -105,8 +117,14 @@ public class LobbyCharacterManager : MonoBehaviour {
 	{
 		if(PlayerHasValidCharacter(playerId))
 		{
-			Debug.Log("Character PrefabID: " + GetPlayerCharacter(playerId) + " wieder freigegeben!");
-			PlayerPrefs.DeleteKey(GetPlayerPrefsKey(playerId));
+			// PlayerPrefs.DeleteKey(GetPlayerPrefsKey(playerId));
+			if(characterDictionary.ContainsKey(GetPlayerPrefsKey(playerId)))
+			{
+				characterDictionary.Remove(GetPlayerPrefsKey(playerId));
+				Debug.Log("Player " + playerId + " hat Character " + GetPlayerCharacter(playerId) + " wieder freigegeben!");
+			}
+			else
+				Debug.Log("Player " + playerId + " hate kein Character!");
 		}
 
 	}
@@ -115,9 +133,9 @@ public class LobbyCharacterManager : MonoBehaviour {
 	{
 		string key = GetPlayerPrefsKey(playerId);
 
-		if(PlayerPrefs.HasKey(key))
+		if(PlayerPrefsHasKey(playerId))
 		{
-			string value = PlayerPrefs.GetString(key);
+			string value = GetPlayerCharacter(key);
 			if(value == "")															// PrefabName = "" --> ERROR
 			{
 				Debug.LogError("PlayerPrefs " + key + " value is an empty string"); 
@@ -206,7 +224,12 @@ public class LobbyCharacterManager : MonoBehaviour {
 
 	public string GetPlayerCharacter(string playerId)
 	{
-		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
+		//DontDestroyOnLoad 
+		string temp = characterDictionary[GetPlayerPrefsKey(playerId)];
+		//characterDictionary.TryGetValue(GetPlayerPrefsKey(playerId), out temp);
+		return temp;
+		//return 
+		//return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
 	}
 
 //	public GUITexture GetPlayerGUITexture(string playerID)

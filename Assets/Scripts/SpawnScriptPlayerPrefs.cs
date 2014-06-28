@@ -27,9 +27,13 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 //	private Sprite[] characterArray;
 
+	LobbyCharacterManager lobbyCharacterManager;
 
 	void Awake ()
 	{
+
+		lobbyCharacterManager = GameObject.FindGameObjectWithTag(Tags.gameController).GetComponent<LobbyCharacterManager>();
+
 
 //		characterArray = Resources.LoadAll<Sprite>("Skins");
 
@@ -75,7 +79,8 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	{
 		foreach(NetworkPlayer player in Network.connections)
 		{
-			string playerCharacterName = GetPlayerCharacter(GetPlayerPrefsKey(player.ToString()));
+			//string playerCharacterName = GetPlayerCharacter(player.ToString());
+			string playerCharacterName = lobbyCharacterManager.GetPlayerCharacter(player.ToString());
 			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
 			networkView.RPC( "net_DoSpawn", player, getRandomPosition(), playerCharacterName);
 			Debug.LogWarning("Player " + player.ToString() + " Prefab Name: " + playerCharacterName);
@@ -86,7 +91,8 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	{
 		string key = "0" + LobbyCharacterManager.suffixName;
 		key = key.ToLower();
-		string serverCharacterName = PlayerPrefs.GetString(key);
+		//string serverCharacterName = PlayerPrefs.GetString(key);
+		string serverCharacterName = lobbyCharacterManager.GetPlayerCharacter("0");
 		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + serverCharacterName, typeof(GameObject));
 		Network.Instantiate( myCharacter, getRandomPosition(), Quaternion.identity,0 );
 		Debug.LogWarning("Server Player " + "0" + " Prefab Name: " + serverCharacterName);
