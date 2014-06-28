@@ -10,9 +10,9 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 	private int characterPrefabID = 0;
 	
-	private int numberOfAllPlayer;
-	private int numberOfAIPlayer;
-	private int numberOfLocalUserPlayer;
+//	private int numberOfAllPlayer;
+//	private int numberOfAIPlayer;
+//	private int numberOfLocalUserPlayer;
 
 //	public Character characterDictonary;
 	public List<GameObject> characterAIPrefabList;
@@ -25,13 +25,13 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 	private Stats statsScript;
 
-	private Sprite[] characterArray;
+//	private Sprite[] characterArray;
 
 
 	void Awake ()
 	{
 
-		characterArray = Resources.LoadAll<Sprite>("Skins");
+//		characterArray = Resources.LoadAll<Sprite>("Skins");
 
 		countDown = GameObject.FindGameObjectWithTag(Tags.countDown);
 		anim = countDown.GetComponent<Animator>();
@@ -44,58 +44,80 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 		startGameTrigger = false;
         startSpawning = false;
-		numberOfAllPlayer = PlayerPrefs.GetInt("NumberOfAllPlayers");
-		numberOfAIPlayer = PlayerPrefs.GetInt("NumberOfAIPlayers");
-		numberOfLocalUserPlayer = PlayerPrefs.GetInt("NumberOfLocalUserPlayers");
-		Debug.Log("number of all player: " + numberOfAllPlayer);
-		Debug.Log("number of AI player: " + numberOfAIPlayer);
-		Debug.Log("number of User player: " + numberOfLocalUserPlayer);
+//		numberOfAllPlayer = PlayerPrefs.GetInt("NumberOfAllPlayers");
+//		numberOfAIPlayer = PlayerPrefs.GetInt("NumberOfAIPlayers");
+//		numberOfLocalUserPlayer = PlayerPrefs.GetInt("NumberOfLocalUserPlayers");
+//		Debug.Log("number of all player: " + numberOfAllPlayer);
+//		Debug.Log("number of AI player: " + numberOfAIPlayer);
+//		Debug.Log("number of User player: " + numberOfLocalUserPlayer);
 
-		PlayerPrefs.SetInt("AI0Character",0);
-		PlayerPrefs.SetInt("AI1Character",1);
-		PlayerPrefs.SetInt("AI2Character",2);
+//		PlayerPrefs.SetInt("AI0Character",0);
+//		PlayerPrefs.SetInt("AI1Character",1);
+//		PlayerPrefs.SetInt("AI2Character",2);
+//
+//		PlayerPrefs.SetInt("User0Character",0);
 
-		PlayerPrefs.SetInt("User0Character",0);
-
-		PlayerPrefabs();
 	}
 
-	void PlayerPrefabs()
+	public string GetPlayerPrefsKey( string playerID)
+	{
+		string key = playerID + LobbyCharacterManager.suffixName;
+		key = key.ToLower();
+		return key;
+	}
+
+	public string GetPlayerCharacter(string playerId)
+	{
+		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
+	}
+
+	void RequestClientsCharacterInstantiation()
 	{
 		foreach(NetworkPlayer player in Network.connections)
 		{
-			string key = player.ToString()+"_PrefabID";
-			key = key.ToLower();
-			Debug.LogWarning("Player " + player.ToString() + " Prefab ID: " + PlayerPrefs.GetInt(key));
+			string playerCharacterName = GetPlayerCharacter(GetPlayerPrefsKey(player.ToString()));
+			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
+			networkView.RPC( "net_DoSpawn", player, getRandomPosition(), playerCharacterName);
+			Debug.LogWarning("Player " + player.ToString() + " Prefab Name: " + playerCharacterName);
 		}
 	}
 
-	void PreparePrefabForPlayer(string player)
+	void InstantiateServerCharacter()
 	{
-		string prefabName = GetPlayerPrefabName(player);	// habe Sprite ID, brauche Prefab Namen
-
-		GameObject go = GameObject.Find(prefabName);
-		if(go != null)
-		{
-			// Prefab gefunden
-			go.GetComponent<PlatformCharacter>().enabled = true;
-			go.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
-			go.GetComponent<PlatformUserControlKeyboard>().enabled = true;
-			go.GetComponent<PlatformCharacter>().enabled = true;
-		}
+		string key = "0" + LobbyCharacterManager.suffixName;
+		key = key.ToLower();
+		string serverCharacterName = PlayerPrefs.GetString(key);
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + serverCharacterName, typeof(GameObject));
+		Network.Instantiate( myCharacter, getRandomPosition(), Quaternion.identity,0 );
+		Debug.LogWarning("Server Player " + "0" + " Prefab Name: " + serverCharacterName);
 	}
 
-	string GetPlayerPrefabName(string player)
-	{
-		string key = player + "_PrefabID";
-		int value = PlayerPrefs.GetInt(key);
-		if(value < 0 || value > characterArray.Length)
-			return "";									// Character nicht in liste gefunden
-		if(characterArray[value] != null)
-			return characterArray[value].name;
-		else
-			return "";									// Character nicht in liste gefunden
-	}
+//	void PreparePrefabForPlayer(string player)
+//	{
+//		string prefabName = GetPlayerPrefabName(player);	// habe Sprite ID, brauche Prefab Namen
+//
+//		GameObject go = GameObject.Find(prefabName);
+//		if(go != null)
+//		{
+//			// Prefab gefunden
+//			go.GetComponent<PlatformCharacter>().enabled = true;
+//			go.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
+//			go.GetComponent<PlatformUserControlKeyboard>().enabled = true;
+//			go.GetComponent<PlatformCharacter>().enabled = true;
+//		}
+//	}
+
+//	string GetPlayerPrefabName(string player)
+//	{
+//		string key = player + "_PrefabID";
+//		int value = PlayerPrefs.GetInt(key);
+//		if(value < 0 || value > characterArray.Length)
+//			return "";									// Character nicht in liste gefunden
+//		if(characterArray[value] != null)
+//			return characterArray[value].name;
+//		else
+//			return "";									// Character nicht in liste gefunden
+//	}
 
 	Vector3 getRandomPosition()
 	{
@@ -109,19 +131,51 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 //		StartCoroutine(StartCountDown());
 		if( Network.isServer )
 		{
-			characterPrefabID = 0;
 			// server doesn’t trigger OnPlayerConnected, manually spawn
-			Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), getRandomPosition(), Quaternion.identity,0 );
-			Debug.Log("Server Character erzeugen");
-			// nobody has joined yet, display "Waiting..." for player 2
-//			Player2ScoreDisplay.text = "Waiting...";
+			InstantiateServerCharacter();
+			RequestClientsCharacterInstantiation();
+//			Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), getRandomPosition(), Quaternion.identity,0 );
+
+		}
+
+	}
+
+	void BackButton()
+	{
+		if (Input.GetKey(KeyCode.Escape))
+		{
+			if(Network.isServer)
+			{
+				MasterServer.UnregisterHost();
+				Debug.LogWarning("MasterServer.UnregisterHost();");
+				
+				foreach(NetworkPlayer player in Network.connections)
+				{
+					Network.CloseConnection(player,true);
+					Debug.LogWarning("Network.CloseConnection("+player.ToString()+",true);");
+				}
+				// schlecht!
+				//					for(int i=0;i<Network.connections.Length;i++)
+				//					{
+				//						Network.CloseConnection(Network.connections[i],true);
+				//						Debug.LogWarning("Network.CloseConnection(Network.connections["+i+"],true);");
+				//					}
+			}
+			Network.Disconnect();
+			Debug.LogWarning("Network.Disconnect();");
+			Application.LoadLevel("mp_Multiplayer");
+			return;
 		}
 	}
 
 	void Update() {
+
+		BackButton();
+
 		if(Network.connections.Length > 0)
 		{
 //			Debug.Log("min. 1 Client verbunden ");
+
 			if(startGameTrigger)
 			{
 				startGameTrigger = false;
@@ -132,42 +186,42 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		}
 	}
 	
-	public void StartSpawn()
-	{
-		int characterID = -1;
-		GameObject currentCharacter;
-		for(int i=0; i<numberOfAIPlayer; i++)
-		{
-			characterID = PlayerPrefs.GetInt("AI"+i+"Character");
-			Debug.Log("AI " + i + " CharacterID: " + characterID);
-			if(characterID != null)
-			{
-				if(characterID >=0 && characterID < characterAIPrefabList.Count)
-				{
-					currentCharacter = (GameObject)Instantiate(characterAIPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-					statsScript.AddPlayer(currentCharacter);
-                }
-            }
-        }
-
-		characterID = -1;
-		for(int i=0; i<numberOfLocalUserPlayer; i++)
-		{
-			characterID = PlayerPrefs.GetInt("User"+i+"Character");
-			Debug.Log("User " + i + " CharacterID: " + characterID);
-			if(characterID != null)
-			{
-				if(characterID >=0 && characterID < characterUserPrefabList.Count)
-				{
-					currentCharacter = (GameObject)Instantiate(characterUserPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-					statsScript.AddPlayer(currentCharacter);
-                }
-            }
-        }
-		startGameTrigger = true;
-    }
+//	public void StartSpawn()
+//	{
+//		int characterID = -1;
+//		GameObject currentCharacter;
+//		for(int i=0; i<numberOfAIPlayer; i++)
+//		{
+//			characterID = PlayerPrefs.GetInt("AI"+i+"Character");
+//			Debug.Log("AI " + i + " CharacterID: " + characterID);
+//			if(characterID != null)
+//			{
+//				if(characterID >=0 && characterID < characterAIPrefabList.Count)
+//				{
+//					currentCharacter = (GameObject)Instantiate(characterAIPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
+//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
+//					statsScript.AddPlayer(currentCharacter);
+//                }
+//            }
+//        }
+//
+//		characterID = -1;
+//		for(int i=0; i<numberOfLocalUserPlayer; i++)
+//		{
+//			characterID = PlayerPrefs.GetInt("User"+i+"Character");
+//			Debug.Log("User " + i + " CharacterID: " + characterID);
+//			if(characterID != null)
+//			{
+//				if(characterID >=0 && characterID < characterUserPrefabList.Count)
+//				{
+//					currentCharacter = (GameObject)Instantiate(characterUserPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
+//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
+//					statsScript.AddPlayer(currentCharacter);
+//                }
+//            }
+//        }
+//		startGameTrigger = true;
+//    }
 
 	void OnPlayerConnected( NetworkPlayer player )
 	{
@@ -195,15 +249,31 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	void OnDisconnectedFromServer( NetworkDisconnection cause )
 	{
 		// go back to the main menu
-		Application.LoadLevel( "DirectConnect" );
+		Application.LoadLevel( "mp_Multiplayer" );
 	}
-	
+
 	[RPC]
-	void net_DoSpawn( Vector3 position )
+	void net_DoSpawn( Vector3 position, string characterPrefabName )
 	{
+		// The object PikachuLanRigidBody2D must be a prefab in the project view.
 		// spawn the player paddle
-		Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), position, Quaternion.identity,0 );
+		
+		// wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
+		//		GameObject myCharacter = GameObject.Find (characterPrefabName);
+		
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		//		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
+		//		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
+		
+		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
+
+//	[RPC]
+//	void net_DoSpawn( Vector3 position )
+//	{
+//		// spawn the player paddle
+//		Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), position, Quaternion.identity,0 );
+//	}
 
 
 	IEnumerator StartCountDown()

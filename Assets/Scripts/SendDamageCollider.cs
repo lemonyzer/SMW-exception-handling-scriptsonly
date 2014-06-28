@@ -4,7 +4,7 @@ using System.Collections;
 public class SendDamageCollider : MonoBehaviour {
 
 	public int damageValue = 1;
-	public int targetLayer = 0;
+//	private int targetLayer = 0;		// Head
 	//public bool enabled=true;
 
 
@@ -30,7 +30,7 @@ public class SendDamageCollider : MonoBehaviour {
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 
-		targetLayer = layer.head;
+//		targetLayer = layer.head;
 	}
 
 
@@ -54,7 +54,7 @@ public class SendDamageCollider : MonoBehaviour {
 				{
 					//Angriff zählt nur wenn selbst nicht getroffen
 					
-					if(other.gameObject.layer == targetLayer)
+					if(other.gameObject.layer == layer.head)
 					{
 						//						foreach(ContactPoint2D contact in collision.contacts)
 						//						{

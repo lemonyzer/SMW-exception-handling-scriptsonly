@@ -158,6 +158,8 @@ public class CharacterSelection2D : MonoBehaviour {
 			if(!characterInUse)
 			{
 				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
+				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
+				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
 				// kein Spieler hat diesen Character gewählt, Client Character zuteilen und freigabe mitteilen.
 				
 				// Zuteilung allen Clients mitteilen
@@ -212,12 +214,13 @@ public class CharacterSelection2D : MonoBehaviour {
 			if(!characterInUse)
 			{
 				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
+				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
 				// kein Spieler hat diesen Character gewählt, Client Character zuteilen und freigabe mitteilen.
 				
 				// Zuteilung allen Clients mitteilen
 				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterName );							// allen Clients Serverauswahl mitteilen (MasterClient bekommt diese RPC auch!)
 				//MarkCharacter(playerClickedID,characterName);
-				DoSpawnServerPlayer(getRandomPosition(),characterName);
+				DoSpawnServerPlayer(getRandomSpawnPosition(),characterName);
 			}
 			else
 			{
@@ -312,7 +315,7 @@ public class CharacterSelection2D : MonoBehaviour {
 	}
 
 
-	Vector3 getRandomPosition()
+	Vector3 getRandomSpawnPosition()
 	{
 		return new Vector3(Random.Range(-9.0f, 9.0f), Random.Range(2f, 15.0f), 0f);
 	}
@@ -326,7 +329,7 @@ public class CharacterSelection2D : MonoBehaviour {
 // wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
 //		GameObject myCharacter = GameObject.Find (characterPrefabName);
 
-		GameObject myCharacter = (GameObject) Resources.Load(characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 //		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 
@@ -335,7 +338,7 @@ public class CharacterSelection2D : MonoBehaviour {
 
 	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 

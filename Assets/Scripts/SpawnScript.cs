@@ -25,9 +25,17 @@ public class SpawnScript : MonoBehaviour {
 
 	private Stats statsScript;
 
+	GameObject[] characterArray;
 
 	void Awake ()
 	{
+
+		characterArray = Resources.LoadAll<GameObject>("PlayerCharacter/lokal");
+
+		foreach(GameObject currCharacter in characterArray)
+		{
+			Debug.Log(currCharacter.name);
+		}
 
 		countDown = GameObject.FindGameObjectWithTag(Tags.countDown);
 		anim = countDown.GetComponent<Animator>();

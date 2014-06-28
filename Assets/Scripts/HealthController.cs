@@ -49,7 +49,7 @@ public class HealthController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		myCharacter = this.gameObject.transform.parent;
+		myCharacter = this.gameObject.transform;
 
 		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
 		if(myCharacterCollider2D == null)

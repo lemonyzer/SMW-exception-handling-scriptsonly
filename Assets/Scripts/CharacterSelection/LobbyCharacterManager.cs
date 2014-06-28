@@ -3,6 +3,7 @@ using System.Collections;
 
 public class LobbyCharacterManager : MonoBehaviour {
 
+	public static string resourcesPath = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
 	public static string suffixName = "_Prefab_Name";
 	public static string noCharacter = "noCharacter";
 
@@ -29,7 +30,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 	void Awake()
 	{
 
-		PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
+//		PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
 
 		// Disable screen dimming
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
@@ -55,13 +56,27 @@ public class LobbyCharacterManager : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
+			DebugListAllPlayer();
 			if(EveryPlayerHasValidCharacter())
 			{
 				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
 				{
+					DebugListAllPlayer();
 					networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
 				}
 			}
+		}
+	}
+
+	void DebugListAllPlayer()
+	{
+		string playerCharacterName = GetPlayerCharacter(GetPlayerPrefsKey("0"));
+		Debug.LogWarning("Player " + GetPlayerPrefsKey("0") + " Character Prefab Name: " + playerCharacterName);
+
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerCharacterName = GetPlayerCharacter(GetPlayerPrefsKey(player.ToString()));
+			Debug.LogWarning("Player " + GetPlayerPrefsKey(player.ToString()) + " Character Prefab Name: " + playerCharacterName);
 		}
 	}
 
@@ -83,6 +98,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 	public void SetPlayerCharacter( string playerId, string characterPrefabName)
 	{
 		PlayerPrefs.SetString(GetPlayerPrefsKey(playerId), characterPrefabName);
+		Debug.Log("Key: " + GetPlayerPrefsKey(playerId) + " mit Value: " + GetPlayerCharacter(GetPlayerPrefsKey(playerId)) + " in PlayerPrefs eingetragen!");
 	}
 
 	public void RemovePlayerCharacter( string playerId )
@@ -329,12 +345,12 @@ public class LobbyCharacterManager : MonoBehaviour {
 				   hit.collider.name == "Head")								// Layer Hash
 				{
 					// Kopf oder Füße getroffen -> Parent GameObject Name
-					Debug.Log("LobbyCharacterManager: " + hit.collider.transform.parent.name );
+					Debug.Log("LobbyCharacterManager, Head/Feet Selected Character:" + hit.collider.transform.parent.name );
 					return hit.collider.transform.parent.name;
 				}
 				else
 				{
-					Debug.Log("LobbyCharacterManager: " + hit.collider.name);
+					Debug.Log("LobbyCharacterManager, Selected Character: " + hit.collider.name);
 					return hit.collider.name;
 				}
 

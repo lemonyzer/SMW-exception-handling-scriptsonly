@@ -11,7 +11,7 @@ public class SpawnCharacterSelector : MonoBehaviour {
 
 	void Awake()
 	{
-		PlayerPrefs.DeleteAll();
+//		PlayerPrefs.DeleteAll();
 	}
 
 	void SpawnServerSpawnCharacterSelector()
