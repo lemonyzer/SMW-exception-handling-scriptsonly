@@ -27,13 +27,9 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 //	private Sprite[] characterArray;
 
-	LobbyCharacterManager lobbyCharacterManager;
 
 	void Awake ()
 	{
-
-		lobbyCharacterManager = GameObject.FindGameObjectWithTag(Tags.gameController).GetComponent<LobbyCharacterManager>();
-
 
 //		characterArray = Resources.LoadAll<Sprite>("Skins");
 
@@ -79,10 +75,9 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	{
 		foreach(NetworkPlayer player in Network.connections)
 		{
-			//string playerCharacterName = GetPlayerCharacter(player.ToString());
-			string playerCharacterName = lobbyCharacterManager.GetPlayerCharacter(player.ToString());
+			string playerCharacterName = GetPlayerCharacter(player.ToString());
 			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
-			networkView.RPC( "net_DoSpawn", player, getRandomPosition(), playerCharacterName);
+			networkView.RPC( "net_DoSpawnGameScene", player, getRandomPosition(), playerCharacterName);
 			Debug.LogWarning("Player " + player.ToString() + " Prefab Name: " + playerCharacterName);
 		}
 	}
@@ -91,8 +86,7 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	{
 		string key = "0" + LobbyCharacterManager.suffixName;
 		key = key.ToLower();
-		//string serverCharacterName = PlayerPrefs.GetString(key);
-		string serverCharacterName = lobbyCharacterManager.GetPlayerCharacter("0");
+		string serverCharacterName = PlayerPrefs.GetString(key);
 		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + serverCharacterName, typeof(GameObject));
 		Network.Instantiate( myCharacter, getRandomPosition(), Quaternion.identity,0 );
 		Debug.LogWarning("Server Player " + "0" + " Prefab Name: " + serverCharacterName);
@@ -231,6 +225,7 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 	void OnPlayerConnected( NetworkPlayer player )
 	{
+		Debug.Log(player + " connected in GameScene!");
 		// when a player joins, tell them to spawn
 		networkView.RPC( "net_DoSpawn", player, getRandomPosition() );
 
@@ -259,7 +254,7 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	}
 
 	[RPC]
-	void net_DoSpawn( Vector3 position, string characterPrefabName )
+	void net_DoSpawnGameScene( Vector3 position, string characterPrefabName )
 	{
 		// The object PikachuLanRigidBody2D must be a prefab in the project view.
 		// spawn the player paddle
@@ -270,8 +265,8 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		//		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 		//		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
-		
-		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
+		if(myCharacter != null)
+			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 
 //	[RPC]
