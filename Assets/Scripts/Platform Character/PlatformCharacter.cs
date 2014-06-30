@@ -91,7 +91,6 @@ public class PlatformCharacter : MonoBehaviour {
 	
 	void Awake()
 	{
-
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
@@ -178,25 +177,6 @@ public class PlatformCharacter : MonoBehaviour {
 			SetAnim();
 			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
 			JumpAblePlatform();
-//			if(AcceptsInput)
-//			{
-//				FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
-//			}
-//			else
-//			{
-//				/**
-//				 * Check Direction Change
-//				 **/
-//				Debug.Log (rigidbody2D.velocity.x + " " + facingRight);
-//				if(rigidbody2D.velocity.x > 0f && !facingRight)
-//				{
-//					Flip();
-//				}
-//				else if(rigidbody2D.velocity.x < 0f && facingRight)
-//				{
-//					Flip();
-//				}
-//			}
 		}
 	}
 
