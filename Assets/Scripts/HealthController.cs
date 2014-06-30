@@ -202,13 +202,13 @@ public class HealthController : MonoBehaviour {
 		myCharacter.rigidbody2D.fixedAngle = false;
 		myCharacter.rigidbody2D.AddTorque(20);
 		stopControlls();
-		Destroy(myCharacter.gameObject,deathTime+spawnAnimationTime+spawnProtectionTime);
-		if(myCharacter.tag.Equals("Player"))
-		{
-			//StartCoroutine(PlayerGameOver());
-			//fader!
-			RestartScene();
-		}
+//		Destroy(myCharacter.gameObject,deathTime+spawnAnimationTime+spawnProtectionTime);
+//		if(myCharacter.tag.Equals("Player"))
+//		{
+//			//StartCoroutine(PlayerGameOver());
+//			//fader!
+//			RestartScene();
+//		}
 	}
 
 	void SetSpawnPoint ()

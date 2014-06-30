@@ -46,53 +46,58 @@ public class SendDamageCollider : MonoBehaviour {
 	// Update is called once per frame
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(Network.isServer)
+		if(Network.peerType == NetworkPeerType.Disconnected)
 		{
-			if(myHead != null)
+
+		}
+		else
+		{
+			if(!Network.isServer)
 			{
-				if(!myHealthController.isHit)
-				{
-					//Angriff zählt nur wenn selbst nicht getroffen
-					
-					if(other.gameObject.layer == layer.head)
-					{
-						//						foreach(ContactPoint2D contact in collision.contacts)
-						//						{
-						//							Debug.DrawRay(contact.point, contact.normal, Color.red, 2, false);
-						//						}
-						//Angriff zählt nur wenn anderer Collider den richtigen Tag besitzt ("Head")
-						if(myCharacter.rigidbody2D.velocity.y < 0)
-						{
-							//Angriff zählt nur bei Fallbewegung
-							targetHead = other.gameObject.transform;
-							targetCharacter = targetHead.parent;
-							
-							//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
-							targetCharacter.GetComponent<HealthController>().ApplyDamage(damageValue,true);
-							//							Debug.Log( myCharacter.name + ": " + "kollision mit Kopf von " + targetCharacter.name);
-							
-							/* SendMessage, Parameter vorher in Array packen!
-						 *  
-						 * head.SendMessage("ApplyDamage",damageValue,SendMessageOptions.DontRequireReceiver);	// BESSER ??!!!! 
-						 */
-						}
-						else
-						{
-							Debug.Log( myCharacter.name + ": " + "Angriff zählt nur bei Fallbewegung");
-						}
-						
-						// Angreifenden Player nach oben schleudern
-						myCharacter.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
-					}
-				}
-			}
-			else
-			{
-				Debug.LogError("Charakter hat keine Hitcollider 'Head'");
+				return;
 			}
 		}
-
-
-
+		if(myHead != null)
+		{
+			if(!myHealthController.isHit)
+			{
+				//Angriff zählt nur wenn selbst nicht getroffen
+				
+				if(other.gameObject.layer == layer.head)
+				{
+					//						foreach(ContactPoint2D contact in collision.contacts)
+					//						{
+					//							Debug.DrawRay(contact.point, contact.normal, Color.red, 2, false);
+					//						}
+					//Angriff zählt nur wenn anderer Collider den richtigen Tag besitzt ("Head")
+					if(myCharacter.rigidbody2D.velocity.y < 0)
+					{
+						//Angriff zählt nur bei Fallbewegung
+						targetHead = other.gameObject.transform;
+						targetCharacter = targetHead.parent;
+						
+						//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
+						targetCharacter.GetComponent<HealthController>().ApplyDamage(damageValue,true);
+						//							Debug.Log( myCharacter.name + ": " + "kollision mit Kopf von " + targetCharacter.name);
+						
+						/* SendMessage, Parameter vorher in Array packen!
+					 *  
+					 * head.SendMessage("ApplyDamage",damageValue,SendMessageOptions.DontRequireReceiver);	// BESSER ??!!!! 
+					 */
+					}
+					else
+					{
+						Debug.Log( myCharacter.name + ": " + "Angriff zählt nur bei Fallbewegung");
+					}
+					
+					// Angreifenden Player nach oben schleudern
+					myCharacter.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+				}
+			}
+		}
+		else
+		{
+			Debug.LogError("Charakter hat keine Hitcollider 'Head'");
+		}
 	}
 }

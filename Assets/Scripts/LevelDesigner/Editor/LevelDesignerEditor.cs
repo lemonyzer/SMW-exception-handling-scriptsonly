@@ -50,6 +50,30 @@ public class LevelDesignerEditor : Editor {
 		EditorGUILayout.BeginHorizontal();
 		EditorGUILayout.PrefixLabel("Sprite");
 		script.sprite = (Sprite) EditorGUILayout.ObjectField (script.sprite, typeof(Sprite), false);
+		if(script.sprite != null)
+		{
+			if(script.sprite.bounds.center != Vector3.zero)
+			{
+				script.useOffset = true;
+				script.offsetX = script.sprite.bounds.center.x;
+				script.offsetY = script.sprite.bounds.center.y;
+				Debug.Log("Center: " + script.sprite.bounds.center);
+			}
+			else
+			{
+				script.useOffset = false;
+			}
+			script.sizeX = script.sprite.bounds.extents.x*2;
+			script.sizeY = script.sprite.bounds.extents.y*2;
+			Debug.Log("Extends: " + script.sprite.bounds.extents);
+		}
+		else
+		{
+			script.sizeX = 1;
+			script.sizeY = 1;
+			Debug.Log("Extends: " + script.sprite.bounds.extents);
+			script.useOffset = false;
+		}
 		EditorGUILayout.EndHorizontal();
 
 		EditorGUILayout.BeginHorizontal();
@@ -86,7 +110,7 @@ public class LevelDesignerEditor : Editor {
 
 		Event current = Event.current;
 
-		/* linke STRG Taste */
+		/* left CTRL Key */
 		if(current.keyCode == KeyCode.LeftControl)
 		{
 			if(current.type == EventType.keyDown)
@@ -100,6 +124,7 @@ public class LevelDesignerEditor : Editor {
 			}
 		}
 
+		/* Mouse */
 		if(leftControl)
 		{
 			if(current.type == EventType.mouseDown)
@@ -119,6 +144,7 @@ public class LevelDesignerEditor : Editor {
 
 		}
 
+		/* Use Input */
 		if((current.type == EventType.mouseDown) || (batchmode != BatchMode.None))
 		{
 			if(script.prefab != null)
@@ -167,7 +193,10 @@ public class LevelDesignerEditor : Editor {
 					DeleteSprite(name);
 				}
 			}
-
+			else
+			{
+				Debug.LogWarning("Prefab and Sprite selected, de-select one!");
+			}
 		}
 
 		SetGizmosColor();
@@ -210,6 +239,18 @@ public class LevelDesignerEditor : Editor {
 			go.AddComponent<SpriteRenderer>();
 			SpriteRenderer renderer = go.GetComponent<SpriteRenderer>();
 			renderer.sprite = script.sprite;
+//			if(script.sprite.bounds.center != Vector3.zero)
+//			{
+//				script.useOffset = true;
+//				script.offsetX = script.sprite.bounds.center.x;
+//				script.offsetY = script.sprite.bounds.center.y;
+//				Debug.Log(script.sprite.bounds.center);
+//				Debug.Log(script.sprite.bounds.extents);
+//			}
+//			else
+//			{
+//				script.useOffset = false;
+//			}
 			//Instantiate (go,pos,quat);
 			go.name = name;
 			go.transform.position = pos;

@@ -45,6 +45,7 @@ public class Beam : MonoBehaviour {
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
+		GameObject original;
 		beamableObject = false;
 
 		if(other.gameObject.layer == layer.player1)
@@ -70,6 +71,7 @@ public class Beam : MonoBehaviour {
 
 		if(beamableObject)
 		{
+			original = other.transform.gameObject;
 			float oldY = other.transform.position.y;
 			float oldX = other.transform.position.x;
 			if(oldX < backgroundCenterPositionX)
@@ -80,6 +82,9 @@ public class Beam : MonoBehaviour {
 			{
 				other.gameObject.transform.position = new Vector2(leftBeamZoneX,oldY);
 			}
+//			GameObject clone = (GameObject) Instantiate(original,new Vector2(oldX,oldY),Quaternion.identity);
+//			clone.layer = layer.floor;
+//			Destroy(clone,2f);
 		}
 
 	}
