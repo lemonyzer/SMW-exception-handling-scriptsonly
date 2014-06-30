@@ -2,9 +2,9 @@
 using System.Collections;
 //using UnityEditor;
 
-public class CharacterSelection2D : MonoBehaviour {
+public class spCharacterSelection2D : MonoBehaviour {
 
-
+	private int currentPlayer=0;
 
 	private bool debugShown = false;
 
@@ -46,6 +46,12 @@ public class CharacterSelection2D : MonoBehaviour {
 	{
 		if (Input.GetKey(KeyCode.Escape))
 		{
+			if(networkView == null)
+			{
+				Debug.Log("SinglePlayer");
+				Application.LoadLevel("MainMenu");
+				return;
+			}
 			if(Network.isServer)
 			{
 				MasterServer.UnregisterHost();
@@ -111,23 +117,33 @@ public class CharacterSelection2D : MonoBehaviour {
 				   hit.collider.gameObject.layer == layer.player4)
 				{
 					clickedPosition = Input.mousePosition;
-					if(Network.isServer)										// wenn Client auch Server ist
+					if(networkView == null)
 					{
-						// Client ist auch Server
-//						NetworkMessageInfo myInfo = new NetworkMessageInfo();
-//						NetworkPlayer myPlayer = networkView.owner;
-//	schreib schutz		myInfo.sender = myPlayer;
-//	schreib schutz		myInfo.networkView = this.networkView;
-						CharacterClicked(clickedPosition);											// Server ruft Funktion selbst auf
-//						networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// Server bekommt diese RPC (RPCMode.Server) nicht
+						// SinglePlayer
+//						Debug.Log("SinglePlayer");
+						CharacterClickedSinglePlayer(clickedPosition);
 					}
 					else
 					{
-						// Client ist nur Client
-						networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// RPC geht von Client an Server
+						// Multiplayer
+						if(Network.isServer)										// wenn Client auch Server ist
+						{
+							// Client ist auch Server
+	//						NetworkMessageInfo myInfo = new NetworkMessageInfo();
+	//						NetworkPlayer myPlayer = networkView.owner;
+	//	schreib schutz		myInfo.sender = myPlayer;
+	//	schreib schutz		myInfo.networkView = this.networkView;
+							CharacterClicked(clickedPosition);											// Server ruft Funktion selbst auf
+	//						networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// Server bekommt diese RPC (RPCMode.Server) nicht
+						}
+						else
+						{
+							// Client ist nur Client
+							networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// RPC geht von Client an Server
+						}
+						Debug.Log(hit.collider.name);
+						debugmsg += hit.collider.name;
 					}
-					Debug.Log(hit.collider.name);
-					debugmsg += hit.collider.name;
 				}
 			}
 		}
@@ -198,21 +214,21 @@ public class CharacterSelection2D : MonoBehaviour {
 	 **/
 	void CharacterClicked(Vector3 recvPos)
 	{
-//		Debug.LogWarning("local CharacterClicked");
+		//		Debug.LogWarning("local CharacterClicked");
 		if(!Network.isServer)
 			return;
-
+		
 		string playerClickedID = networkView.owner.ToString();
 		bool characterInUse = false;
 		
 		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
 		GameObject prefab = GameObject.Find(characterName);
-
+		
 		if( prefab != null)
 		{
 			// Prefab (GameObject) in Scene gefunden
 			Debug.Log("MasterClient: Prefab " + characterName + " gefunden.");
-
+			
 			characterInUse = lobbyCharacterManager.CheckPrefabInUse(characterName);
 			
 			if(!characterInUse)
@@ -225,6 +241,43 @@ public class CharacterSelection2D : MonoBehaviour {
 				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterName );							// allen Clients Serverauswahl mitteilen (MasterClient bekommt diese RPC auch!)
 				//MarkCharacter(playerClickedID,characterName);
 				DoSpawnServerPlayer(getRandomSpawnPosition(),characterName);
+			}
+			else
+			{
+				// Character schon in Verwendung
+				
+				// Master Client hat angefragt ->  spielt sound ab
+				SelectedCharacterInUse();																						// Läuft local auf Server
+			}
+		}
+		else
+		{
+			// keine Prefab (GameObject) mit passendem Name in Scene gefunden
+			Debug.LogError("Server: Prefab " + characterName + " NICHT gefunden.");
+			return;																			// RPC abbrechen!
+		}
+	}
+
+	void CharacterClickedSinglePlayer(Vector3 recvPos)
+	{
+		string playerClickedID = ""+currentPlayer;
+		bool characterInUse = false;
+		
+		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
+		GameObject prefab = GameObject.Find(characterName);
+		
+		if( prefab != null)
+		{
+			// Prefab (GameObject) in Scene gefunden
+			Debug.Log("MasterClient: Prefab " + characterName + " gefunden.");
+			
+			characterInUse = lobbyCharacterManager.CheckPrefabInUseSinglePlayer(characterName);
+			
+			if(!characterInUse)
+			{
+				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
+				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
+				MarkCharacter(playerClickedID,characterName);
 			}
 			else
 			{
@@ -306,14 +359,23 @@ public class CharacterSelection2D : MonoBehaviour {
 	/**
 	 * Charakter selection Animation 
 	 **/
-	void MarkCharacter(string networkPlayerID, string characterPrefabName)
+	void MarkCharacter(string playerID, string characterPrefabName)
 	{
 		// Character Sound 
-		Debug.Log("Player " + networkPlayerID + " hat Character " + characterPrefabName + " gewählt");
+		Debug.Log("Player " + playerID + " hat Character " + characterPrefabName + " gewählt");
 		AudioSource.PlayClipAtPoint(characterSelected,transform.position,1);
 
 
-		lobbyCharacterManager.SetPlayerSprite(networkPlayerID, characterPrefabName);
+		lobbyCharacterManager.SetPlayerSprite(playerID, characterPrefabName);
+
+		if(networkView == null)
+		{
+			SpawnPlayer(getRandomSpawnPosition(), characterPrefabName);
+			currentPlayer++;
+			if(currentPlayer == 4)
+				currentPlayer = 0;
+		}
+
 		//Network.Instantiate();..
 //		net_DoSpawn( getRandomPosition(), characterPrefabName );
 	}
@@ -336,82 +398,24 @@ public class CharacterSelection2D : MonoBehaviour {
 		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 //		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
-
-		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
+		if(myCharacter != null)
+			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 
 	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
 	{
 		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
-		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
+		if(myCharacter != null)
+			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 
 
+	void SpawnPlayer( Vector3 position, string characterPrefabName )
+	{
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		if(myCharacter != null)
+			Instantiate( myCharacter, position, Quaternion.identity);
+	}
 
 
-
-
-//	/**
-//	 * Check in PlayerPrefs
-//	 **/
-//	bool CheckPrefabIdInUse(int characterPrefabID)
-//	{
-//		/*
-//		 * 
-//		 * ACHTUNG!!!! Server hat ID 0, NetworkPlayer geht bei 1 los!
-//		 * //foreach(NetworkPlayer player in Network.connections)
-//		 * 
-//		 * wenn player 2 disconnected, wird slot nicht direkt freigegeben!
-//		 */
-//
-//		Debug.LogWarning("Verbindungsanzahl: " + Network.connections.Length);
-//
-//		string key;
-//		int value;
-//
-//		// Charactere der Clients checken
-//		foreach(NetworkPlayer player in Network.connections)
-//		{
-//			key = player.ToString() + suffixID;		// Key um in PlayerPrefs nach einträgen zu schauen
-//			key = key.ToLower();
-//			value = PlayerPrefs.GetInt(key);			// Value 
-//			if(value == characterPrefabID)
-//			{
-//				return true;
-//			}
-//		}
-//		// Charactere des Master Clients (Server) checken
-//		key = "0" + suffixID;
-//		key = key.ToLower();
-//		if(PlayerPrefs.GetInt(key) == characterPrefabID)
-//			return true;
-//		return false;
-//    }
-
-//	/**
-//	 * RPC des Servers, (Client fordert Server auf diese Funktion zu starten)
-//	 **/
-//	[RPC]
-//	void ServerRPC(Vector3 pos, NetworkMessageInfo info)
-//	{
-//		if(networkView.isMine)
-//			return;
-//		if(!Network.isServer)
-//			return;
-//		
-//	}
-	
-
-	
-//	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
-//		Vector3 netPosition;
-//		if (stream.isWriting) {
-//			netPosition = this.position;
-//			stream.Serialize(ref netPosition);
-//		} else {
-//			netPosition = Vector3.zero;
-//			stream.Serialize(ref netPosition);
-//			this.position = netPosition;
-//		}
-//	}
 }

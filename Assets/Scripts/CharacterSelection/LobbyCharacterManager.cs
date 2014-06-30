@@ -40,7 +40,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 		//characterArray = Resources.LoadAll<Texture2D>("Skins");		// nur ganze Bilder 
 		
 		//if(Network.isServer)
-		if(networkView.isMine)
+		if(networkView == null || networkView.isMine)
 		{
 			
 			for(int i=0; i < characterArray.Length; i=i+6)
@@ -54,14 +54,29 @@ public class LobbyCharacterManager : MonoBehaviour {
 	// ArgumentException: You can only call GUI functions from inside OnGUI.
 	void OnGUI()
 	{
-		if(Network.isServer)
+		if(networkView == null)
 		{
-			if(EveryPlayerHasValidCharacter())
+			// Local
+			if(PlayerAndBotsHaveValidCharacter())
 			{
 				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
 				{
-					DebugListAllPlayer();
-					networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
+					Application.LoadLevel("sp_classic_selected_character");
+				}
+			}
+		}
+		else
+		{
+			// Multiplayer
+			if(Network.isServer)
+			{
+				if(EveryPlayerHasValidCharacter())
+				{
+					if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
+					{
+						DebugListAllPlayer();
+						networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
+					}
 				}
 			}
 		}
@@ -134,7 +149,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 		else
 		{
-			Debug.LogError("Player " + playerId + " has no character selected");
+//			Debug.LogError("Player " + playerId + " has no character selected");
 			return false;
 		}
 		
@@ -150,7 +165,19 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 		return false;
 	}
-	
+
+	public bool PlayerAndBotsHaveValidCharacter()
+	{
+		for(int i=0; i < 4; i++)
+		{
+			if(!PlayerHasValidCharacter(""+i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public bool EveryPlayerHasValidCharacter()
 	{
 		// Server Character
@@ -166,6 +193,21 @@ public class LobbyCharacterManager : MonoBehaviour {
 				return false;
 		}
 		return true;
+	}
+
+	public bool CheckPrefabInUseSinglePlayer(string characterPrefabName)
+	{
+		for(int i=0; i < 4; i++)
+		{
+			if(PlayerHasValidCharacter(""+i))
+			{
+				if(GetPlayerCharacter(""+i) == characterPrefabName)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

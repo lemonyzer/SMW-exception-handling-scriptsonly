@@ -27,9 +27,17 @@ public class ConnectToGameLobby : MonoBehaviour
 	private int numberOfAIPlayer;
 	private int numberOfLocalUserPlayer;
 
+
+	private float minButtonHeight;
+
 	void Awake()
 	{
-
+		if(Screen.dpi != 0)
+		{
+			minButtonHeight = 20f * Screen.height / Screen.dpi;
+		}
+		else
+			minButtonHeight = 20f;
 
 		MasterServer.ipAddress = "192.168.0.174";
 		MasterServer.port = 23466;
@@ -64,19 +72,23 @@ public class ConnectToGameLobby : MonoBehaviour
 		/**
 		 * Android Softbutton: Back
 		 **/
-		if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor)
+		if (Application.platform == RuntimePlatform.Android ||
+		    Application.platform == RuntimePlatform.WindowsPlayer ||
+		    Application.platform == RuntimePlatform.WindowsEditor)
 		{
 			if (Input.GetKey(KeyCode.Escape))
 			{
 				// Insert Code Here (I.E. Load Scene, Etc)
 				// OR Application.Quit();
-				Application.LoadLevel("MainMenuOld");
+				Application.LoadLevel("MainMenu");
 			}
 		}
 	}
 
 	void OnGUI()
 	{
+
+
 		// let the user enter IP address
 		GUILayout.Label( "IP Address" );
 		ip = GUILayout.TextField( ip, GUILayout.Width( 200f ) );
@@ -90,37 +102,30 @@ public class ConnectToGameLobby : MonoBehaviour
 			port = port_num;
 		
 		// connect to the IP and port
-		if( GUILayout.Button( "Connect", GUILayout.Width( 100f ) ) )
+		if( GUILayout.Button( "Connect", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ) )
 		{
 			Network.Connect( ip, port );
 		}
 		
 		// host a server on the given port, only allow 1 incoming connection (one other player)
-		if( GUILayout.Button( "Host", GUILayout.Width( 100f ) ) )
+		if( GUILayout.Button( "Host", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ) )
 		{
 			//InitializeServer(int connections, int listenPort, bool useNat);
 			//connections Anzahl (zusätzlich zum server selst)
 			Network.InitializeServer( serverSlots, port, true );
 		}
-		if( GUILayout.Button( "Refresh" ) || Time.realtimeSinceStartup > lastHostListRequest + hostListRefreshTimeout)
-		{
-			//				Debug.Log(Time.realtimeSinceStartup);
-			//				Debug.Log(lastHostListRequest);
-			//				Debug.Log(lastHostListRequest+hostListRefreshTimeout);
-			lastHostListRequest = Time.realtimeSinceStartup;
-			Debug.Log("Serverlist requested");
-			refreshHostList();
-		}
-		
-		if( loading )
-		{
-			GUILayout.Label( "Loading..." );
-		}
+
 
 		if ( true )
 		{
 			hostListRefreshed = false;
-			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.Width( 500f ), GUILayout.Height( 300f ) );
+			GUILayout.BeginArea(new Rect(Screen.width*0.5f, 0, Screen.width*0.5f, Screen.height));
+			GUILayout.Label("Serverlist from Master Server");
+			if( loading )
+			{
+				GUILayout.Label( "Loading Serverlist..." );
+			}
+			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.Width( Screen.width*0.5f ), GUILayout.Height( Screen.height - minButtonHeight -30f ) );
 			
 			HostData[] hosts = MasterServer.PollHostList();
 			for( int i = 0; i < hosts.Length; i++ )
@@ -128,7 +133,7 @@ public class ConnectToGameLobby : MonoBehaviour
 				Debug.Log("hosts: " + hosts.Length);
 				Debug.Log("hosts[" + i + "] gameName=" + hosts[i].gameName);
 				//if( GUI.Button(new Rect(10,40,210,30), hosts[i].gameName, GUILayout.ExpandWidth( true ) ) )
-				if( GUILayout.Button( hosts[i].guid + ":" + hosts[i].port + " " + hosts[i].gameName + " " + hosts[i].connectedPlayers + " " + hosts[i].playerLimit, GUILayout.ExpandWidth( true ) ) )
+				if( GUILayout.Button( hosts[i].guid + ":" + hosts[i].port + " " + hosts[i].gameName + " " + hosts[i].connectedPlayers + " " + hosts[i].playerLimit, GUILayout.Width( Screen.width*0.5f - 10f ), GUILayout.Height (minButtonHeight) ) )
 				{
 					Network.Connect( hosts[i].ip, hosts[i].port );
 				}
@@ -138,8 +143,18 @@ public class ConnectToGameLobby : MonoBehaviour
 			{
 				GUILayout.Label( "No servers running" );
 			}
-			
 			GUILayout.EndScrollView();
+
+			if( GUILayout.Button( "Refresh", GUILayout.Height (minButtonHeight)) || Time.realtimeSinceStartup > lastHostListRequest + hostListRefreshTimeout)
+			{
+				//				Debug.Log(Time.realtimeSinceStartup);
+				//				Debug.Log(lastHostListRequest);
+				//				Debug.Log(lastHostListRequest+hostListRefreshTimeout);
+				lastHostListRequest = Time.realtimeSinceStartup;
+				Debug.Log("Serverlist requested");
+				refreshHostList();
+			}
+			GUILayout.EndArea();
 
 		}
 	}

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class MainMenu : MonoBehaviour
+public class MainMenu2 : MonoBehaviour
 {
 	private string connectIP = "192.168.0.129";
 	

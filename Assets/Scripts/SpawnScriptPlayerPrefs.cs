@@ -7,14 +7,13 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	public bool startGameTrigger = false;
 	public bool gameStarted = false;
 	public bool startSpawning = false;
-
-	private int characterPrefabID = 0;
 	
+
 //	private int numberOfAllPlayer;
 //	private int numberOfAIPlayer;
 //	private int numberOfLocalUserPlayer;
 
-//	public Character characterDictonary;
+	public Dictionary<string,GameObject> characterDictonary;
 	public List<GameObject> characterAIPrefabList;
 	public List<GameObject> characterUserPrefabList;
 
@@ -25,13 +24,25 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 	private Stats statsScript;
 
-//	private Sprite[] characterArray;
+	private GameObject[] characterArray;
 
 
 	void Awake ()
 	{
 
-//		characterArray = Resources.LoadAll<Sprite>("Skins");
+		characterArray = Resources.LoadAll<GameObject>(LobbyCharacterManager.resourcesPath);
+		characterDictonary = new Dictionary<string,GameObject>();
+		foreach(GameObject go in characterArray)
+		{
+			if(go != null)
+			{
+				if(go.name != null)
+				{
+					characterDictonary.Add(go.name,go);
+					Debug.Log("characterDictionary: " + characterDictonary[go.name].name);
+				}
+			}
+		}
 
 		countDown = GameObject.FindGameObjectWithTag(Tags.countDown);
 		anim = countDown.GetComponent<Animator>();
@@ -71,19 +82,46 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
 	}
 
-	void RequestClientsCharacterInstantiation()
+	IEnumerator RequestClientsCharacterInstantiation()
 	{
+
+		Debug.Log("Before Waiting 2 seconds");
+		yield return new WaitForSeconds(2);
+		Debug.Log("After Waiting 2 Seconds");
+
+//		string key = "0" + LobbyCharacterManager.suffixName;
+//		key = key.ToLower();
+//		string serverCharacterName = PlayerPrefs.GetString(key);
+//
+//		NetworkViewID viewID = Network.AllocateViewID();
+//		networkView.RPC("SpawnBox", RPCMode.AllBuffered, viewID, getRandomPosition(), serverCharacterName);
+
 		foreach(NetworkPlayer player in Network.connections)
 		{
 			string playerCharacterName = GetPlayerCharacter(player.ToString());
-			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
+//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
 			networkView.RPC( "net_DoSpawnGameScene", player, getRandomPosition(), playerCharacterName);
 			Debug.LogWarning("Player " + player.ToString() + " Prefab Name: " + playerCharacterName);
 		}
 	}
 
-	void InstantiateServerCharacter()
+
+
+	[RPC]
+	void SpawnBox(NetworkViewID viewID, Vector3 position, string characterName) {
+		Transform clone;
+		clone = Instantiate(characterDictonary[characterName], position, Quaternion.identity) as Transform as Transform;
+		NetworkView nView;
+		nView = clone.GetComponent<NetworkView>();
+		nView.viewID = viewID;
+	}
+
+	IEnumerator InstantiateServerCharacter()
 	{
+		Debug.Log("Before Waiting 2 seconds");
+		yield return new WaitForSeconds(2);
+		Debug.Log("After Waiting 2 Seconds");
+
 		string key = "0" + LobbyCharacterManager.suffixName;
 		key = key.ToLower();
 		string serverCharacterName = PlayerPrefs.GetString(key);
@@ -132,8 +170,8 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		if( Network.isServer )
 		{
 			// server doesn’t trigger OnPlayerConnected, manually spawn
-			InstantiateServerCharacter();
-			RequestClientsCharacterInstantiation();
+			StartCoroutine(InstantiateServerCharacter());
+			StartCoroutine(RequestClientsCharacterInstantiation());
 //			Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), getRandomPosition(), Quaternion.identity,0 );
 
 		}
@@ -261,8 +299,10 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		
 		// wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
 		//		GameObject myCharacter = GameObject.Find (characterPrefabName);
-		
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+
+//		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = characterDictonary[characterPrefabName];
+		Debug.Log("RPC try to Spawn: " + myCharacter.name);
 		//		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 		//		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 		if(myCharacter != null)
