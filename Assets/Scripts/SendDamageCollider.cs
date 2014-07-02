@@ -8,9 +8,9 @@ public class SendDamageCollider : MonoBehaviour {
 	//public bool enabled=true;
 
 
-	Transform myCharacterTransform;		
-	Transform targetCharacterTransform;
-	Transform targetHead;
+	GameObject myCharacterGameObject;		
+	GameObject targetCharacterGameObject;
+	GameObject targetHead;
 
 	HealthController myHealthController;
 	HealthController targetHealthController;
@@ -34,10 +34,10 @@ public class SendDamageCollider : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		myCharacterTransform = transform.parent;
-		myHealthController = myCharacterTransform.GetComponent<HealthController>();
+		myCharacterGameObject = transform.parent.gameObject;
+		myHealthController = myCharacterGameObject.GetComponent<HealthController>();
 		if(myHealthController == null)
-			Debug.LogError( myCharacterTransform.name + "'s has no HealthController");
+			Debug.LogError( myCharacterGameObject.name + "'s has no HealthController");
 	}
 	
 	// Update is called once per frame
@@ -61,14 +61,14 @@ public class SendDamageCollider : MonoBehaviour {
 				{
 					//Angriff zählt nur wenn anderer Collider sich in der Layer (Ebene) "Head" befindet
 
-					if(myCharacterTransform.rigidbody2D.velocity.y < 0)
+					if(myCharacterGameObject.rigidbody2D.velocity.y < 0)
 					{
 						//Angriff zählt nur bei Fallbewegung
 
-						targetHead = other.gameObject.transform;
-						targetCharacterTransform = targetHead.parent;
-						statsManager.HeadJump(myCharacterTransform,targetCharacterTransform);
-						//targetCharacterTransform.GetComponent<HealthController>().ApplyDamage(damageValue,true);
+						targetHead = other.gameObject;
+						targetCharacterGameObject = targetHead.transform.parent.gameObject;
+						statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);
+						//targetCharacterGameObject.GetComponent<HealthController>().ApplyDamage(damageValue,true);
 
 						//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
 
@@ -80,11 +80,11 @@ public class SendDamageCollider : MonoBehaviour {
 					}
 					else
 					{
-						Debug.Log( myCharacterTransform.name + ": " + "Angriff zählt nur bei Fallbewegung");
+						Debug.Log( myCharacterGameObject.name + ": " + "Angriff zählt nur bei Fallbewegung");
 					}
 					
 					// Angreifenden Player nach oben schleudern
-					myCharacterTransform.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+					myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
 				}
 			}
 		}

@@ -40,8 +40,12 @@ public class StatsManager : MonoBehaviour {
 	public GUIText player2GUIText;
 	public GUIText player3GUIText;
 
+	private SpawnScript spawnScript;
+
 	void Awake()
 	{
+		spawnScript = GetComponent<SpawnScript>();
+
 		characterManager = GetComponent<LobbyCharacterManager>();
 		slotsCount = characterManager.getNumberOfGameSlots();
 		teamsCount = characterManager.getNumberOfTeams();
@@ -104,10 +108,22 @@ public class StatsManager : MonoBehaviour {
 
 	void AddPoint(string player, int pointValue)
 	{
-		int currentPoints = GetPoints(player);
+		int currentPoints;// = points[player];
+		if(points.TryGetValue(player, out currentPoints))
+		{
+			// Key exists
+			currentPoints += pointValue;
+			points[player] = currentPoints;
+			Debug.Log("Player " + player + " hat " + points[player] + " Punkte");
+			Debug.Log("Player " + player + " hat " + currentPoints + " Punkte");
+		}
+		else
+		{
+			// Key exists not
+			currentPoints = pointValue;
+			points.Add(player,currentPoints);
+		}
 
-		currentPoints += pointValue;
-		points.Add(player,currentPoints);
 		if(currentGameMode == GameMode.Classic)
 		{
 			if(currentPoints >= gameModePointLimit)
@@ -116,6 +132,7 @@ public class StatsManager : MonoBehaviour {
 				gameWinner = player;
 			}
 		}
+
 	}
 
 	int GetPoints(string player)
@@ -123,9 +140,11 @@ public class StatsManager : MonoBehaviour {
 		int currentPoints;// = points[player];
 		if(points.TryGetValue(player, out currentPoints))
 		{
+			// Key exists
 		}
 		else
 		{
+			// Key exists not
 			currentPoints = 0;
 		}
 		return currentPoints;
@@ -158,18 +177,30 @@ public class StatsManager : MonoBehaviour {
 
 	void AddNemesis(string killer, string victim)
 	{
-		int currentNemesis = GetNemesis(killer,victim);
-		currentNemesis += 1;
-		nemesis.Add(GetNemesisKey(killer,victim), currentNemesis);
+		int currentNemesis;// = points[player];
+		if(nemesis.TryGetValue(GetNemesisKey(killer,victim), out currentNemesis))
+		{
+			// Key Exists
+			currentNemesis++;
+			nemesis[GetNemesisKey(killer,victim)] = currentNemesis;
+		}
+		else
+		{
+			// Key is new
+			currentNemesis = 1;
+			nemesis.Add(GetNemesisKey(killer,victim), currentNemesis);
+		}
+
 	}
 
-	public void HeadJump(Transform attacker, Transform victim)
+	public void HeadJump(GameObject attacker, GameObject victim)
 	{
 		if(gameRunning)
 		{
 			victim.GetComponent<HealthController>().ApplyDamage(damageValueHeadJump,true);
-			AddKill(attacker.name, victim.name);
-			AddNemesis(attacker.name, victim.name);
+
+			AddKill(spawnScript.playerDictonary[attacker].getID()+"", spawnScript.playerDictonary[victim].getID()+"");
+			AddNemesis(spawnScript.playerDictonary[attacker].getID()+"", spawnScript.playerDictonary[victim].getID()+"");
 		}
 	}
 }

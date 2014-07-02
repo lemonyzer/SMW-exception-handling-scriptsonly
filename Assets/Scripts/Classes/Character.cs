@@ -7,13 +7,48 @@ public class Character : IComparable<Character>
 	private string characterName;
 	private Sprite characterSprite;
 	private GameObject characterPrefab;
+	private PlatformCharacter platformCharacter;
+	private HealthController healthController;
+	private PlatformAIControl platformAIControl;
+	private PlatformUserControlAnalogStickAndButton platformUserControlMobile;
+	private PlatformUserControlKeyboard platformUserControlPC;
+	private bool isAI;
 
 	// Constructor
-	public Character(string name, Sprite sprite, GameObject prefab)
+	public Character(GameObject prefab, bool isAI)
 	{
-		this.characterName = name;
-		this.characterSprite = sprite;
 		this.characterPrefab = prefab;
+		this.isAI = isAI;
+		this.characterName = prefab.name;
+		this.characterSprite = prefab.GetComponent<SpriteRenderer>().sprite;
+		this.platformCharacter = prefab.GetComponent<PlatformCharacter>();
+		this.healthController = prefab.GetComponent<HealthController>();
+
+		this.platformUserControlMobile = prefab.GetComponent<PlatformUserControlAnalogStickAndButton>();
+		this.platformUserControlPC = prefab.GetComponent<PlatformUserControlKeyboard>();
+		this.platformAIControl = prefab.GetComponent<PlatformAIControl>();
+		if(isAI)
+		{
+			this.platformUserControlMobile.enabled = false;
+			this.platformUserControlPC.enabled = false;
+			this.platformAIControl.enabled = true;
+		}
+		else
+		{
+			this.platformUserControlMobile.enabled = true;
+			this.platformUserControlPC.enabled = true;
+			this.platformAIControl.enabled = false;
+		}
+	}
+
+	public HealthController getHealthController()
+	{
+		return this.healthController;
+	}
+
+	public PlatformCharacter getPlatformCharacter()
+	{
+		return this.platformCharacter;
 	}
 
 	public int CompareTo(Character other)

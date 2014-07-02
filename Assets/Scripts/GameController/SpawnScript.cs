@@ -12,9 +12,10 @@ public class SpawnScript : MonoBehaviour {
 	private int numberOfAIPlayer;
 	private int numberOfLocalUserPlayer;
 
-//	public Character characterDictonary;
-	public List<GameObject> characterAIPrefabList;
-	public List<GameObject> characterUserPrefabList;
+	public Dictionary<GameObject, Player> playerDictonary;
+
+//	public List<GameObject> characterAIPrefabList;
+//	public List<GameObject> characterUserPrefabList;
 
 	private GameObject gameController;
     private HashID hash;
@@ -26,12 +27,16 @@ public class SpawnScript : MonoBehaviour {
 
 	GameObject[] characterArray;
 
+
+
 	void Awake ()
 	{
+		playerDictonary = new Dictionary<GameObject, Player>();
+
 		statsManager = GetComponent<StatsManager>();
 		characterManager = GetComponent<LobbyCharacterManager>();
 
-		characterArray = Resources.LoadAll<GameObject>("PlayerCharacter/lokal");
+		characterArray = Resources.LoadAll<GameObject>("PlayerCharacter/local");
 
 		foreach(GameObject currCharacter in characterArray)
 		{
@@ -89,13 +94,24 @@ public class SpawnScript : MonoBehaviour {
 		//		NetworkViewID viewID = Network.AllocateViewID();
 		//		networkView.RPC("SpawnBox", RPCMode.AllBuffered, viewID, getRandomPosition(), serverCharacterName);
 		
-		for(int i=0; i<4; i++)
+		for(int i=0; i < characterManager.getNumberOfGameSlots(); i++)
 		{
 			string playerCharacterName = characterManager.GetPlayerCharacter(""+i);
 			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
-			GameObject currentCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
-			if(currentCharacter != null)
-				currentCharacter = (GameObject)Instantiate(currentCharacter, getRandomPosition(), Quaternion.identity);
+			GameObject currentCharacterGameObject = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
+			if(currentCharacterGameObject != null)
+			{
+				Character currentCharacter;
+				if(i==0)
+					currentCharacter = new Character(currentCharacterGameObject,false);	
+				else
+					currentCharacter = new Character(currentCharacterGameObject,true);	
+
+				Player currentPlayer = new Player(i, "Player", currentCharacter);
+				currentCharacterGameObject = (GameObject)Instantiate(currentCharacterGameObject, getRandomPosition(), Quaternion.identity);
+				playerDictonary.Add(currentCharacterGameObject,currentPlayer);
+
+			}
 
 			Debug.LogWarning("Player " + i + " Prefab Name: " + playerCharacterName);
 		}

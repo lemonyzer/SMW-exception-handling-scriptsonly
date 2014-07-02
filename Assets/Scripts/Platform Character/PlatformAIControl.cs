@@ -35,11 +35,13 @@ public class PlatformAIControl : MonoBehaviour {
 
 	private GameObject gameController;
 	private Stats stats;
+	private SpawnScript spawnScript;
 	
 	void Awake() {
 
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		stats = gameController.GetComponent<Stats>();
+		spawnScript = gameController.GetComponent<SpawnScript>();
 	}
 
 	// Use this for initialization

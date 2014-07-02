@@ -393,7 +393,7 @@ public class spCharacterSelection2D : MonoBehaviour
 // wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
 //		GameObject myCharacter = GameObject.Find (characterPrefabName);
 
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 //		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 		if(myCharacter != null)
@@ -402,7 +402,7 @@ public class spCharacterSelection2D : MonoBehaviour
 
 	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		if(myCharacter != null)
 			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
@@ -410,7 +410,7 @@ public class spCharacterSelection2D : MonoBehaviour
 
 	void SpawnPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		if(myCharacter != null)
 			Instantiate( myCharacter, position, Quaternion.identity);
 	}

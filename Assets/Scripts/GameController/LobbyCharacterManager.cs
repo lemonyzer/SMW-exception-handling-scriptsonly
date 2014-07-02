@@ -3,7 +3,8 @@ using System.Collections;
 
 public class LobbyCharacterManager : MonoBehaviour {
 
-	public static string resourcesPath = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
+	public static string resourcesPathLan = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
+	public static string resourcesPathLocal = "PlayerCharacter/local/";
 	public static string suffixName = "_Prefab_Name";
 	public static string noCharacter = "noCharacter";
 	public static string gameSlotsCount = "gameSlotsCount";
@@ -33,6 +34,11 @@ public class LobbyCharacterManager : MonoBehaviour {
 	//Texture2D[] characterArray;
 	Sprite[] characterArray;
 
+	public void setNumberOfGameSlots()
+	{
+		PlayerPrefs.SetInt(gameSlotsCount,4);
+	}
+
 	public int getNumberOfGameSlots()
 	{
 		Debug.Log("gameSlotsCount " + PlayerPrefs.GetInt(gameSlotsCount));
@@ -47,6 +53,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 
 	void Awake()
 	{
+		setNumberOfGameSlots();
 		slots = getNumberOfGameSlots();
 
 		//PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client

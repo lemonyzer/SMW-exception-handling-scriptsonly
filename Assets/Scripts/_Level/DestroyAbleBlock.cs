@@ -17,8 +17,14 @@ public class DestroyAbleBlock : MonoBehaviour {
 	private GameObject myBlock;
 	private BoxCollider2D myBlockCollider;
 
+	private GameObject gameController;
+	private Layer layer;
+
 	void Awake()
 	{
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		layer = gameController.GetComponent<Layer>();
+
 		myTriggerZone = GetComponent<BoxCollider2D>();
 		myBlock = this.transform.parent.gameObject;
 		myBlockCollider = myBlock.GetComponent<BoxCollider2D>();
@@ -65,20 +71,9 @@ public class DestroyAbleBlock : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.gameObject.tag != null)
+		if(other.gameObject.layer == layer.head)
 		{
-			if(other.gameObject.tag == targetTag)
-			{
-//				other.gameObject.transform.parent.rigidbody2D.velocity = new Vector2(other.gameObject.transform.parent.rigidbody2D.velocity.x,0f);
-				destroyed = true;
-
-//				foreach(BoxCollider2D collider in myColliders)
-//				{
-//					collider.enabled = false;
-//				}
-
-
-			}
+			destroyed = true;
 		}
 	}
 

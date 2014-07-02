@@ -329,7 +329,7 @@ public class CharacterSelection2D : MonoBehaviour
 // wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
 //		GameObject myCharacter = GameObject.Find (characterPrefabName);
 
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLan + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 //		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 
@@ -338,7 +338,7 @@ public class CharacterSelection2D : MonoBehaviour
 
 	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLan + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 

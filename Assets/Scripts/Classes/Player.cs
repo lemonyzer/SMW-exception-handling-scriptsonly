@@ -4,17 +4,20 @@ using System;
 
 public class Player
 {
+	private int id;
 	private string name;
 	private Character character;
 	private Character characterClone;
+//	private bool isAI;
 	private int points;
 	private int kills;
 	private int deads;
 //	private int 
 	
 	// Constructor
-	public Player(string name, Character character)
+	public Player(int id, string name, Character character)
 	{
+		this.id = id;
 		this.name = name;
 		this.character = character;
 	}
@@ -32,7 +35,13 @@ public class Player
 //			return 0;
 //		
 //	}
-	
+
+
+	public int getID()
+	{
+		return id;
+	}
+
 	public string getName()
 	{
 		return name;
