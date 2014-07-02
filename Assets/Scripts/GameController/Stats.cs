@@ -12,7 +12,7 @@ public class Stats : MonoBehaviour {
 	public GameObject backGround;
 	public List<GameObject> playerList;
 	public List<GameObject> statsList;
-	bool allEnemyDeath=false;
+//	bool allEnemyDeath=false;
 	bool playerLebt=true;
 	bool winEffectOn=false;
 	bool restart=false;
@@ -56,7 +56,7 @@ public class Stats : MonoBehaviour {
 		else
 		{
 
-			allEnemyDeath = true;
+//			allEnemyDeath = true;
 			playerLebt = false;
 			foreach(GameObject go in playerList)			
 			{
@@ -78,7 +78,7 @@ public class Stats : MonoBehaviour {
 					{
 						if(currentLifes > 0f)
 						{
-							allEnemyDeath = false;
+//							allEnemyDeath = false;
 						}
 					}
 				}

@@ -8,14 +8,12 @@ public class JumpAblePlatformSaveZone : MonoBehaviour {
 	PlatformCharacter playerController;
 
 	private GameObject gameController;
-	private HashID hash;
 	private Layer layer;
 	
 	
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 	}
 	

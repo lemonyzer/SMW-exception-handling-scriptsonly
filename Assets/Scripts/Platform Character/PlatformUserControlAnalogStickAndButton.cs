@@ -18,7 +18,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		/**
 		 * Input Flags (Jump Button)
 		 **/
-	int buttonTouchID=-1;			// ID of current jump touch (right screen)
+//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
 	int buttonTapCount=0;			// tap count current jump touch (right screen)
 	bool buttonIsPressed = false;	// flag if player presses jump 		
 	bool buttonIsTapped = false;	// flag if player presses jump again		
@@ -26,7 +26,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		/**
 		 * Input Flags (Analog Stick)
 		 **/
-	Touch analogStick;
+//	Touch analogStick;
 	int analogStickTouchID=-1;
 	bool analogStickTouchBegan = false;
 	bool analogStickIsStillPressed = false;
@@ -149,7 +149,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 				if(touch.position.x > (Screen.width * 0.5f))
 				{
 					debugmsg += "Jump found\n";
-					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
+//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
 					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
 						buttonTapCount = touch.tapCount;	
 						buttonIsTapped = true;				
@@ -185,7 +185,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 					{
 						debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
-						analogStick = touch;
+//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
 						analogStickTouchBegan = true;
 						analogStickIsStillPressed = true;
@@ -343,7 +343,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		{
 			debugmsg += "kein Button gefunden\n";
 			//kein Button in der Schleife oben gefunden, zurücksetzen
-			buttonTouchID = -1;
+//			buttonTouchID = -1;
 			buttonTapCount = 0;
 		}
 

@@ -6,6 +6,12 @@ public class LobbyCharacterManager : MonoBehaviour {
 	public static string resourcesPath = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
 	public static string suffixName = "_Prefab_Name";
 	public static string noCharacter = "noCharacter";
+	public static string gameSlotsCount = "gameSlotsCount";
+	public static string gameTeamsCount = "gameTeamsCount";
+	public static string gameAICount = "gameAICount";
+
+
+	private int slots;
 
 	public GUIText player0GUIText;
 	public GUIText player1GUIText;
@@ -27,10 +33,24 @@ public class LobbyCharacterManager : MonoBehaviour {
 	//Texture2D[] characterArray;
 	Sprite[] characterArray;
 
+	public int getNumberOfGameSlots()
+	{
+		Debug.Log("gameSlotsCount " + PlayerPrefs.GetInt(gameSlotsCount));
+		return PlayerPrefs.GetInt(gameSlotsCount);
+	}
+
+	public int getNumberOfTeams()
+	{
+		Debug.Log("gameTeamsCount " + PlayerPrefs.GetInt(gameTeamsCount));
+		return PlayerPrefs.GetInt(gameTeamsCount);
+	}
+
 	void Awake()
 	{
+		slots = getNumberOfGameSlots();
 
-		PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
+		//PlayerPrefs.DeleteAll();		// delete PlayerPrefs auf Server und Client
+		RemoveAllPlayerCharacter();
 
 		// Disable screen dimming
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
@@ -101,19 +121,24 @@ public class LobbyCharacterManager : MonoBehaviour {
 		// Hash / static string scenename/levelname
 		NetworkLevelLoader.Instance.LoadLevel(sceneName,0);
 	}
-
+    
 	public string GetPlayerPrefsKey( string playerID)
 	{
 		string key = playerID + suffixName;
 		key = key.ToLower();
 		return key;
 	}
-
+	
 	public void SetPlayerCharacter( string playerId, string characterPrefabName)
 	{
 		PlayerPrefs.SetString(GetPlayerPrefsKey(playerId), characterPrefabName);
 		Debug.Log("Key: " + GetPlayerPrefsKey(playerId) + " mit Value: " + GetPlayerCharacter(playerId) + " in PlayerPrefs eingetragen!");
-	}
+    }
+
+    public string GetPlayerCharacter(string playerId)
+	{
+		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
+    }
 
 	public void RemovePlayerCharacter( string playerId )
 	{
@@ -123,6 +148,17 @@ public class LobbyCharacterManager : MonoBehaviour {
 			PlayerPrefs.DeleteKey(GetPlayerPrefsKey(playerId));
 		}
 
+	}
+
+	public void RemoveAllPlayerCharacter()
+	{
+		for(int i=0; i<100; i++)
+		{
+			if(PlayerHasValidCharacter(i+""))
+			{
+				RemovePlayerCharacter(i+"");
+			}
+		}
 	}
 	
 	public bool PlayerHasValidCharacter( string playerId )
@@ -143,7 +179,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 			}
 			else
 			{
-				Debug.LogError("PlayerPrefs " + key + " with value " + value + " no GameObject in Scene found");
+//				Debug.LogError("PlayerPrefs " + key + " with value " + value + " no GameObject in Scene found");
 				return false;
 			}
 		}
@@ -168,7 +204,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 
 	public bool PlayerAndBotsHaveValidCharacter()
 	{
-		for(int i=0; i < 4; i++)
+		for(int i=0; i < slots; i++)
 		{
 			if(!PlayerHasValidCharacter(""+i))
 			{
@@ -245,10 +281,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 		return false;
 	}
 
-	public string GetPlayerCharacter(string playerId)
-	{
-		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
-	}
+
 
 //	public GUITexture GetPlayerGUITexture(string playerID)
 //	{
@@ -399,43 +432,4 @@ public class LobbyCharacterManager : MonoBehaviour {
 		}
 		return null;
 	}
-
-
-//	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
-//		string player0Text;
-//		string player1Text;
-//		string player2Text;
-//		string player3Text;
-//
-//		string player0PrefabName;
-//		string player1PrefabName;
-//		string player2PrefabName;
-//		string player3PrefabName;
-//
-//		if (stream.isWriting) {
-//			player0Text = this.player0GUIText.text;
-//			player1Text = this.player1GUIText.text;
-//			player2Text = this.player2GUIText.text;
-//			player3Text = this.player3GUIText.text;
-//
-//			stream.Serialize(ref player0Text);
-//			stream.Serialize(ref player1Text);
-//			stream.Serialize(ref player2Text);
-//			stream.Serialize(ref player3Text);
-//		} else {
-//			player0Text = "";
-//			player1Text = "";
-//			player2Text = "";
-//			player3Text = "";
-//			stream.Serialize(ref player0Text);
-//			stream.Serialize(ref player1Text);
-//			stream.Serialize(ref player2Text);
-//			stream.Serialize(ref player3Text);
-//
-//			this.player0GUIText.text = player0Text;
-//			this.player1GUIText.text = player1Text;
-//			this.player2GUIText.text = player2Text;
-//			this.player3GUIText.text = player3Text;
-//		}
-//	}
 }

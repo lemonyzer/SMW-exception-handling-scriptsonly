@@ -9,7 +9,7 @@ public class PlatformAIControl : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
-	private string debugmsg="";
+//	private string debugmsg="";
 
 	/**
 	 * AI Variablen
@@ -28,26 +28,24 @@ public class PlatformAIControl : MonoBehaviour {
 	private float changeDirectionInterval=0.5f; // in Sekunden
 	private bool ableToChangeDirection = false;
 	private float deltaLastDirectionChange;
-	private float deltaLastJump;
+//	private float deltaLastJump;
 
 	private float inputVelocity;
 	private bool inputJump;
 
 	private GameObject gameController;
-	private HashID hash;
 	private Stats stats;
 	
 	void Awake() {
 
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		stats = gameController.GetComponent<Stats>();
-		hash = gameController.GetComponent<HashID>();
 	}
 
 	// Use this for initialization
 	void Start () {
 		character = GetComponent<PlatformCharacter>();
-		deltaLastJump =0.0f;
+//		deltaLastJump = 0.0f;
 		deltaLastDirectionChange = 0.7f;
 	}
 	

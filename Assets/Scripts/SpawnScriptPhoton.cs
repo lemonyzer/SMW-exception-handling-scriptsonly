@@ -89,42 +89,42 @@ public class SpawnScriptPhoton : MonoBehaviour {
 		}
 	}
 	
-	public void StartSpawn()
-	{
-		int characterID = -1;
-		GameObject currentCharacter;
-		for(int i=0; i<numberOfAIPlayer; i++)
-		{
-			characterID = PlayerPrefs.GetInt("AI"+i+"Character");
-			Debug.Log("AI " + i + " CharacterID: " + characterID);
-			if(characterID != null)
-			{
-				if(characterID >=0 && characterID < characterAIPrefabList.Count)
-				{
-					currentCharacter = (GameObject)Instantiate(characterAIPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-					statsScript.AddPlayer(currentCharacter);
-                }
-            }
-        }
-
-		characterID = -1;
-		for(int i=0; i<numberOfLocalUserPlayer; i++)
-		{
-			characterID = PlayerPrefs.GetInt("User"+i+"Character");
-			Debug.Log("User " + i + " CharacterID: " + characterID);
-			if(characterID != null)
-			{
-				if(characterID >=0 && characterID < characterUserPrefabList.Count)
-				{
-					currentCharacter = (GameObject)Instantiate(characterUserPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-					statsScript.AddPlayer(currentCharacter);
-                }
-            }
-        }
-		startGameTrigger = true;
-    }
+//	public void StartSpawn()
+//	{
+//		int characterID = -1;
+//		GameObject currentCharacter;
+//		for(int i=0; i<numberOfAIPlayer; i++)
+//		{
+//			characterID = PlayerPrefs.GetInt("AI"+i+"Character");
+//			Debug.Log("AI " + i + " CharacterID: " + characterID);
+//			if(characterID != null)
+//			{
+//				if(characterID >=0 && characterID < characterAIPrefabList.Count)
+//				{
+//					currentCharacter = (GameObject)Instantiate(characterAIPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
+//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
+//					statsScript.AddPlayer(currentCharacter);
+//                }
+//            }
+//        }
+//
+//		characterID = -1;
+//		for(int i=0; i<numberOfLocalUserPlayer; i++)
+//		{
+//			characterID = PlayerPrefs.GetInt("User"+i+"Character");
+//			Debug.Log("User " + i + " CharacterID: " + characterID);
+//			if(characterID != null)
+//			{
+//				if(characterID >=0 && characterID < characterUserPrefabList.Count)
+//				{
+//					currentCharacter = (GameObject)Instantiate(characterUserPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
+//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
+//					statsScript.AddPlayer(currentCharacter);
+//                }
+//            }
+//        }
+//		startGameTrigger = true;
+//    }
 
 	void OnPlayerConnected( NetworkPlayer player )
 	{

@@ -3,7 +3,7 @@ using System.Collections;
 
 public class HealthController : MonoBehaviour {
 
-	public bool godmode=false;
+	public bool godmode = false;
 
 	public AudioClip deathSound;
 	public AudioClip gameOverSound;
@@ -16,8 +16,7 @@ public class HealthController : MonoBehaviour {
 	public float spawnAnimationTime = 1.0f;
 	public float spawnProtectionTime = 1.0f;
 	public float restartDelay = 5.0f;
-
-	public GUIText lbl_life=null;
+	
 	public GameObject deathPrefabRight;
 	public bool respawn=false;
 	public bool enableControlls=false;
@@ -67,8 +66,6 @@ public class HealthController : MonoBehaviour {
 			Debug.LogError(myCharacter.name + "'s head has no BoxCollider2D");
 
 		anim = myCharacter.GetComponent<Animator>();
-		if(lbl_life != null)
-			lbl_life.text = myCharacter.name + ": " + currentLifes;
 
 		myPlatformCharacterScript = myCharacter.GetComponent<PlatformCharacter>();
 		if(myPlatformCharacterScript == null)
@@ -121,14 +118,6 @@ public class HealthController : MonoBehaviour {
 							/* nur noch ein Leben verbleibend */
 							AudioSource.PlayClipAtPoint(criticalHealthSound,transform.position,1);
 						}
-
-	//					/* Leben auf GUI ausgeben */
-	//					if(lbl_life != null)
-	//					{
-	//						lbl_life.text = myCharacter.name + ": " + currentLifes;
-	//					}
-	//					else
-	//						Debug.LogError("keine Label für Leben gesetzt!");
 							
 						
 	//					Debug.Log (this.gameObject.name + ": takes damage of " + damage);
@@ -183,7 +172,7 @@ public class HealthController : MonoBehaviour {
 		//myCharacter.renderer.enabled = false;
 
 		// Deathanimation positioning
-		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
+//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
 
 		// Show Deathanimation and Destroy after deathTime seconds
 		//Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
@@ -231,11 +220,7 @@ public class HealthController : MonoBehaviour {
 		//myCharacter.GetComponent<BoxCollider2D>().enabled = true;	//BAD PROGRAMMING!
 		myCharacter.rigidbody2D.isKinematic = true;
 	}
-
-	void RestartScene()
-	{	
-		Application.LoadLevel(Application.loadedLevel);
-	}
+	
 /*
 	IEnumerator DamageEffect()
 	{
@@ -269,14 +254,14 @@ public class HealthController : MonoBehaviour {
 		disableSpawnProtection=true;
 	}
 
-	IEnumerator PlayerGameOver()
-	{
-		Debug.Log("Restart in " + restartDelay + " seconds");
-		yield return new WaitForSeconds(restartDelay);
-		RestartScene();
-		/* Funktioneirt nicht, mit if RestartScene im Update immer abfragen, sehr resourcen verschwendent!!!! 
-		 */
-	}
+//	IEnumerator PlayerGameOver()
+//	{
+//		Debug.Log("Restart in " + restartDelay + " seconds");
+//		yield return new WaitForSeconds(restartDelay);
+//		RestartScene();
+//		/* Funktioneirt nicht, mit if RestartScene im Update immer abfragen, sehr resourcen verschwendent!!!! 
+//		 */
+//	}
 
 	void stopControlls()
 	{

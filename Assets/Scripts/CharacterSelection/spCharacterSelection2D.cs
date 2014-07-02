@@ -2,11 +2,9 @@
 using System.Collections;
 //using UnityEditor;
 
-public class spCharacterSelection2D : MonoBehaviour {
-
-	private int currentPlayer=0;
-
-	private bool debugShown = false;
+public class spCharacterSelection2D : MonoBehaviour
+{
+	private int currentPlayer = 0;
 
 	private Vector3 clickedPosition = Vector3.zero;
 	public AudioClip characterInUseSound;
@@ -22,7 +20,7 @@ public class spCharacterSelection2D : MonoBehaviour {
 	public Sprite player2CharacterSprite;
 	public Sprite player3CharacterSprite;
 	
-	private string debugmsg="";
+	private string debugmsg = "";
 
 	private LobbyCharacterManager lobbyCharacterManager;
 	private Layer layer;

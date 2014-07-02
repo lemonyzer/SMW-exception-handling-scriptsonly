@@ -6,7 +6,7 @@ public class TouchTest: MonoBehaviour {
 	float deltaX=0;
 	float deltaY=0;
 
-	Touch analogStick;
+//	Touch analogStick;
 	int analogStickTouchID=-1;
 	bool analogStickTouchBegan=false;
 	float touchBeganPositionX;
@@ -26,7 +26,7 @@ public class TouchTest: MonoBehaviour {
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
 
-	bool buttonIsPressed;
+//	bool buttonIsPressed;
 
 	void Start() {
 		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
@@ -47,7 +47,7 @@ public class TouchTest: MonoBehaviour {
 	}
 
 	void Update () {
-		buttonIsPressed=false;
+//		buttonIsPressed=false;
 		foreach (Touch touch in Input.touches)
 		{
 			string message = "";
@@ -104,7 +104,7 @@ public class TouchTest: MonoBehaviour {
 					if(touch.position.x < (Screen.width * 0.5f))
 					{
 						// Analog Stick gefunden
-						analogStick = touch;
+//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
 						analogStickTouchBegan=true;
 
@@ -181,7 +181,7 @@ public class TouchTest: MonoBehaviour {
 					}
 					else
 					{
-						buttonIsPressed=true;
+//						buttonIsPressed=true;
 					}
 					break;
 				/* 2. */

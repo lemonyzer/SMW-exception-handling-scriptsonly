@@ -13,13 +13,11 @@ public class PushSkript : MonoBehaviour {
 	 * Connection with GameController 
 	 **/
 	GameObject gameController;
-	HashID hash;
 	Layer layer;
 
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 	}
 

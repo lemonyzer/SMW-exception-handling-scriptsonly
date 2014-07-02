@@ -16,7 +16,7 @@ public class MoveCam : MonoBehaviour
 	private Quaternion currentAttitude;
 	// Mobile Accelerometer
 	private float camSpeed = 5;
-	private Vector3 referencePoint;
+//	private Vector3 referencePoint;
 	private Vector3 currentAcceleration;
 
 
@@ -39,10 +39,10 @@ public class MoveCam : MonoBehaviour
 	/**
 	 * Mobile Gyroscope, Accelerometer
 	 **/
-	void SetReferencPoint()
-	{
-		referencePoint = Input.acceleration;
-	}
+//	void SetReferencPoint()
+//	{
+//		referencePoint = Input.acceleration;
+//	}
 
 	// Use this for initialization
 	void Start () 

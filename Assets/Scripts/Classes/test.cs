@@ -67,7 +67,7 @@ public class test : MonoBehaviour {
 		/**
 		 * Input Flags (Jump Button)
 		 **/
-	int buttonTouchID=-1;			// ID of current jump touch (right screen)
+//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
 	int buttonTapCount=0;			// tap count current jump touch (right screen)
 	bool inputTouchJump = false;	// flag if player presses jump 		
 	bool buttonIsPressed = false;	// flag if player presses jump 		
@@ -75,11 +75,11 @@ public class test : MonoBehaviour {
 		/**
 		 * Input Flags (Analog Stick)
 		 **/
-	Touch analogStick;
+//	Touch analogStick;
 	int analogStickTouchID=-1;
 	bool analogStickTouchBegan = false;
 	bool analogStickIsStillPressed = false;
-	bool inputTouchStick = false;
+//	bool inputTouchStick = false;
 	
 	float touchBeganPositionX;
 	float touchBeganPositionY;
@@ -169,7 +169,7 @@ public class test : MonoBehaviour {
 	{
 		AnalogStickAndButton();
 		inputTouchJump = buttonIsPressed;
-		inputTouchStick = analogStickIsStillPressed;
+//		inputTouchStick = analogStickIsStillPressed;
 	}
 	
 	// FixedUpdate is called once per frame
@@ -381,7 +381,7 @@ public class test : MonoBehaviour {
 			{
 				if(touch.position.x > (Screen.width * 0.5f))
 				{
-					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
+//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
 					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
 						buttonTapCount = touch.tapCount;	
 						buttonIsPressed = true;				// Button (rechte Seite) nicht weiter suchen
@@ -410,7 +410,7 @@ public class test : MonoBehaviour {
 					if(touch.position.x < (Screen.width * 0.5f))
 					{
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
-						analogStick = touch;
+//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
 						analogStickTouchBegan = true;
 						analogStickIsStillPressed = true;
@@ -561,7 +561,7 @@ public class test : MonoBehaviour {
 		if(!buttonIsPressed)
 		{
 			//kein Button in der Schleife oben gefunden, zurücksetzen
-			buttonTouchID = -1;
+//			buttonTouchID = -1;
 			buttonTapCount = 0;
 		}
 		if(!analogStickIsStillPressed)

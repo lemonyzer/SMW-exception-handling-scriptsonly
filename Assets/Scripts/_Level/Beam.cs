@@ -18,13 +18,11 @@ public class Beam : MonoBehaviour {
 	 * Connection to GameController 
 	 **/
 	private GameObject gameController;
-	private HashID hash;
 	private Layer layer;
 
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 	}
 
@@ -45,7 +43,7 @@ public class Beam : MonoBehaviour {
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
-		GameObject original;
+//		GameObject original;
 		beamableObject = false;
 
 		if(other.gameObject.layer == layer.player1)
@@ -71,7 +69,7 @@ public class Beam : MonoBehaviour {
 
 		if(beamableObject)
 		{
-			original = other.transform.gameObject;
+//			original = other.transform.gameObject;
 			float oldY = other.transform.position.y;
 			float oldX = other.transform.position.x;
 			if(oldX < backgroundCenterPositionX)

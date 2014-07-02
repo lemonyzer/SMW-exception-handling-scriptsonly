@@ -4,7 +4,7 @@ using System.Collections;
 public class DestroyAbleBlock : MonoBehaviour {
 
 	private bool destroyed = false;
-	private Vector3 destroyPosition;
+//	private Vector3 destroyPosition;
 
 	public string targetTag = "Head";
 	public float powerUpRespawnTime = 8.0f;
@@ -102,7 +102,7 @@ public class DestroyAbleBlock : MonoBehaviour {
 			stream.Serialize( ref pos );
 			stream.Serialize( ref destroy );
 			this.destroyed = destroy;
-			this.destroyPosition = pos;
+//			this.destroyPosition = pos;
 		}
 	}
 

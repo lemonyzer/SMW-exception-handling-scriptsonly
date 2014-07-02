@@ -7,8 +7,6 @@ public class SpawnScript : MonoBehaviour {
 	public bool startGameTrigger = false;
 	public bool gameStarted = false;
 	public bool startSpawning = false;
-
-	private int characterPrefabID = 0;
 	
 	private int numberOfAllPlayer;
 	private int numberOfAIPlayer;
@@ -22,13 +20,16 @@ public class SpawnScript : MonoBehaviour {
     private HashID hash;
     private GameObject countDown;
 	private Animator anim;
-
-	private Stats statsScript;
+	
+	private StatsManager statsManager;
+	private LobbyCharacterManager characterManager;
 
 	GameObject[] characterArray;
 
 	void Awake ()
 	{
+		statsManager = GetComponent<StatsManager>();
+		characterManager = GetComponent<LobbyCharacterManager>();
 
 		characterArray = Resources.LoadAll<GameObject>("PlayerCharacter/lokal");
 
@@ -42,9 +43,9 @@ public class SpawnScript : MonoBehaviour {
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 
-		statsScript = GetComponent<Stats>();
-		if(statsScript == null)
-			Debug.LogError("GameController hat kein StatsScript");
+		statsManager = GetComponent<StatsManager>();
+		if(statsManager == null)
+			Debug.LogError("GameController hat kein StatsManager");
 
 		startGameTrigger = false;
         startSpawning = false;
@@ -90,7 +91,7 @@ public class SpawnScript : MonoBehaviour {
 		
 		for(int i=0; i<4; i++)
 		{
-			string playerCharacterName = GetPlayerCharacter(""+i);
+			string playerCharacterName = characterManager.GetPlayerCharacter(""+i);
 			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
 			GameObject currentCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
 			if(currentCharacter != null)
@@ -98,18 +99,6 @@ public class SpawnScript : MonoBehaviour {
 
 			Debug.LogWarning("Player " + i + " Prefab Name: " + playerCharacterName);
 		}
-	}
-
-	public string GetPlayerPrefsKey( string playerID)
-	{
-		string key = playerID + LobbyCharacterManager.suffixName;
-		key = key.ToLower();
-		return key;
-	}
-	
-	public string GetPlayerCharacter(string playerId)
-	{
-		return PlayerPrefs.GetString(GetPlayerPrefsKey(playerId));
 	}
 
 	void Update() {

@@ -4,7 +4,7 @@ using System.Collections.Generic;			//für Liste
 
 public class SpriteController : MonoBehaviour {
 
-	private bool LeftRightMirrow=true;				// nur eine Textur für beide Richtungen
+//	private bool LeftRightMirrow=true;				// nur eine Textur für beide Richtungen
 
 
 	public bool hittedTrigger = false;

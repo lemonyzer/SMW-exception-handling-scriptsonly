@@ -11,14 +11,12 @@ public class MusicBlockScript : MonoBehaviour {
 
 	private string targetTag = "Head";
 	private GameObject gameController;
-	private HashID hash;
 	private AudioSource backgroundMusicSource;
 
 
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 		backgroundMusicSource = gameController.GetComponent<AudioSource>();
 	}
 

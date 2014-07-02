@@ -3,7 +3,7 @@ using System.Collections;
 
 public class PlatformUserControlTapAndHoldButton : MonoBehaviour {
 
-	private PlatformCharacter character;
+//	private PlatformCharacter character;
 	
 	/**
 	 * Debugging GUI Element
@@ -18,15 +18,15 @@ public class PlatformUserControlTapAndHoldButton : MonoBehaviour {
 		/**
 		 * Input Flags (Jump Button)
 		 **/
-	int buttonTouchID=-1;			// ID of current jump touch (right screen)
+//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
 	int buttonTapCount=0;			// tap count current jump touch (right screen)
-	bool inputTouchJump = false;	// flag if player presses jump 		
+//	bool inputTouchJump = false;	// flag if player presses jump 		
 	bool buttonIsPressed = false;	// flag if player presses jump 		
 	bool buttonIsTapped = false;	// flag if player presses jump again
 
 	// Use this for initialization
 	void Start() {
-		character = GetComponent<PlatformCharacter>();
+//		character = GetComponent<PlatformCharacter>();
 	}
 	
 	// Update is called once per frame
@@ -48,7 +48,7 @@ public class PlatformUserControlTapAndHoldButton : MonoBehaviour {
 				if(touch.position.x > (Screen.width * 0.5f))
 				{
 					debugmsg += "Jump found\n";
-					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
+//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
 					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
 						buttonTapCount = touch.tapCount;	
 						buttonIsTapped = true;				
@@ -68,7 +68,7 @@ public class PlatformUserControlTapAndHoldButton : MonoBehaviour {
 		{
 			debugmsg += "kein Button gefunden\n";
 			//kein Button in der Schleife oben gefunden, zurücksetzen
-			buttonTouchID = -1;
+//			buttonTouchID = -1;
 			buttonTapCount = 0;
 		}
 		

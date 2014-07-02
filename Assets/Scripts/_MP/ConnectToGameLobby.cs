@@ -11,14 +11,14 @@ public class ConnectToGame : MonoBehaviour
 	private string gameName="pers0rs bouncy bude";
 	private string comment="comeINandDIE";
 
-	private float timeoutHostList = 0.0f;
+//	private float timeoutHostList = 0.0f;
 	private float lastHostListRequest = -1000.0f;
 	private float hostListRefreshTimeout = 10.0f;
 
 
 	// are we currently trying to download a host list?
 	private bool loading = false;
-	private bool hostListRefreshed = false;
+//	private bool hostListRefreshed = false;
 	
 	// the current position within the scrollview
 	private Vector2 scrollPos = Vector2.zero;
@@ -119,7 +119,7 @@ public class ConnectToGame : MonoBehaviour
 
 		if ( true )
 		{
-			hostListRefreshed = false;
+//			hostListRefreshed = false;
 			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.Width( 500f ), GUILayout.Height( 300f ) );
 			
 			HostData[] hosts = MasterServer.PollHostList();
@@ -159,7 +159,7 @@ public class ConnectToGame : MonoBehaviour
 		{
 			// received the host list, no longer awaiting results
 			loading = false;
-			hostListRefreshed = true;
+//			hostListRefreshed = true;
 			Debug.Log("MasterServerEvent.HostListReceived");
 		}
 	}

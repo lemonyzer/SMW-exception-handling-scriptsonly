@@ -3,7 +3,7 @@ using System.Collections;
 
 public class PlatformUserControlAnalogStick : MonoBehaviour {
 
-	private PlatformCharacter character;
+//	private PlatformCharacter character;
 
 	/**
 	 * Debugging GUI Element
@@ -31,11 +31,11 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 		/**
 		 * Input Flags (Analog Stick)
 		 **/
-	Touch analogStick;
+//	Touch analogStick;
 	int analogStickTouchID=-1;
-	bool analogStickTouchBegan = false;
+//	bool analogStickTouchBegan = false;
 	bool analogStickIsStillPressed = false;
-	bool inputTouchStick = false;
+//	bool inputTouchStick = false;
 	
 	float touchBeganPositionX;
 	float touchBeganPositionY;
@@ -54,7 +54,7 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 
 	// Use this for initialization
 	void Start() {
-		character = GetComponent<PlatformCharacter>();
+//		character = GetComponent<PlatformCharacter>();
 
 		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
 		stickTexture = (GUITexture) Instantiate(stickTexture);					// needed? pre-instantiete in hierachie?!
@@ -107,9 +107,9 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 					{
 						debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
-						analogStick = touch;
+//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
-						analogStickTouchBegan = true;
+//						analogStickTouchBegan = true;
 						analogStickIsStillPressed = true;
 						
 						// Screen.width/(2*2*2) = Screen.width*0.125
@@ -252,7 +252,7 @@ public class PlatformUserControlAnalogStick : MonoBehaviour {
 						                                   0);
 						
 						// Analog Stick als nicht aktiv setzen
-						analogStickTouchBegan = false;
+//						analogStickTouchBegan = false;
 						analogStickIsStillPressed = false;
 						analogStickTouchID = -1;
 					}

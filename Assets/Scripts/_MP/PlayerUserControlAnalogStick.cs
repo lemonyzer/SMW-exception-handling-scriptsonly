@@ -20,9 +20,9 @@ public class PlayerUserControlAnalogStick : MonoBehaviour {
 		/**
 		 * Input Flags (Analog Stick)
 		 **/
-	Touch analogStick;
+//	Touch analogStick;
 	int analogStickTouchID=-1;
-	bool analogStickTouchBegan = false;
+//	bool analogStickTouchBegan = false;
 	bool analogStickIsStillPressed = false;
 	
 	float touchBeganPositionX;
@@ -101,9 +101,9 @@ public class PlayerUserControlAnalogStick : MonoBehaviour {
 					{
 						debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
-						analogStick = touch;
+//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
-						analogStickTouchBegan = true;
+//						analogStickTouchBegan = true;
 						analogStickIsStillPressed = true;
 						
 						// Screen.width/(2*2*2) = Screen.width*0.125
@@ -246,7 +246,7 @@ public class PlayerUserControlAnalogStick : MonoBehaviour {
 						                                   0);
 						
 						// Analog Stick als nicht aktiv setzen
-						analogStickTouchBegan = false;
+//						analogStickTouchBegan = false;
 						analogStickIsStillPressed = false;
 						analogStickTouchID = -1;
 					}

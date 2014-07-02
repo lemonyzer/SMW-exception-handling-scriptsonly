@@ -14,7 +14,7 @@ public class PlatformCharacter : MonoBehaviour {
 	 * Debugging GUI Element
 	 **/
 	public GUIText debugging;
-	private string debugmsg="";
+//	private string debugmsg="";
 
 	/** 
 	 * Character Position Check 
@@ -31,6 +31,7 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Status 
 	 **/
+	public bool controlsEnabled = true;
 	public bool isDead = false;					// is Player currently dead?
 	public bool jumpAllowed = true;				// denies/allows player&bots to jump
 	public bool moveAllowed = true;				// denies/allows player&bots to move horizontally
@@ -216,20 +217,34 @@ public class PlatformCharacter : MonoBehaviour {
 			//transform.position = Vector3.Lerp( transform.position, readNetworkPos, 100f * Time.deltaTime );
 //			transform.position = readNetworkPos;
 			// don’t use player input
-			return;
-		}
-		inputJump = inputPCJump || inputTouchJump;
-		if(!jumpAllowed)
 			inputJump = false;
-
-		inputVelocity = inputPCVelocity + inputTouchVelocity;
-		if(!moveAllowed)
 			inputVelocity = 0f;
+		}
+		else
+		{
+			if(controlsEnabled)
+			{
+				inputJump = inputPCJump || inputTouchJump;
+				if(!jumpAllowed)
+					inputJump = false;
+				
+				inputVelocity = inputPCVelocity + inputTouchVelocity;
+				if(!moveAllowed)
+					inputVelocity = 0f;
+				
+				if(inputVelocity > 1f)
+					inputVelocity = 1f;
+				else if(inputVelocity < -1f)
+					inputVelocity = -1f;
+			}
+			else
+			{
+				inputJump = false;
+				inputVelocity = 0f;
+			}
+		}
 
-		if(inputVelocity > 1f)
-			inputVelocity = 1f;
-		else if(inputVelocity < -1f)
-			inputVelocity = -1f;
+
 
 
 		if(isBouncing)

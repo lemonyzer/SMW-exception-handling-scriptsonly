@@ -10,14 +10,12 @@ public class InventoryCollider : MonoBehaviour {
 	public string targetTag = Tags.player;		// kann nur von Spielern eingesammelt werden
 
 	private GameObject gameController;
-	private HashID hash;
 	private Layer layer;
 	
 	
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 	}
 
