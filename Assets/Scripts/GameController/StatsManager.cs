@@ -9,7 +9,7 @@ public class StatsManager : MonoBehaviour {
 	private GameObject gameWinner;
 
 	private GameMode currentGameMode;
-	private int gameModePointLimit = 1;
+	public int gameModePointLimit = 1;
 	
 	enum GameMode
 	{
@@ -340,7 +340,21 @@ public class StatsManager : MonoBehaviour {
 	{
 		if(gameRunning)
 		{
+			Player playerVictim = spawnScript.playerDictonary[victim];
+			Character characterVictim = spawnScript.playerDictonary[victim].getCharacter();
+			HealthController victimHealthController = spawnScript.playerDictonary[victim].getCharacter().getHealthController();
+
+			victimHealthController.ApplyDamage(attacker, damageValueHeadJump, false);
+		}
+	}
+
+	public void InvincibleAttackConfirm(GameObject attacker, GameObject victim)
+	{
+		if(gameRunning)
+		{
 			Debug.Log("Sternstunde!!!");
+			AddKill(attacker,victim);
+			AddNemesis(attacker,victim);
 		}
 	}
 }

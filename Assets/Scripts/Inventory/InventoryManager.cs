@@ -13,14 +13,25 @@ public class InventoryManager : MonoBehaviour {
 	static public Inventory inventory;
 
 //	public bool create = false;
-	public float coin = 0;
-
-	public float initHealth = 5;
-	public float initLifePoint = 3;
+//	public float coin = 0;
+//
+//	public float initHealth = 5;
+//	public float initLifePoint = 3;
 
 	private bool initValues = false;
 
-	public string healthText = "Health";
+	public string player0slot0 = "player0slot0";
+	public string player0slot1 = "player0slot1";
+	
+	public string player1slot0 = "player1slot0";
+	public string player1slot1 = "player1slot1";
+
+	public string player2slot0 = "player2slot0";
+	public string player2slot1 = "player2slot1";
+	
+	public string player3slot0 = "player3slot0";
+	public string player3slot1 = "player3slot1";
+
 	public string lifePointsText = "LifePoint";
 	public string maxHealthText = "MaxHealth";
 
@@ -53,9 +64,14 @@ public class InventoryManager : MonoBehaviour {
 		{
 			// Werte initialisieren
 			// zB. mit PlayerPrefs (sind auch nach beenden des Programms vorhanden!)
-			inventory.SetItems(healthText, initHealth);
-			inventory.SetItems(maxHealthText, initHealth);
-			inventory.SetItems(lifePointsText, initLifePoint);
+			for(int i=0; i<4; i++)
+			{
+				inventory.SetItems("player"+i+"slot0",0f);
+			}
+
+//			inventory.SetItems(healthText, initHealth);
+//			inventory.SetItems(maxHealthText, initHealth);
+//			inventory.SetItems(lifePointsText, initLifePoint);
 		}
 	}
 	

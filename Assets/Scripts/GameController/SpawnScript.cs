@@ -105,9 +105,15 @@ public class SpawnScript : MonoBehaviour {
 				 * Erster Character ist User, rest ist AI
 				 **/
 				if(i==0)
+				{
+					currentCharacterGameObject.tag = Tags.player;
 					currentCharacter = new Character(currentCharacterGameObject,false);			// User Controller
+				}
 				else
+				{
+					currentCharacterGameObject.tag = Tags.ai;
 					currentCharacter = new Character(currentCharacterGameObject,true);			// AI Controller
+				}
 
 				Player currentPlayer = new Player(i, "Player", currentCharacter);
 

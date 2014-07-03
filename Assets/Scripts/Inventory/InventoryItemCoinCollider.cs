@@ -1,30 +1,31 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class InventoryCollider : MonoBehaviour {
+public class InventoryItemCoinCollider : MonoBehaviour {
 
 	public string itemName = "";
 	public float value = 1;
 	public AudioClip SpawnedSound;
 	public AudioClip CollectedSound;
-	public string targetTag = Tags.player;		// kann nur von Spielern eingesammelt werden
+	private string targetTag = Tags.player;		// kann nur von Spielern eingesammelt werden
 
 	private GameObject gameController;
 	private Layer layer;
-	
+	private SpawnScript spawnScript;
 	
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		layer = gameController.GetComponent<Layer>();
+		spawnScript = gameController.GetComponent<SpawnScript>();
 	}
 
 	void Start()
 	{
-		this.itemName = this.gameObject.name;
+//		this.itemName = this.gameObject.name;
 	}
 
-	void CollectItem()
+	public virtual void CollectItem()
 	{
 		AudioSource.PlayClipAtPoint(CollectedSound,transform.position,1);
 //		transform.GetComponent<AudioSource>().audio.loop=true;

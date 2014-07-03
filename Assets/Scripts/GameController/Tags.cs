@@ -5,6 +5,7 @@ public class Tags : MonoBehaviour {
 
 	public const string background = "Background";
 	public const string player = "Player";
+	public const string ai = "AI";
 	public const string head = "Head";
 	public const string feet = "Feet";
 	public const string powerUp = "PowerUp";

@@ -157,7 +157,13 @@ public class HealthController : MonoBehaviour {
 								/* Spieler wurde NICHT per Kopfsprung getötet
 							 	* 
 							 	*/
-								Debug.Log (this.gameObject.name + ": shooted, timout,... my bad!");
+
+								//Animation setzen
+								anim.SetBool(hash.headJumpedBool,true);
+								//Animation 3 sekunden laufen lassen
+								StartCoroutine(SpawnDelay());
+								NotHeadJumped();
+								Debug.Log (this.gameObject.name + ": StarTime, shooted... my bad!");
 							}
 							
 						}
@@ -176,13 +182,28 @@ public class HealthController : MonoBehaviour {
 	{
 //		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
 
-		//myCharacter.renderer.enabled = false;
+		myCharacter.renderer.enabled = false;
 
 		// Deathanimation positioning
-//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
+		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
 
 		// Show Deathanimation and Destroy after deathTime seconds
-		//Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+		if(deathPrefabRight != null)
+			Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+	}
+
+	void NotHeadJumped() 
+	{
+		//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
+		
+		myCharacter.renderer.enabled = false;
+		
+		// Deathanimation positioning
+		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
+		
+		// Show Deathanimation and Destroy after deathTime seconds
+//		if(deathPrefabRight != null)
+//			Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
 	}
 
 	void GameOver() 

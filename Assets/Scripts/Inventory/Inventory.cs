@@ -10,7 +10,7 @@ public class Inventory : ScriptableObject {
 
 	public void AddItems(string itemName, float quantity)
 	{
-		Debug.LogError(itemName + " added");
+		Debug.Log("Inventory: " + itemName + " added");
 		float oldValue = 0;
 		itemName = itemName.ToLower();
 		
@@ -29,7 +29,7 @@ public class Inventory : ScriptableObject {
 
 	public void SetItems(string itemName, float quantity)
 	{
-		Debug.LogError(itemName + " setted");
+		Debug.Log("Inventory: " + itemName + " setted");
 		float oldValue = 0;
 		itemName = itemName.ToLower();
 		

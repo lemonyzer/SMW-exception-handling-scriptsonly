@@ -90,9 +90,30 @@ public class PlatformCharacter : MonoBehaviour {
 	private HashID hash;
 	private Layer layer;
 	private StatsManager statsManager;
-	
+
+	/**
+	 * Connection to other Body parts
+	 **/
+	private Collider2D bodyCollider2D;
+	private Collider2D headCollider2D;
+	private Collider2D feetCollider2D;
+
+	public void setMaxSpeed(float newMaxSpeed)
+	{
+		maxSpeed = newMaxSpeed;
+	}
+
+	public float getMaxSpeed()
+	{
+		return maxSpeed;
+	}
+
 	void Awake()
 	{
+		bodyCollider2D = GetComponent<BoxCollider2D>();
+		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
+		feetCollider2D = transform.FindChild(Tags.feet).GetComponent<BoxCollider2D>();
+
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
@@ -129,46 +150,12 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Update()
 	{
-		if(InventoryManager.inventory != null)
-		{
-			if(InventoryManager.inventory.GetItems("Star(Clone)") > 0f)
-			{
-				if(this.gameObject.layer == layer.player1)
-				{
-					isInRageModus = true;
-					if(anim == null)
-					{
-					}
-					else
-					{
-						anim.SetBool(hash.rageModusBool,true);
-						anim.SetTrigger(hash.rageTrigger);
-					}
-					Debug.LogError("isInRageModus: On");
-					InventoryManager.inventory.SetItems("Star(Clone)",0f);
-					StartCoroutine(RageTime());
-
-				}
-			}
-		}
 	}
+	
 
-	IEnumerator RageTime()
-	{
-		yield return new WaitForSeconds(8.0f);
-		isInRageModus = false;
-		Debug.LogError("isInRageModus: Off");
-		if(anim == null)
-		{
-		}
-		else
-		{
-			anim.SetBool(hash.rageModusBool,false);
-		}
 
-		//anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
-		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
-	}
+
+
 
 	// FixedUpdate is called once per frame
 	void FixedUpdate () {
@@ -442,47 +429,5 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
-	void OnTriggerEnter2D (Collider2D other)
-	{
-		if(Network.isServer)
-		{
 
-			if(isInRageModus)
-			{
-				if(this.gameObject.layer != other.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
-				{
-					bool enemyObject = false;
-					if(other.gameObject.layer == layer.player1)
-					{
-						enemyObject = true;
-					}
-					else if(other.gameObject.layer == layer.player2)
-					{
-						enemyObject = true;
-					}
-					else if(other.gameObject.layer == layer.player3)
-					{
-						enemyObject = true;
-					}
-					else if(other.gameObject.layer == layer.player4)
-					{
-						enemyObject = true;
-					}
-	//				else if(other.gameObject.layer == layer.powerUp)
-	//				{
-	//					enemyObject = true;
-	//				}
-
-					if(enemyObject)
-					{
-						//networkView.RPC
-						//other.gameObject.GetComponent<NetworkView>().RPC(
-						statsManager.InvincibleAttack(this.gameObject, other.gameObject);			// Layerfilter -> wir sind auf PlatformCharacter ebene (nicht im child feet/head)
-						//other.gameObject.GetComponent<HealthController>().ApplyDamage(this.gameObject, 1 ,true);
-					}
-				}
-			}
-		}
-		
-	}
 }

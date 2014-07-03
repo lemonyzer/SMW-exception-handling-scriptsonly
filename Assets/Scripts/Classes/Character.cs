@@ -7,11 +7,16 @@ public class Character : IComparable<Character>
 	private string characterName;
 	private Sprite characterSprite;
 	private GameObject characterPrefab;
+
 	private PlatformCharacter platformCharacter;
 	private HealthController healthController;
+	private PushSkript pushSkript;
+	private RageModus rageModus;
+
 	private PlatformAIControl platformAIControl;
 	private PlatformUserControlAnalogStickAndButton platformUserControlMobile;
 	private PlatformUserControlKeyboard platformUserControlPC;
+
 	private bool isAI;
 
 	// Constructor
@@ -21,6 +26,7 @@ public class Character : IComparable<Character>
 		this.isAI = isAI;
 		this.characterName = prefab.name;
 		this.characterSprite = prefab.GetComponent<SpriteRenderer>().sprite;
+
 		this.platformCharacter = prefab.GetComponent<PlatformCharacter>();
 		if(platformCharacter == null)
 			Debug.LogError(characterName + " hat kein PlatformCharacter script!!!");
@@ -28,6 +34,10 @@ public class Character : IComparable<Character>
 		this.healthController = prefab.GetComponent<HealthController>();
 		if(healthController == null)
 			Debug.LogError(characterName + " hat kein HealthController script!!!");
+
+		this.rageModus = prefab.GetComponent<RageModus>();
+		if(rageModus == null)
+			Debug.LogError(characterName + " hat kein rageModus script!!!");
 
 		this.platformUserControlMobile = prefab.GetComponent<PlatformUserControlAnalogStickAndButton>();
 		this.platformUserControlPC = prefab.GetComponent<PlatformUserControlKeyboard>();
@@ -54,6 +64,11 @@ public class Character : IComparable<Character>
 	public PlatformCharacter getPlatformCharacter()
 	{
 		return this.platformCharacter;
+	}
+
+	public RageModus getRageModus()
+	{
+		return this.rageModus;
 	}
 
 	public int CompareTo(Character other)
