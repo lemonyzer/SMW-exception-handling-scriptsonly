@@ -3,6 +3,8 @@ using System.Collections;
 
 public class Layer : MonoBehaviour {
 
+	// Physic Layer
+
 	public int player1;
 	public int player2;
 	public int player3;

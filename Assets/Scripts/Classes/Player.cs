@@ -37,7 +37,7 @@ public class Player
 //	}
 
 
-	public int getID()
+	public int getPlayerID()
 	{
 		return id;
 	}

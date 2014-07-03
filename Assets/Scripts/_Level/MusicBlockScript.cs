@@ -9,14 +9,15 @@ public class MusicBlockScript : MonoBehaviour {
 	public AudioClip backgroundMusicAlternative;
 	private bool stdMusic = true;
 
-	private string targetTag = "Head";
 	private GameObject gameController;
+	private Layer layer;
 	private AudioSource backgroundMusicSource;
 
 
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		layer = gameController.GetComponent<Layer>();
 		backgroundMusicSource = gameController.GetComponent<AudioSource>();
 	}
 
@@ -27,24 +28,20 @@ public class MusicBlockScript : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.gameObject.tag != null)
+		if(other.gameObject.layer == layer.head)
 		{
-			if(other.gameObject.tag == targetTag)
+			if(stdMusic)
 			{
-				if(stdMusic)
-				{
-					backgroundMusicSource.clip = backgroundMusicAlternative;
-					backgroundMusicSource.Play();
-//					AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
-					stdMusic = false;
-				}
-				else
-				{
-					backgroundMusicSource.clip = backgroundMusicStandard;
-					backgroundMusicSource.Play();
-					stdMusic = true;
-				}
-				
+				backgroundMusicSource.clip = backgroundMusicAlternative;
+				backgroundMusicSource.Play();
+//				AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
+				stdMusic = false;
+			}
+			else
+			{
+				backgroundMusicSource.clip = backgroundMusicStandard;
+				backgroundMusicSource.Play();
+				stdMusic = true;
 			}
 		}
 	}

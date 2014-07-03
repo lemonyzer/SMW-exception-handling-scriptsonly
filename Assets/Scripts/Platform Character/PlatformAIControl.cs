@@ -55,7 +55,7 @@ public class PlatformAIControl : MonoBehaviour {
 	void Update () {
 		CheckTimeBetweenLastDirectionChange();
 		//FindClosestGameObjectWithPriority();
-		target = FindClosestPlayerWithGameController();
+		target = FindClosestPlayerWithGameControllerNew();
 		AIMove();
 		character.MoveKeyboard(inputVelocity, inputJump);
 	}
@@ -113,7 +113,7 @@ public class PlatformAIControl : MonoBehaviour {
 //		
 //		return closest;
 //	}
-	
+
 	GameObject FindClosestPlayerWithGameController() {
 		
 		targetDistance = Mathf.Infinity;
@@ -127,9 +127,9 @@ public class PlatformAIControl : MonoBehaviour {
 				{
 					// Nur andere Spieler können target werden!
 					Vector3 diff = go.transform.position - myPosition;		// targetPosition - eigenePosition
-																			// diff = negatativ => eigene Position höher
-																			// diff = 0 		=> gleiche Höhe
-																			// diff = positiv 	=> eigene Position niedriger
+					// diff = negatativ => eigene Position höher
+					// diff = 0 		=> gleiche Höhe
+					// diff = positiv 	=> eigene Position niedriger
 					float curDistance = diff.sqrMagnitude;
 					if (curDistance < targetDistance) {
 						closest = go;
@@ -164,6 +164,79 @@ public class PlatformAIControl : MonoBehaviour {
 							targetDirection = +1;
 						}
 						
+					}
+				}
+			}
+			//			else
+			//				Debug.Log("GameObject layer: " + go.layer + " == Player(Ki) layer: " + gameObject.layer);
+		}
+		
+		//		Debug.Log(character.name + " my position: " + myPosition);
+		//		Debug.Log(character.name + " hunts " + closest.name + " with position: " + closest.transform.position);
+		return closest;
+	}
+
+	GameObject FindClosestPlayerWithGameControllerNew() {
+		
+		targetDistance = Mathf.Infinity;
+		Vector3 myPosition = transform.position;
+
+//		for(IEnumerator e = spawnScript.playerDictonary.GetEnumerator(); e.MoveNext();)
+//		{
+//
+//		}
+		foreach(GameObject go in spawnScript.playerDictonary.Keys)
+		{
+			if(go != null)
+			{
+				// GameObject existiert
+
+				if(go.layer != gameObject.layer)
+				{
+					// Nur Spieler aus anderem Team (Teamlayer) können target werden!
+
+					if(!spawnScript.playerDictonary[go].getCharacter().getPlatformCharacter().isDead)
+					{
+						// Nur wenn Spieler lebt
+					
+						Vector3 diff = go.transform.position - myPosition;		// targetPosition - eigenePosition
+																				// diff = negatativ => eigene Position höher
+																				// diff = 0 		=> gleiche Höhe
+																				// diff = positiv 	=> eigene Position niedriger
+						float curDistance = diff.sqrMagnitude;
+						if (curDistance < targetDistance) {
+							closest = go;
+							targetDistance = curDistance;
+							
+							if( (diff.y <= heightSaveOffset) && (diff.y >= -heightSaveOffset) )			// save offset!!! physic has no 0.0F precision!
+							{
+								targetHigher = false;
+								targetAtSameHeight = true;
+							}
+							else if(diff.y > heightSaveOffset)
+							{
+								targetHigher = true;
+								targetAtSameHeight = false;
+							}
+							else
+							{
+								targetHigher = false;
+								targetAtSameHeight = false;
+							}
+							
+							if( -10.0f < diff.x && diff.x < 0.0f )			//between -10 and 0
+							{
+								targetDirection = -1;
+							}
+							else if( 10.0f < diff.x && diff.x < 20.0f )		//between 10 and 20
+							{
+								targetDirection = -1;
+							}
+							else 											//else (between 0 and 10)
+							{
+								targetDirection = +1;
+							}
+						}
 					}
 				}
 			}

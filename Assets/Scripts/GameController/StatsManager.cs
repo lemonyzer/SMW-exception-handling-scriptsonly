@@ -4,12 +4,13 @@ using System.Collections.Generic;
 
 public class StatsManager : MonoBehaviour {
 
-	public bool gameRunning;
-	private string gameWinner;
+	public bool gameRunning = false;
+	public bool gameHasWinner = false;
+	private GameObject gameWinner;
 
 	private GameMode currentGameMode;
-	private int gameModePointLimit = 10;
-
+	private int gameModePointLimit = 1;
+	
 	enum GameMode
 	{
 		Classic,
@@ -24,7 +25,7 @@ public class StatsManager : MonoBehaviour {
 		FlappyBird
 	}
 
-	private float damageValueHeadJump = 1;
+	private int damageValueHeadJump = 1;
 	private int pointValueHeadJump = 1;
 
 	private Dictionary<string,int> points;
@@ -40,10 +41,24 @@ public class StatsManager : MonoBehaviour {
 	public GUIText player2GUIText;
 	public GUIText player3GUIText;
 
+	private GameObject backGround;
+	public GameObject winEffect;
+	public GameObject winEffect2;
+	public AudioClip winSound;
+
 	private SpawnScript spawnScript;
+	private SortingLayer sortingLayer;
 
 	void Awake()
 	{
+		sortingLayer = GetComponent<SortingLayer>();
+
+		backGround = GameObject.FindGameObjectWithTag(Tags.background);
+		if(backGround == null)
+		{
+			Debug.LogError("no Background found!");
+		}
+
 		spawnScript = GetComponent<SpawnScript>();
 
 		characterManager = GetComponent<LobbyCharacterManager>();
@@ -57,6 +72,8 @@ public class StatsManager : MonoBehaviour {
 		nemesis = new Dictionary<string, int>();
 
 		currentGameMode = GameMode.Classic;
+
+		gameHasWinner = false;
 		gameRunning = true;
 	}
 
@@ -106,33 +123,106 @@ public class StatsManager : MonoBehaviour {
 		}
 	}
 
-	void AddPoint(string player, int pointValue)
+//	void AddPoint(string player, int pointValue)
+//	{
+//		int currentPoints;// = points[player];
+//		if(points.TryGetValue(player, out currentPoints))
+//		{
+//			// Key exists
+//			currentPoints += pointValue;
+//			points[player] = currentPoints;
+//			Debug.Log("Player " + player + " hat " + points[player] + " Punkte");
+//			Debug.Log("Player " + player + " hat " + currentPoints + " Punkte");
+//		}
+//		else
+//		{
+//			// Key exists not
+//			currentPoints = pointValue;
+//			points.Add(player,currentPoints);
+//		}
+//		if(PointLimitReached(currentPoints))
+//		{
+//			GameHasAWinner(player);
+//		}
+//	}
+
+	void AddPoint(GameObject player, int pointValue)
 	{
 		int currentPoints;// = points[player];
-		if(points.TryGetValue(player, out currentPoints))
+		string playerID = spawnScript.playerDictonary[player].getPlayerID().ToString();
+		string playerCharacter = spawnScript.playerDictonary[player].getCharacter().getName();
+		if(points.TryGetValue(playerID, out currentPoints))
 		{
 			// Key exists
 			currentPoints += pointValue;
-			points[player] = currentPoints;
-			Debug.Log("Player " + player + " hat " + points[player] + " Punkte");
-			Debug.Log("Player " + player + " hat " + currentPoints + " Punkte");
+			points[playerID] = currentPoints;
+			Debug.Log("Player " + playerID + " ("+playerCharacter+") " + "hat " + points[playerID] + " Punkte");
+//			Debug.Log("Player " + playerID + " ("+playerCharacter+") " + " hat " + currentPoints + " Punkte");
 		}
 		else
 		{
 			// Key exists not
 			currentPoints = pointValue;
-			points.Add(player,currentPoints);
+			points.Add(playerID,currentPoints);
 		}
-
-		if(currentGameMode == GameMode.Classic)
+		if(PointLimitReached(currentPoints))
 		{
+			// genug Punkte, gewonnen!
+			GameHasAWinner(player);
+		}
+		else
+		{
+			// nicht genug Punkte, weiter...
+			//Debug.Log("Player " + playerID + ", Points: " + currentPoints);
+		}
+	}
+
+	bool PointLimitReached(int currentPoints)
+	{
+//		if(currentGameMode == GameMode.Classic)
+//		{
 			if(currentPoints >= gameModePointLimit)
 			{
-				gameRunning = false;
-				gameWinner = player;
+				return true;
+			}
+//		}
+		return false;
+	}
+
+	void GameHasAWinner(GameObject player)
+	{
+		gameRunning = false;
+		gameHasWinner = true;
+		gameWinner = player;
+		WinnerEffect();
+		//gameWinner = spawnScript.playerDictonary[player].getCharacter().getPrefab();
+	}
+
+	void WinnerEffect()
+	{
+//		Debug.Log("WinnerEffect started");
+//		backGround.renderer.enabled = false;
+		if(winEffect != null)
+		{
+			winEffect.SetActive(true);
+			winEffect.transform.position = gameWinner.transform.position;
+			winEffect.transform.parent = gameWinner.transform;
+			winEffect.renderer.sortingLayerID = sortingLayer.guiSortingLayer;
+		}
+		if(winEffect2 != null)
+		{
+			winEffect2.SetActive(true);
+			winEffect2.transform.position = gameWinner.transform.position;
+			winEffect2.transform.parent = gameWinner.transform;
+			foreach(Transform child in winEffect2.transform)
+			{
+				child.renderer.sortingLayerID = sortingLayer.guiSortingLayer;
 			}
 		}
-
+		if(winSound != null) {
+			transform.GetComponent<AudioSource>().Stop();
+			AudioSource.PlayClipAtPoint(winSound,transform.position,1);
+		}
 	}
 
 	int GetPoints(string player)
@@ -150,12 +240,19 @@ public class StatsManager : MonoBehaviour {
 		return currentPoints;
 	}
 
-	void AddKill(string killer, string victim)
+	void AddKill(GameObject killer, GameObject victim)
 	{
 		//if(!combo)
-		AddPoint(killer,pointValueHeadJump);
+		AddPoint(killer, pointValueHeadJump);
 		AddNemesis(killer, victim);
 	}
+
+//	void AddKill(string killer, string victim)
+//	{
+//		//if(!combo)
+//		AddPoint(killer,pointValueHeadJump);
+//		AddNemesis(killer, victim);
+//	}
 
 	string GetNemesisKey(string killer, string victim)
 	{
@@ -175,32 +272,75 @@ public class StatsManager : MonoBehaviour {
 		return currentNemesis;
 	}
 
-	void AddNemesis(string killer, string victim)
+	void AddNemesis(GameObject killer, GameObject victim)
 	{
 		int currentNemesis;// = points[player];
-		if(nemesis.TryGetValue(GetNemesisKey(killer,victim), out currentNemesis))
+		string killerID = spawnScript.playerDictonary[killer].getPlayerID().ToString();
+		string victimID = spawnScript.playerDictonary[victim].getPlayerID().ToString();
+		if(nemesis.TryGetValue(GetNemesisKey(killerID,victimID), out currentNemesis))
 		{
 			// Key Exists
 			currentNemesis++;
-			nemesis[GetNemesisKey(killer,victim)] = currentNemesis;
+			nemesis[GetNemesisKey(killerID,victimID)] = currentNemesis;
 		}
 		else
 		{
 			// Key is new
 			currentNemesis = 1;
-			nemesis.Add(GetNemesisKey(killer,victim), currentNemesis);
+			nemesis.Add(GetNemesisKey(killerID,victimID), currentNemesis);
 		}
-
+		
 	}
+
+//	void AddNemesis(string killer, string victim)
+//	{
+//		int currentNemesis;// = points[player];
+//		if(nemesis.TryGetValue(GetNemesisKey(killer,victim), out currentNemesis))
+//		{
+//			// Key Exists
+//			currentNemesis++;
+//			nemesis[GetNemesisKey(killer,victim)] = currentNemesis;
+//		}
+//		else
+//		{
+//			// Key is new
+//			currentNemesis = 1;
+//			nemesis.Add(GetNemesisKey(killer,victim), currentNemesis);
+//		}
+//
+//	}
 
 	public void HeadJump(GameObject attacker, GameObject victim)
 	{
 		if(gameRunning)
 		{
-			victim.GetComponent<HealthController>().ApplyDamage(damageValueHeadJump,true);
+//			victim.GetComponent<HealthController>().ApplyDamage(damageValueHeadJump,true);
 
-			AddKill(spawnScript.playerDictonary[attacker].getID()+"", spawnScript.playerDictonary[victim].getID()+"");
-			AddNemesis(spawnScript.playerDictonary[attacker].getID()+"", spawnScript.playerDictonary[victim].getID()+"");
+			Player playerVictim = spawnScript.playerDictonary[victim];
+			Character characterVictim = spawnScript.playerDictonary[victim].getCharacter();
+			HealthController victimHealthController = spawnScript.playerDictonary[victim].getCharacter().getHealthController();
+
+			victimHealthController.ApplyDamage(attacker, damageValueHeadJump, true);
+
+			//AddKill(spawnScript.playerDictonary[attacker].getPlayerID()+"", spawnScript.playerDictonary[victim].getPlayerID()+"");
+			//AddNemesis(spawnScript.playerDictonary[attacker].getPlayerID()+"", spawnScript.playerDictonary[victim].getPlayerID()+"");
+		}
+	}
+
+	public void HeadJumpConfirm(GameObject attacker, GameObject victim)
+	{
+		if(gameRunning)
+		{
+			AddKill(attacker,victim);
+			AddNemesis(attacker,victim);
+		}
+	}
+
+	public void InvincibleAttack(GameObject attacker, GameObject victim)
+	{
+		if(gameRunning)
+		{
+			Debug.Log("Sternstunde!!!");
 		}
 	}
 }

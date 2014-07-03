@@ -93,4 +93,13 @@ public class SendDamageCollider : MonoBehaviour {
 			Debug.LogError("Charakter hat keine HealthController");
 		}
 	}
+
+
+	void OnTriggerStay2D(Collider2D other)
+	{
+		if(other.gameObject.layer == layer.head)
+		{
+			myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+		}
+	}
 }

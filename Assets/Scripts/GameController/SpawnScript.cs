@@ -54,18 +54,14 @@ public class SpawnScript : MonoBehaviour {
 
 		startGameTrigger = false;
         startSpawning = false;
-		numberOfAllPlayer = PlayerPrefs.GetInt("NumberOfAllPlayers");
-		numberOfAIPlayer = PlayerPrefs.GetInt("NumberOfAIPlayers");
-		numberOfLocalUserPlayer = PlayerPrefs.GetInt("NumberOfLocalUserPlayers");
-		Debug.Log("number of all player: " + numberOfAllPlayer);
-		Debug.Log("number of AI player: " + numberOfAIPlayer);
-		Debug.Log("number of User player: " + numberOfLocalUserPlayer);
 
-		PlayerPrefs.SetInt("AI0Character",0);
-		PlayerPrefs.SetInt("AI1Character",1);
-		PlayerPrefs.SetInt("AI2Character",2);
+//		numberOfAllPlayer = PlayerPrefs.GetInt("NumberOfAllPlayers");
+//		numberOfAIPlayer = PlayerPrefs.GetInt("NumberOfAIPlayers");
+//		numberOfLocalUserPlayer = PlayerPrefs.GetInt("NumberOfLocalUserPlayers");
+//		Debug.Log("number of all player: " + numberOfAllPlayer);
+//		Debug.Log("number of AI player: " + numberOfAIPlayer);
+//		Debug.Log("number of User player: " + numberOfLocalUserPlayer);
 
-		PlayerPrefs.SetInt("User0Character",0);
 	}
 
 	Vector3 getRandomPosition()
@@ -98,19 +94,25 @@ public class SpawnScript : MonoBehaviour {
 		{
 			string playerCharacterName = characterManager.GetPlayerCharacter(""+i);
 			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
-			GameObject currentCharacterGameObject = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
-			if(currentCharacterGameObject != null)
+			GameObject currentCharacterPrefab = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
+			if(currentCharacterPrefab != null)
 			{
+				GameObject currentCharacterGameObject = (GameObject)Instantiate(currentCharacterPrefab, getRandomPosition(), Quaternion.identity);
+				currentCharacterGameObject.layer += i; // jeden Spieler in eigene Layer (JumpAblePlatform)
+
 				Character currentCharacter;
+				/**
+				 * Erster Character ist User, rest ist AI
+				 **/
 				if(i==0)
-					currentCharacter = new Character(currentCharacterGameObject,false);	
+					currentCharacter = new Character(currentCharacterGameObject,false);			// User Controller
 				else
-					currentCharacter = new Character(currentCharacterGameObject,true);	
+					currentCharacter = new Character(currentCharacterGameObject,true);			// AI Controller
 
 				Player currentPlayer = new Player(i, "Player", currentCharacter);
-				currentCharacterGameObject = (GameObject)Instantiate(currentCharacterGameObject, getRandomPosition(), Quaternion.identity);
-				playerDictonary.Add(currentCharacterGameObject,currentPlayer);
 
+				//currentCharacterGameObject.Awake();
+				playerDictonary.Add(currentCharacterGameObject,currentPlayer);
 			}
 
 			Debug.LogWarning("Player " + i + " Prefab Name: " + playerCharacterName);

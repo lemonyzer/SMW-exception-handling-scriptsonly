@@ -26,7 +26,7 @@ public class HealthController : MonoBehaviour {
 
 	public bool isHit=false;
 
-	Transform myCharacter;
+	GameObject myCharacter;
 	BoxCollider2D myCharacterCollider2D;
 	Transform feet;
 	BoxCollider2D feetCollider2D;
@@ -39,31 +39,35 @@ public class HealthController : MonoBehaviour {
 
 	GameObject gameController;
 	private HashID hash;
+	private StatsManager statsManager;
 
 	void Awake() {
+//		Debug.Log(gameObject.name + " HealthController -> Awake()");
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
+		statsManager = gameController.GetComponent<StatsManager>();
 	}
 
 	// Use this for initialization
 	void Start () {
+//		Debug.Log(gameObject.name + " HealthController -> Start()");
 
-		myCharacter = this.gameObject.transform;
+		myCharacter = this.gameObject;
 
 		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
 		if(myCharacterCollider2D == null)
 			Debug.LogError(myCharacter.name + " has no BoxCollider2D");
 
-		feet = myCharacter.Find("Feet");
+		feet = myCharacter.transform.Find("Feet");
 		feetCollider2D = feet.GetComponent<BoxCollider2D>();
 		if(feetCollider2D == null)
-			Debug.LogError(myCharacter.name + "'s feet has no BoxCollider2D");
+			Debug.LogError(myCharacter.name + "'s feet has no FEET BoxCollider2D");
 
 
-		head = myCharacter.Find("Head");
+		head = myCharacter.transform.Find("Head");
 		headCollider2D = head.GetComponent<BoxCollider2D>();
 		if(headCollider2D == null)
-			Debug.LogError(myCharacter.name + "'s head has no BoxCollider2D");
+			Debug.LogError(myCharacter.name + "'s head has no HEAD BoxCollider2D");
 
 		anim = myCharacter.GetComponent<Animator>();
 
@@ -72,7 +76,7 @@ public class HealthController : MonoBehaviour {
 			Debug.LogError(myCharacter.name + " has no PlatformCharacter Script");
 	}
 
-	public void ApplyDamage(float damage, bool headJumped)
+	public void ApplyDamage(GameObject attacker, int damage, bool headJumped)
 	{
 		if(!myPlatformCharacterScript.isInRageModus)
 		{
@@ -81,6 +85,9 @@ public class HealthController : MonoBehaviour {
 				if(!isHit)		//nur wenn er noch nicht getroffen wurde
 				{
 					isHit = true;
+
+					statsManager.HeadJumpConfirm(attacker,myCharacter);
+
 					anim.SetTrigger(hash.hitTrigger);
 					anim.SetBool(hash.hittedBool,true);
 					anim.SetBool(hash.deadBool,true);	// zu schnell!

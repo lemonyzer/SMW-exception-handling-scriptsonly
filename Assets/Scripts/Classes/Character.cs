@@ -22,7 +22,12 @@ public class Character : IComparable<Character>
 		this.characterName = prefab.name;
 		this.characterSprite = prefab.GetComponent<SpriteRenderer>().sprite;
 		this.platformCharacter = prefab.GetComponent<PlatformCharacter>();
+		if(platformCharacter == null)
+			Debug.LogError(characterName + " hat kein PlatformCharacter script!!!");
+
 		this.healthController = prefab.GetComponent<HealthController>();
+		if(healthController == null)
+			Debug.LogError(characterName + " hat kein HealthController script!!!");
 
 		this.platformUserControlMobile = prefab.GetComponent<PlatformUserControlAnalogStickAndButton>();
 		this.platformUserControlPC = prefab.GetComponent<PlatformUserControlKeyboard>();

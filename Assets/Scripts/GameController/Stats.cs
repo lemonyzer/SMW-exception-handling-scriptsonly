@@ -9,7 +9,7 @@ public class Stats : MonoBehaviour {
 	public GameObject winEffect;
 	public GameObject winEffect2;
 	public AudioClip winSound;
-	public GameObject backGround;
+	private GameObject backGround;
 	public List<GameObject> playerList;
 	public List<GameObject> statsList;
 //	bool allEnemyDeath=false;

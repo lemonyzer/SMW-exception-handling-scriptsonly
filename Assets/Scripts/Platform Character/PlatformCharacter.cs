@@ -89,12 +89,14 @@ public class PlatformCharacter : MonoBehaviour {
 	private GameObject gameController;
 	private HashID hash;
 	private Layer layer;
+	private StatsManager statsManager;
 	
 	void Awake()
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
+		statsManager = gameController.GetComponent<StatsManager>();
 	}
 	
 	void Start() {
@@ -475,7 +477,8 @@ public class PlatformCharacter : MonoBehaviour {
 					{
 						//networkView.RPC
 						//other.gameObject.GetComponent<NetworkView>().RPC(
-						other.gameObject.GetComponent<HealthController>().ApplyDamage(1.0f,true);
+						statsManager.InvincibleAttack(this.gameObject, other.gameObject);			// Layerfilter -> wir sind auf PlatformCharacter ebene (nicht im child feet/head)
+						//other.gameObject.GetComponent<HealthController>().ApplyDamage(this.gameObject, 1 ,true);
 					}
 				}
 			}

@@ -16,11 +16,14 @@ public class PowerUpBlock : MonoBehaviour {
 	private Animator anim;
 	GameObject gameController;
 	private HashID hash;
+	private Layer layer;
+
 
 	// Use this for initialization
 	void Awake() {
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
+		layer = gameController.GetComponent<Layer>();
 		anim = GetComponent<Animator>();
 	}
 
@@ -36,25 +39,23 @@ public class PowerUpBlock : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.gameObject.tag != null)
+		if(other.gameObject.layer == layer.head)
 		{
-			if(other.gameObject.tag == targetTag)
+//			if(other.gameObject.tag == targetTag)
+//			{
+			if(hasPowerUp)
 			{
-				if(hasPowerUp)
-				{
-					AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
-					hasPowerUp = false;
-					anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
-					StartCoroutine(ReloadPowerUpBlock());
-					//Vector3 offset = new Vector3(.5f,.5f,0.0f);
-					Vector3 offset = new Vector3(0,1,0);
-					GameObject clone = (GameObject)Instantiate(powerup,transform.position + offset ,Quaternion.identity);
-					clone.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
-					Destroy(clone,powerUpStayTime);
-
-				}
-
+				AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
+				hasPowerUp = false;
+				anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
+				StartCoroutine(ReloadPowerUpBlock());
+				//Vector3 offset = new Vector3(.5f,.5f,0.0f);
+				Vector3 offset = new Vector3(0,1,0);
+				GameObject clone = (GameObject)Instantiate(powerup,transform.position + offset ,Quaternion.identity);
+				clone.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
+				Destroy(clone,powerUpStayTime);
 			}
+//			}
 		}
 	}
 
