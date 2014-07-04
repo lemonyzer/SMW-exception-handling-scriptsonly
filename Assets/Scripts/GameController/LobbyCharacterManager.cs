@@ -51,8 +51,17 @@ public class LobbyCharacterManager : MonoBehaviour {
 		return PlayerPrefs.GetInt(gameTeamsCount);
 	}
 
+	private float minButtonHeight;
+	
 	void Awake()
 	{
+		if(Screen.dpi != 0)
+		{
+			minButtonHeight = 20f * Screen.height / Screen.dpi;
+		}
+		else
+			minButtonHeight = 20f;
+
 		setNumberOfGameSlots();
 		slots = getNumberOfGameSlots();
 
@@ -86,7 +95,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 			// Local
 			if(PlayerAndBotsHaveValidCharacter())
 			{
-				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
+				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ))
 				{
 					Application.LoadLevel("sp_classic_selected_character");
 				}
@@ -99,7 +108,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 			{
 				if(EveryPlayerHasValidCharacter())
 				{
-					if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ) ))
+					if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ))
 					{
 						DebugListAllPlayer();
 						networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");

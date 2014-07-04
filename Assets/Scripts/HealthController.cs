@@ -18,6 +18,7 @@ public class HealthController : MonoBehaviour {
 	public float restartDelay = 5.0f;
 	
 	public GameObject deathPrefabRight;
+	public GameObject HeadJumpedPrefabRight;
 	public bool respawn=false;
 	public bool enableControlls=false;
 	public bool disableSpawnProtection = false;
@@ -85,10 +86,16 @@ public class HealthController : MonoBehaviour {
 				if(!isHit)		//nur wenn er noch nicht getroffen wurde
 				{
 					isHit = true;
+					if(headJumped)
+						statsManager.HeadJumpConfirm(attacker,myCharacter);
+					else
+						statsManager.InvincibleAttackConfirm(attacker,myCharacter);
 
-					statsManager.HeadJumpConfirm(attacker,myCharacter);
-
-					anim.SetTrigger(hash.hitTrigger);
+					anim.SetBool(hash.spawnProtectionBool,false);
+					anim.SetBool(hash.spawnBool,false);
+					anim.SetBool(hash.gameOverBool,false);
+					anim.SetBool(hash.headJumpedBool,headJumped);
+					anim.SetTrigger(hash.hitTrigger);	//Lösung!
 					anim.SetBool(hash.hittedBool,true);
 					anim.SetBool(hash.deadBool,true);	// zu schnell!
 					anim.SetBool(hash.spawnBool,false);
@@ -189,7 +196,7 @@ public class HealthController : MonoBehaviour {
 
 		// Show Deathanimation and Destroy after deathTime seconds
 		if(deathPrefabRight != null)
-			Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+			Destroy(Instantiate(HeadJumpedPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
 	}
 
 	void NotHeadJumped() 
@@ -202,8 +209,12 @@ public class HealthController : MonoBehaviour {
 		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
 		
 		// Show Deathanimation and Destroy after deathTime seconds
-//		if(deathPrefabRight != null)
-//			Destroy(Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+		if(deathPrefabRight != null)
+		{
+			GameObject deathPrefab = (GameObject) Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity);
+			deathPrefab.rigidbody2D.velocity = new Vector2(0f, 20f);
+			Destroy(deathPrefab,deathTime);
+		}
 	}
 
 	void GameOver() 

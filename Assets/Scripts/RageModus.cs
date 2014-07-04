@@ -3,8 +3,10 @@ using System.Collections;
 
 public class RageModus : MonoBehaviour {
 
+	public float rageTime = 8f;
 	public bool isInRageModus = false;
 	private float oldMaxSpeed;
+
 
 	private float rageMaxSpeed;
 	/** 
@@ -57,11 +59,13 @@ public class RageModus : MonoBehaviour {
 	public void startRageModus()
 	{
 		oldMaxSpeed = myPlatformCharacter.getMaxSpeed();
-		rageMaxSpeed = oldMaxSpeed * 1.25f;
+		rageMaxSpeed = oldMaxSpeed * 1.2f;
 		myPlatformCharacter.setMaxSpeed(rageMaxSpeed);
 		headCollider2D.enabled = false;
 		feetCollider2D.enabled = false;
 //		bodyCollider2D.isTrigger = false;
+
+//		disableCollision();
 		
 		isInRageModus = true;
 		myPlatformCharacter.isInRageModus = true;
@@ -77,7 +81,7 @@ public class RageModus : MonoBehaviour {
 
 	IEnumerator RageTime()
 	{
-		yield return new WaitForSeconds(8.0f);
+		yield return new WaitForSeconds(rageTime);
 		stopRageModus();
 	}
 
@@ -88,6 +92,9 @@ public class RageModus : MonoBehaviour {
 		{
 			anim.SetBool(hash.rageModusBool,false);
 		}
+
+//		enableCollision();
+
 		isInRageModus = false;
 		myPlatformCharacter.isInRageModus = false;
 		headCollider2D.enabled = true;
@@ -97,6 +104,44 @@ public class RageModus : MonoBehaviour {
 		
 		//anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
 		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
+	}
+
+	void disableCollision()
+	{
+		int currentLayer = gameObject.layer;
+		for(int i=0; i<4; i++)
+		{
+			if(i==0)
+				currentLayer = layer.player1;
+			if(i==1)
+				currentLayer = layer.player2;
+			if(i==2)
+				currentLayer = layer.player3;
+			if(i==3)
+				currentLayer = layer.player4;
+			
+			if(gameObject.layer != currentLayer)
+				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,true);
+		}
+	}
+
+	void enableCollision()
+	{
+		int currentLayer = gameObject.layer;
+		for(int i=0; i<4; i++)
+		{
+			if(i==0)
+				currentLayer = layer.player1;
+			if(i==1)
+				currentLayer = layer.player2;
+			if(i==2)
+				currentLayer = layer.player3;
+			if(i==3)
+				currentLayer = layer.player4;
+			
+			if(gameObject.layer != currentLayer)
+				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,false);
+		}
 	}
 
 	void OnCollisionEnter2D (Collision2D collision)

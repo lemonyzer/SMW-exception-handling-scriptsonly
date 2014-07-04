@@ -23,7 +23,7 @@ public class PlatformCharacter : MonoBehaviour {
 	public bool walled = false;
 	public Vector2 groundCheckPosition = new Vector2(0, -0.5f);	// Position, where the the Ground will be checked
 	public Vector2 wallCheckPosition = new Vector2(0.5f, 0); // Position, where the the Wall will be checked
-	public float groundRadius = 0.2f;	// Size of the Circle @rround the Checkposition 
+//	public float groundRadius = 0.2f;	// Size of the Circle @rround the Checkposition 
 	public float wallRadius = 0.1f;	// Size of the Circle @rround the Checkposition
 	public LayerMask whatIsGround;	// Floor, JumpAblePlatform, DestroyAblePlatform 
 	public LayerMask whatIsWall;	// Floor, JumpAblePlatform, DestroyAblePlatform
@@ -35,7 +35,7 @@ public class PlatformCharacter : MonoBehaviour {
 	public bool isDead = false;					// is Player currently dead?
 	public bool jumpAllowed = true;				// denies/allows player&bots to jump
 	public bool moveAllowed = true;				// denies/allows player&bots to move horizontally
-	public bool isInJumpAbleSaveZone = false;	// is Player currently in save Zone (prevent's colliding with Platform) 
+//	public bool isInJumpAbleSaveZone = false;	// is Player currently in save Zone (prevent's colliding with Platform) 
 	public bool isBouncing = false;				// move speed changed while bouncing with other player
 	public bool isInRageModus = false;
 	
@@ -94,9 +94,10 @@ public class PlatformCharacter : MonoBehaviour {
 	/**
 	 * Connection to other Body parts
 	 **/
-	private Collider2D bodyCollider2D;
-	private Collider2D headCollider2D;
-	private Collider2D feetCollider2D;
+	private BoxCollider2D bodyCollider2D;
+	private BoxCollider2D headCollider2D;
+	private BoxCollider2D feetCollider2D;
+	private SpriteRenderer spriteRenderer;
 
 	public void setMaxSpeed(float newMaxSpeed)
 	{
@@ -110,6 +111,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Awake()
 	{
+		spriteRenderer = GetComponent<SpriteRenderer>();
 		bodyCollider2D = GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
 		feetCollider2D = transform.FindChild(Tags.feet).GetComponent<BoxCollider2D>();
@@ -118,11 +120,20 @@ public class PlatformCharacter : MonoBehaviour {
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
 		statsManager = gameController.GetComponent<StatsManager>();
+
+		//LayerMasks();	// <-- wichtig in Start... Awake ist zu früh
 	}
-	
+
+	void LayerMasks()
+	{
+		whatIsGround = 1 << layer.floor;
+		whatIsGround |= 1 << layer.jumpAblePlatform;
+		whatIsGround |= 1 << layer.destroyAbleBlock;
+	}
+
 	void Start() {
 		anim = GetComponent<Animator>();
-		isInJumpAbleSaveZone=false;
+		LayerMasks();
 
 		// if this is our paddle, it accepts input
 		// otherwise, if it is someone else’s paddle, it does not
@@ -165,20 +176,42 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			CheckPosition();
 			SetAnim();
-			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung					
-			JumpAblePlatform();
+			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
 		}
 	}
 
 	void CheckPosition()
 	{
+		//playerPos spriterenderer boundaries
 		Vector2 playerPos = new Vector2(rigidbody2D.transform.position.x, rigidbody2D.transform.position.y);
+
+		Vector2 groundedOffset = new Vector2(0f,0.5f);
+
+		Vector2 playerColliderTopLeftPos = new Vector2(transform.position.x - bodyCollider2D.size.x*0.5f + bodyCollider2D.center.x,
+		                                               transform.position.y);	// Collider Top Left
 		
-		grounded = Physics2D.OverlapCircle(playerPos+groundCheckPosition, groundRadius, whatIsGround);
-		Debug.DrawLine(playerPos,playerPos+groundCheckPosition,Color.green);
+		Vector2 playerColliderBottomRightPos = new Vector2(transform.position.x + bodyCollider2D.size.x*0.5f + bodyCollider2D.center.x,
+		                                                   transform.position.y - spriteRenderer.bounds.extents.y*1.2f);	// Collider Bottom Right
+
+		Vector2 playerColliderTopRightPos = new Vector2(transform.position.x + bodyCollider2D.size.x*0.5f + bodyCollider2D.center.x,
+		                                               transform.position.y);	// Collider Top Right
+		
+		Vector2 playerColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider2D.size.x*0.5f + bodyCollider2D.center.x,
+		                                                   transform.position.y - spriteRenderer.bounds.extents.y*1.2f);	// Collider Bottom Left
+
+		Debug.DrawLine(playerColliderTopLeftPos, playerColliderBottomRightPos, Color.yellow);
+		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderTopRightPos, Color.yellow);
+		Debug.DrawLine(playerColliderTopLeftPos, playerColliderTopRightPos, Color.yellow);
+		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderBottomRightPos, Color.yellow);
+
+		grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, whatIsGround);
+//		if(gameObject.layer == layer.player1)
+//			Debug.Log(gameObject.name + " grounded: " + grounded);
+		//grounded = Physics2D.OverlapCircle(playerPos+groundCheckPosition, groundRadius, whatIsGround);
+//		Debug.DrawLine(playerPos, playerPos + groundCheckPosition + new Vector2(0,-groundRadius), Color.green);
 
 		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, whatIsWall);
-		Debug.DrawLine(playerPos,playerPos+wallCheckPosition,Color.green);
+		Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
 	}
 
 	void SetAnim() 
@@ -406,28 +439,4 @@ public class PlatformCharacter : MonoBehaviour {
 		transform.localScale = theScale;
 		
 	}
-	
-	/**
-	 * 
-	 * Wird extra abgefragt, da Spieler auch ohne selbst zu Springen eine positive vertikale Geschwindigkeit bekommen können
-	 * zB.: steht auf Platform, Gegenspieler springt von unten an die Füße => Spieler macht automatischen Sprung
-	 * 
-	 **/
-	void JumpAblePlatform()
-	{
-		if(!isInJumpAbleSaveZone)
-		{
-			//			Debug.LogWarning(gameObject.name + ": velocity.y=" + rigidbody2D.velocity.y);
-			if(rigidbody2D.velocity.y >0.1F)
-			{
-				Physics2D.IgnoreLayerCollision(layer.jumpAblePlatform,gameObject.layer,true);		// Kollisionsdetection ausschalten
-			}
-			else if(rigidbody2D.velocity.y <0.1F)
-			{
-				Physics2D.IgnoreLayerCollision(layer.jumpAblePlatform,gameObject.layer,false);		// Kollisionsdetection einschalten
-			}
-		}
-	}
-
-
 }

@@ -15,6 +15,7 @@ public class Layer : MonoBehaviour {
 	public int head;
 
 	public int floor;
+	public int destroyAbleBlock;
 	public int jumpAblePlatform;
 	public int jumpAblePlatformSaveZone;
 	
@@ -31,8 +32,9 @@ public class Layer : MonoBehaviour {
 	public const string headLayerName = "Head";
 
 	public const string enemyLayerName = "Enemy";
-
+	
 	public const string floorLayerName = "Floor";
+	public const string destroyAbleBlockLayerName = "DestroyAbleBlock";
 	public const string jumpAblePlatformLayerName = "JumpAblePlatform";
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpAblePlatformSaveZone";
 
@@ -52,6 +54,7 @@ public class Layer : MonoBehaviour {
 		enemy = LayerMask.NameToLayer(enemyLayerName);
 
 		floor = LayerMask.NameToLayer(floorLayerName);
+		destroyAbleBlock = LayerMask.NameToLayer(destroyAbleBlockLayerName);
 		jumpAblePlatform = LayerMask.NameToLayer(jumpAblePlatformLayerName);
 		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
 
