@@ -381,7 +381,7 @@ public class spCharacterSelection2D : MonoBehaviour
 
 	Vector3 getRandomSpawnPosition()
 	{
-		return new Vector3(Random.Range(-9.0f, 9.0f), Random.Range(2f, 15.0f), 0f);
+		return new Vector3(Random.Range(-2.0f, 9.0f), Random.Range(2f, 11.0f), 0f);
 	}
 
 	[RPC]
@@ -410,9 +410,20 @@ public class spCharacterSelection2D : MonoBehaviour
 
 	void SpawnPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
-		if(myCharacter != null)
-			Instantiate( myCharacter, position, Quaternion.identity);
+		GameObject myCharacterPrefab = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		if(myCharacterPrefab != null)
+		{
+			GameObject currentCharacter = (GameObject) Instantiate( myCharacterPrefab, position, Quaternion.identity);
+			if(currentPlayer == 0)
+			{
+				currentCharacter.GetComponent<PlatformUserControlKeyboard>().enabled = true;
+				currentCharacter.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
+			}
+			else
+			{
+				currentCharacter.GetComponent<PlatformAIControl>().enabled = true;
+			}
+		}
 	}
 
 

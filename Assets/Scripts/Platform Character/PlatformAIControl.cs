@@ -36,9 +36,10 @@ public class PlatformAIControl : MonoBehaviour {
 	private GameObject gameController;
 	private Stats stats;
 	private SpawnScript spawnScript;
+	private PlatformCharacter myPlatformCharacter;
 	
 	void Awake() {
-
+		myPlatformCharacter = GetComponent<PlatformCharacter>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		stats = gameController.GetComponent<Stats>();
 		spawnScript = gameController.GetComponent<SpawnScript>();
@@ -185,6 +186,12 @@ public class PlatformAIControl : MonoBehaviour {
 //		{
 //
 //		}
+		if(gameController == null)
+			return null;
+
+		if(spawnScript == null)
+			return null;
+		
 		foreach(GameObject go in spawnScript.playerDictonary.Keys)
 		{
 			if(go != null)
@@ -258,25 +265,40 @@ public class PlatformAIControl : MonoBehaviour {
 		
 		if(target != null)
 		{
-			if(!targetHigher)
+			if(spawnScript.playerDictonary[target].getCharacter().getPlatformCharacter().isInRageModus)
 			{
-				//Bot ist höher oder auf gleicher Höhe
-				inputJump = false;
-
-				if(ableToChangeDirection)					// Bot leichter machen
-					inputVelocity = targetDirection;
-
-				if(targetAtSameHeight)
+				// Rage ganz nah, wegrennen!
+				inputVelocity = -targetDirection;
+				if(targetDistance < jumpRange) 
 				{
-					if(targetDistance < jumpRange) 
-					{
-							inputJump = true;				// Target in Jumprange, Springen!
-					}
+					inputJump = true;				// Target in Jumprange, Springen!
 				}
 			}
-			else if(targetHigher)
+			else
 			{
-				inputJump = true;
+				if(!targetHigher)
+				{
+					//Bot ist höher oder auf gleicher Höhe
+					inputJump = false;
+					
+					if(ableToChangeDirection)					// Bot leichter machen
+						inputVelocity = targetDirection;
+					
+					if(targetAtSameHeight)
+					{
+						if(!myPlatformCharacter.isInRageModus)
+						{
+							if(targetDistance < jumpRange) 
+							{
+								inputJump = true;				// Target in Jumprange, Springen!
+							}
+						}
+					}
+				}
+				else if(targetHigher)
+				{
+					inputJump = true;
+				}
 			}
 		}
 		else

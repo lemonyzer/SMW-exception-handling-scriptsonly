@@ -20,10 +20,40 @@ public class Beam : MonoBehaviour {
 	private GameObject gameController;
 	private Layer layer;
 
+	BoxCollider2D[] beamCollider;
+
 	void Awake()
 	{
+		beamCollider = GetComponents<BoxCollider2D>();
+		SortBeamCollider();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		layer = gameController.GetComponent<Layer>();
+	}
+
+	void SortBeamCollider()
+	{
+		if(beamCollider != null)
+		{
+			if(beamCollider.Length > 1)
+			{
+				Debug.Log(beamCollider.Length + " Beamcollider");
+				Debug.Log(beamCollider[0].center);
+				Debug.Log(beamCollider[1].center);
+				if(beamCollider[0].center.x <= beamCollider[1].center.x)
+				{
+					// alles ok, collider mit index 0 = links, collider mit index 1 = rechts
+				}
+				else
+				{
+					// tauschen!
+					BoxCollider2D temp = beamCollider[0];
+					beamCollider[0] = beamCollider[1];
+					beamCollider[1] = temp;
+				}
+				Debug.Log(beamCollider[0].center);
+				Debug.Log(beamCollider[1].center);
+			}
+		}
 	}
 
 	void Start()
@@ -32,8 +62,10 @@ public class Beam : MonoBehaviour {
 
 		backgroundCenterPositionX = backgroundSpriteRenderer.bounds.center.x;
 		backgroundWidth = backgroundSpriteRenderer.bounds.size.x;
-		leftBeamZoneX = backgroundCenterPositionX - (backgroundWidth * 0.5f) + saveBeamOffsetX;	// + !!!
-		rightBeamZoneX = backgroundCenterPositionX + (backgroundWidth * 0.5f) - saveBeamOffsetX;	// - !!!
+//		leftBeamZoneX = backgroundCenterPositionX - (backgroundWidth * 0.5f) + saveBeamOffsetX;	// + !!!
+//		rightBeamZoneX = backgroundCenterPositionX + (backgroundWidth * 0.5f) - saveBeamOffsetX;	// - !!!
+		leftBeamZoneX = beamCollider[0].center.x + beamCollider[0].size.x*0.5f + saveBeamOffsetX;
+		rightBeamZoneX = beamCollider[1].center.x - beamCollider[0].size.x*0.5f - saveBeamOffsetX;
 		Debug.Log(backgroundSpriteRenderer.bounds);
 		Debug.Log(leftBeamZoneX);
 		Debug.Log(rightBeamZoneX);
