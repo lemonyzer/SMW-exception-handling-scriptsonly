@@ -8,6 +8,9 @@ public class RageModus : MonoBehaviour {
 	private float oldMaxSpeed;
 
 
+	Color[] rageAnim;
+	int currentAnimColor = 0;
+
 	private float rageMaxSpeed;
 	/** 
 	 * Character Animation 
@@ -31,9 +34,65 @@ public class RageModus : MonoBehaviour {
 	private Collider2D feetCollider2D;
 
 	private PlatformCharacter myPlatformCharacter;
-	
+	private SpriteRenderer mySpriteRenderer;
+	void InitRageAnimation()
+	{
+		rageAnim = new Color[6];
+
+//		for(int i=0; i<rageAnim.Length; i++)
+//		{
+//			rageAnim[i].r = 1;
+//			rageAnim[i].g = 0;
+//			rageAnim[i].b = 0;
+//			rageAnim[i].a = 1;
+//		}
+		int i=0;
+		rageAnim[i] = new Color(1f, 0f, 0f, 1f);
+//		rageAnim[i].r = 1;
+//		rageAnim[i].g = 0;
+//		rageAnim[i].b = 0;
+//		rageAnim[i].a = 1;
+		i++;
+		rageAnim[i] = new Color(1f, 1f, 0f, 1f);
+//		rageAnim[i].r = 1;
+//		rageAnim[i].g = 1;
+//		rageAnim[i].b = 0;
+//		rageAnim[i].a = 1;
+		i++;
+		rageAnim[i] = new Color(0f, 1f, 0f, 1f);
+//		rageAnim[i].r = 0;
+//		rageAnim[i].g = 1;
+//		rageAnim[i].b = 0;
+//		rageAnim[i].a = 1;
+		i++;
+		rageAnim[i] = new Color(0f, 1f, 1f, 1f);
+//		rageAnim[i].r = 0;
+//		rageAnim[i].g = 1;
+//		rageAnim[i].b = 1;
+//		rageAnim[i].a = 1;
+		i++;
+		rageAnim[i] = new Color(0f, 0f, 1f, 1f);
+//		rageAnim[i].r = 0;
+//		rageAnim[i].g = 0;
+//		rageAnim[i].b = 1;
+//		rageAnim[i].a = 1;
+		i++;
+		rageAnim[i] = new Color(1f, 1f, 1f, 1f);
+//		rageAnim[i].r = 1;
+//		rageAnim[i].g = 1;
+//		rageAnim[i].b = 1;
+//		rageAnim[i].a = 1;
+//		rageAnim[1] = Color.yellow;
+//		rageAnim[2] = Color.green;
+//		rageAnim[3] = Color.cyan;
+//		rageAnim[4] = Color.blue;
+//		rageAnim[5] = Color.white;
+	}
+
 	void Awake()
 	{
+		InitRageAnimation();
+		mySpriteRenderer = GetComponent<SpriteRenderer>();
 		myPlatformCharacter = GetComponent<PlatformCharacter>();
 		anim = GetComponent<Animator>();
 		bodyCollider2D = GetComponent<BoxCollider2D>();
@@ -50,10 +109,18 @@ public class RageModus : MonoBehaviour {
 	void Start () {
 	
 	}
-	
+
 	// Update is called once per frame
-	void Update () {
-	
+	void LateUpdate () {
+		if(isInRageModus)
+		{
+			currentAnimColor++;
+			currentAnimColor = currentAnimColor % rageAnim.Length;
+			Debug.Log("currentAnimColor:" + currentAnimColor);
+			Debug.Log("SpriteRenderer Color:" + mySpriteRenderer.color);
+			mySpriteRenderer.color = rageAnim[currentAnimColor];
+			Debug.Log("new SpriteRenderer Color:" + mySpriteRenderer.color);
+		}
 	}
 
 	public void startRageModus()
@@ -69,11 +136,11 @@ public class RageModus : MonoBehaviour {
 		
 		isInRageModus = true;
 		myPlatformCharacter.isInRageModus = true;
-		if(anim != null)
-		{
-			anim.SetBool(hash.rageModusBool,true);
-			anim.SetTrigger(hash.rageTrigger);
-		}
+//		if(anim != null)
+//		{
+//			anim.SetBool(hash.rageModusBool,true);
+//			anim.SetTrigger(hash.rageTrigger);
+//		}
 		Debug.LogError(gameObject.name + "isInRageModus: On");
 		//		InventoryManager.inventory.SetItems("Star(Clone)",0f);
 		StartCoroutine(RageTime());
@@ -88,11 +155,11 @@ public class RageModus : MonoBehaviour {
 	public void stopRageModus()
 	{
 		Debug.LogError(gameObject.name + "isInRageModus: Off");
-		if(anim != null)
-		{
-			anim.SetBool(hash.rageModusBool,false);
-		}
-
+//		if(anim != null)
+//		{
+//			anim.SetBool(hash.rageModusBool,false);
+//		}
+		mySpriteRenderer.color = Color.white;
 //		enableCollision();
 
 		isInRageModus = false;
