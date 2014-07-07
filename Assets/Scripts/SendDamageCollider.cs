@@ -67,7 +67,17 @@ public class SendDamageCollider : MonoBehaviour {
 
 						targetHead = other.gameObject;
 						targetCharacterGameObject = targetHead.transform.parent.gameObject;
-						statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);
+
+						if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
+						{
+							// Angriff zählt nur wenn Gegenspieler nicht durch mich durchspringt
+							statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);			// Alternative: statsManager oder HealthController können auch SpawnProtection abfragen!
+						}
+						else
+						{
+							Debug.LogWarning(targetCharacterGameObject.name + " durchspringt " + myCharacterGameObject.name + ", feet-head trigger zählt nicht als angriff");
+							Debug.Log(myCharacterGameObject.name + " " + myCharacterGameObject.rigidbody2D.velocity.y + " < " + targetCharacterGameObject.rigidbody2D.velocity.y + " " + targetCharacterGameObject.name);
+						}
 						//targetCharacterGameObject.GetComponent<HealthController>().ApplyDamage(damageValue,true);
 
 						//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
@@ -90,7 +100,7 @@ public class SendDamageCollider : MonoBehaviour {
 		}
 		else
 		{
-			Debug.LogError("Charakter hat keine HealthController");
+			Debug.LogError("Charakter hat kein HealthController");
 		}
 	}
 

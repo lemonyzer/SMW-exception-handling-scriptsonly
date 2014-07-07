@@ -10,7 +10,7 @@ public class PlatformJumper : MonoBehaviour {
 	BoxCollider2D bodyCollider;
 
 	GameObject gameController;
-	PlatformCharacter myPlatformCharacter;
+//	PlatformCharacter myPlatformCharacter;
 	Layer layer;
 
 	SpriteRenderer spriteRenderer;
@@ -20,7 +20,7 @@ public class PlatformJumper : MonoBehaviour {
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		layer = gameController.GetComponent<Layer>();
-		myPlatformCharacter = GetComponent<PlatformCharacter>();
+//		myPlatformCharacter = GetComponent<PlatformCharacter>();
 
 
 
@@ -131,6 +131,7 @@ public class PlatformJumper : MonoBehaviour {
 		}
 		else
 		{
+			// is in Jumpable save zone
 			// deaktiviere collision, nicht an platformen hängen bleiben
 			Physics2D.IgnoreLayerCollision(layer.jumpAblePlatform, gameObject.layer,true);
 		}

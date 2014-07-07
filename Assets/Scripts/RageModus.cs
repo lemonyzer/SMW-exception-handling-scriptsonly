@@ -9,7 +9,7 @@ public class RageModus : MonoBehaviour {
 
 
 	Color[] rageAnim;
-	int currentAnimColor = 0;
+	int currentAnimColorIndex = 0;
 
 	private float rageMaxSpeed;
 	/** 
@@ -114,12 +114,13 @@ public class RageModus : MonoBehaviour {
 	void LateUpdate () {
 		if(isInRageModus)
 		{
-			currentAnimColor++;
-			currentAnimColor = currentAnimColor % rageAnim.Length;
-			Debug.Log("currentAnimColor:" + currentAnimColor);
-			Debug.Log("SpriteRenderer Color:" + mySpriteRenderer.color);
-			mySpriteRenderer.color = rageAnim[currentAnimColor];
-			Debug.Log("new SpriteRenderer Color:" + mySpriteRenderer.color);
+//			Debug.Log("currentAnimColor:" + currentAnimColor);
+//			Debug.Log("SpriteRenderer Color:" + mySpriteRenderer.color);
+			currentAnimColorIndex = currentAnimColorIndex % rageAnim.Length;
+			mySpriteRenderer.color = rageAnim[currentAnimColorIndex];
+//			Debug.Log("new SpriteRenderer Color:" + mySpriteRenderer.color);
+			currentAnimColorIndex++;
+
 		}
 	}
 

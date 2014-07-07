@@ -21,6 +21,8 @@ public class Layer : MonoBehaviour {
 	
 	public int powerUp;
 
+	public int groundStopper;
+
 	public int fader;
 
 	public const string player1LayerName = "Player1";
@@ -39,6 +41,8 @@ public class Layer : MonoBehaviour {
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpAblePlatformSaveZone";
 
 	public const string powerUpLayerName = "PowerUp";
+	public const string groundStopperLayerName = "GroundStopper";
+
 	public const string faderLayerName = "Fader";
 
 	void Awake()
@@ -59,6 +63,7 @@ public class Layer : MonoBehaviour {
 		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
 
 		powerUp = LayerMask.NameToLayer(powerUpLayerName);
+		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
 		fader = LayerMask.NameToLayer(faderLayerName);
 	}
 

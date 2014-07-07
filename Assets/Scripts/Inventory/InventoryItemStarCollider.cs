@@ -64,29 +64,29 @@ public class InventoryItemStarCollider : MonoBehaviour {
 		
 	}
 	
-	void OnCollisionEnter2D(Collision2D collision) 
-	{
-		/***
-		 * Compare layer > 10 & layer < 14 effektiver?
-		 * mit layermask layer 11,12,13,14 und verknüpfen und vergleichen?
-		 ***/
-		if((collision.gameObject.layer == layer.player1) || 
-		   (collision.gameObject.layer == layer.player2) ||
-		   (collision.gameObject.layer == layer.player3) || 
-		   (collision.gameObject.layer == layer.player4))
-		{
-			if(targetTag == "ALL" || targetTag == collision.gameObject.tag)
-			{
-				// PowerUp kann von allen oder nur von Player augesammelt werden
-				CollectItem(collision.gameObject);
-			}
-			else
-			{
-				Debug.LogWarning("Star (Collision): falscher Tag!");
-				Debug.LogWarning("targetTag: " + targetTag);
-				Debug.LogWarning("gameObject: " + collision.gameObject.tag);
-			}
-		}
-		
-	}
+//	void OnCollisionEnter2D(Collision2D collision) 
+//	{
+//		/***
+//		 * Compare layer > 10 & layer < 14 effektiver?
+//		 * mit layermask layer 11,12,13,14 und verknüpfen und vergleichen?
+//		 ***/
+//		if((collision.gameObject.layer == layer.player1) || 
+//		   (collision.gameObject.layer == layer.player2) ||
+//		   (collision.gameObject.layer == layer.player3) || 
+//		   (collision.gameObject.layer == layer.player4))
+//		{
+//			if(targetTag == "ALL" || targetTag == collision.gameObject.tag)
+//			{
+//				// PowerUp kann von allen oder nur von Player augesammelt werden
+//				CollectItem(collision.gameObject);
+//			}
+//			else
+//			{
+//				Debug.LogWarning("Star (Collision): falscher Tag!");
+//				Debug.LogWarning("targetTag: " + targetTag);
+//				Debug.LogWarning("gameObject: " + collision.gameObject.tag);
+//			}
+//		}
+//		
+//	}
 }

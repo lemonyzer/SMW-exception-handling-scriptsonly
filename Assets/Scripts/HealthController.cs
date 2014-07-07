@@ -23,58 +23,128 @@ public class HealthController : MonoBehaviour {
 	public bool enableControlls=false;
 	public bool disableSpawnProtection = false;
 
-	public bool isKI=false;
 
 	public bool isHit=false;
 
 	GameObject myCharacter;
-	BoxCollider2D myCharacterCollider2D;
-	Transform feet;
-	BoxCollider2D feetCollider2D;
-	Transform head;
-	BoxCollider2D headCollider2D;
+//	BoxCollider2D myCharacterCollider2D;
+//	Transform feet;
+//	BoxCollider2D feetCollider2D;
+//	Transform head;
+//	BoxCollider2D headCollider2D;
 
 	PlatformCharacter myPlatformCharacterScript;
-
+	ReSpawnScript myReSpawnScript;
 	Animator anim;
 
 	GameObject gameController;
 	private HashID hash;
 	private StatsManager statsManager;
+	private Layer layer;
+
+	/**
+	 * Collider / Trigger
+	 **/
+	// root: PlayerLayer
+	BoxCollider2D myBodyCollider;
+	BoxCollider2D myBodyTrigger;
+	// child Feet: FeetLayer
+	BoxCollider2D myFeetTrigger;
+	// child Head: HeadLayer
+	BoxCollider2D myHeadTrigger;
+	// child GroundStopper: PlayerLayer
+	BoxCollider2D myGroundStopperCollider;
+	
+	void InitColliderAndTrigger()
+	{
+		BoxCollider2D[] myBody = GetComponents<BoxCollider2D>();
+		if(myBody == null)
+			return;
+		foreach(BoxCollider2D coll in myBody)
+		{
+			if(coll.isTrigger)
+				myBodyTrigger = coll;
+			else
+				myBodyCollider = coll;
+		}
+		myFeetTrigger = transform.Find(Tags.feet).GetComponent<BoxCollider2D>();
+		myHeadTrigger = transform.Find(Tags.head).GetComponent<BoxCollider2D>();
+//		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
+	}
 
 	void Awake() {
+		myCharacter = this.gameObject;
+		InitColliderAndTrigger();
+		myReSpawnScript = GetComponent<ReSpawnScript>();
 //		Debug.Log(gameObject.name + " HealthController -> Awake()");
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 		statsManager = gameController.GetComponent<StatsManager>();
+		layer = gameController.GetComponent<Layer>();
 	}
 
 	// Use this for initialization
 	void Start () {
-//		Debug.Log(gameObject.name + " HealthController -> Start()");
 
-		myCharacter = this.gameObject;
-
-		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
-		if(myCharacterCollider2D == null)
-			Debug.LogError(myCharacter.name + " has no BoxCollider2D");
-
-		feet = myCharacter.transform.Find("Feet");
-		feetCollider2D = feet.GetComponent<BoxCollider2D>();
-		if(feetCollider2D == null)
-			Debug.LogError(myCharacter.name + "'s feet has no FEET BoxCollider2D");
-
-
-		head = myCharacter.transform.Find("Head");
-		headCollider2D = head.GetComponent<BoxCollider2D>();
-		if(headCollider2D == null)
-			Debug.LogError(myCharacter.name + "'s head has no HEAD BoxCollider2D");
+//		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
+//		if(myCharacterCollider2D == null)
+//			Debug.LogError(myCharacter.name + " has no BoxCollider2D");
+//
+//		feet = myCharacter.transform.Find(Tags.feet);
+//		feetCollider2D = feet.GetComponent<BoxCollider2D>();
+//		if(feetCollider2D == null)
+//			Debug.LogError(myCharacter.name + "'s feet has no FEET BoxCollider2D");
+//
+//
+//		head = myCharacter.transform.Find(Tags.head);
+//		headCollider2D = head.GetComponent<BoxCollider2D>();
+//		if(headCollider2D == null)
+//			Debug.LogError(myCharacter.name + "'s head has no HEAD BoxCollider2D");
 
 		anim = myCharacter.GetComponent<Animator>();
 
 		myPlatformCharacterScript = myCharacter.GetComponent<PlatformCharacter>();
 		if(myPlatformCharacterScript == null)
 			Debug.LogError(myCharacter.name + " has no PlatformCharacter Script");
+	}
+
+	void SetCharacterColliderHeadJumped()
+	{
+		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
+		
+		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
+		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
+		myBodyTrigger.enabled = false;
+//					myCharacterCollider2D.enabled = false;
+		
+		// FeetCollider deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
+		myFeetTrigger.enabled = false;
+		myHeadTrigger.enabled = false;
+//					feet.gameObject.SetActive(false);
+//					headCollider2D.enabled = false;
+
+//					// verhindern dass das GameObject durch die Gravität in Boden fällt
+//					myCharacter.rigidbody2D.isKinematic = true;
+		
+		/* Ki und Controlls deaktivieren */
+		stopControlls();
+	}
+
+	void SetCharacterColliderDead()
+	{
+		SetCharacterColliderHeadJumped();
+
+		// zusätzlich durch Boden fallen
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.destroyAbleBlock,true);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,true);
+
+
 	}
 
 	public void ApplyDamage(GameObject attacker, int damage, bool headJumped)
@@ -91,36 +161,14 @@ public class HealthController : MonoBehaviour {
 					else
 						statsManager.InvincibleAttackConfirm(attacker,myCharacter);
 
-					anim.SetBool(hash.spawnProtectionBool,false);
 					anim.SetBool(hash.spawnBool,false);
 					anim.SetBool(hash.gameOverBool,false);
-					anim.SetBool(hash.headJumpedBool,headJumped);
-					anim.SetTrigger(hash.hitTrigger);	//Lösung!
-					anim.SetBool(hash.hittedBool,true);
-					anim.SetBool(hash.deadBool,true);	// zu schnell!
-					anim.SetBool(hash.spawnBool,false);
+					anim.SetBool(hash.headJumpedBool,false);
+					anim.SetBool(hash.deadBool,false);
+					anim.SetTrigger(hash.hitTrigger);			// Lösung!
 
 					// Death Sound abspielen
 					AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
-
-					// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-					myCharacterCollider2D.enabled = false;
-
-					// Fuß BoxCollider2D & SendDamageScript deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
-					// myCharacter.Find("Feet").gameObject.SetActive(false);
-					feet.gameObject.SetActive(false);
-					headCollider2D.enabled = false;
-					//head.gameObject.GetComponent<BoxCollider2D>().enabled = false;	//BAD PROGRAMMING!
-
-					// verhindern dass das GameObject durch die Gravität in Boden fällt
-					myCharacter.rigidbody2D.isKinematic = true;
-
-	//				myCharacter.rigidbody2D.velocity = new Vector2(0.0f,0.0f);
-
-					/* Ki und Controlls deaktivieren */
-					stopControlls();
-
-	//				StartCoroutine(DamageEffect());
 					
 					if (currentLifes > 0)
 					{
@@ -140,6 +188,8 @@ public class HealthController : MonoBehaviour {
 							/* Game Over...
 							 * Player hat alle Leben verloren */
 							anim.SetBool (hash.gameOverBool, true);
+							SetCharacterColliderDead();
+							DeadAnimationPhysics();
 							currentLifes = 0;
 							GameOver();
 						}
@@ -152,29 +202,24 @@ public class HealthController : MonoBehaviour {
 								/* Spieler wurde per Kopfsprung getötet
 							 	* 
 							 	*/
-
-								//Animation setzen
-								anim.SetBool(hash.headJumpedBool,true);
-								//Animation 3 sekunden laufen lassen
 								HeadJumped();
-								StartCoroutine(SpawnDelay());
+								//Animation 3 sekunden laufen lassen
+//								StartCoroutine(SpawnDelay());
 							}
 							else
 							{
 								/* Spieler wurde NICHT per Kopfsprung getötet
 							 	* 
 							 	*/
-
-								//Animation setzen
-								anim.SetBool(hash.headJumpedBool,true);
+								NoHeadJump();
 								//Animation 3 sekunden laufen lassen
-								StartCoroutine(SpawnDelay());
-								NotHeadJumped();
+//								StartCoroutine(SpawnDelay());
 								Debug.Log (this.gameObject.name + ": StarTime, shooted... my bad!");
 							}
-							
+							myReSpawnScript.StartReSpawn();
 						}
 					}
+					isHit = false;
 				}
 				else
 				{
@@ -185,81 +230,80 @@ public class HealthController : MonoBehaviour {
 
 	}
 
-	void HeadJumped() 
+	void NoHeadJump()
 	{
-//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
+		//Animation setzen
+		anim.SetBool(hash.deadBool,true);
+		SetCharacterColliderDead();
 
-		myCharacter.renderer.enabled = false;
-
-		// Deathanimation positioning
-		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
-
-		// Show Deathanimation and Destroy after deathTime seconds
-		if(deathPrefabRight != null)
-			Destroy(Instantiate(HeadJumpedPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+		DeadAnimationPhysics();
 	}
 
-	void NotHeadJumped() 
+	void HeadJumped() 
 	{
-		//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
-		
-		myCharacter.renderer.enabled = false;
-		
-		// Deathanimation positioning
-		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
-		
-		// Show Deathanimation and Destroy after deathTime seconds
-		if(deathPrefabRight != null)
-		{
-			GameObject deathPrefab = (GameObject) Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity);
-			deathPrefab.rigidbody2D.velocity = new Vector2(0f, 20f);
-			Destroy(deathPrefab,deathTime);
-		}
+		//Animation setzen
+		anim.SetBool(hash.headJumpedBool,true);
+		SetCharacterColliderHeadJumped();
+
+		myCharacter.rigidbody2D.velocity = Vector2.zero;
+	}
+
+//	void HeadJumped() 
+//	{
+////		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
+//
+//		myCharacter.renderer.enabled = false;
+//
+//		// Deathanimation positioning
+//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
+//
+//		// Show Deathanimation and Destroy after deathTime seconds
+//		if(deathPrefabRight != null)
+//			Destroy(Instantiate(HeadJumpedPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
+//	}
+//
+//	void NotHeadJumped() 
+//	{
+//		//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
+//		
+//		myCharacter.renderer.enabled = false;
+//		
+//		// Deathanimation positioning
+//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
+//		
+//		// Show Deathanimation and Destroy after deathTime seconds
+//		if(deathPrefabRight != null)
+//		{
+//			GameObject deathPrefab = (GameObject) Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity);
+//			deathPrefab.rigidbody2D.velocity = new Vector2(0f, 20f);
+//			Destroy(deathPrefab,deathTime);
+//		}
+//	}
+
+	void DeadAnimationPhysics()
+	{
+		rigidbody2D.velocity = new Vector2(0f, 20f);
 	}
 
 	void GameOver() 
 	{
-
 		AudioSource.PlayClipAtPoint(gameOverSound,transform.position,1);
 		Debug.Log (this.gameObject.name + ": GameOver");
 
-		// Spieler aus Physic nehmen
-		myCharacter.rigidbody2D.isKinematic = false;
-		feet.gameObject.SetActive(false);
-		myCharacter.rigidbody2D.AddForce(new Vector2(0.0f,500.0f));
 		myCharacter.rigidbody2D.fixedAngle = false;
 		myCharacter.rigidbody2D.AddTorque(20);
 		stopControlls();
-//		Destroy(myCharacter.gameObject,deathTime+spawnAnimationTime+spawnProtectionTime);
-//		if(myCharacter.tag.Equals("Player"))
-//		{
-//			//StartCoroutine(PlayerGameOver());
-//			//fader!
-//			RestartScene();
-//		}
+		StartCoroutine(PlayerGameOver());		// nach gameovertime character nicht mehr fallen lassen, kinematic setzen und ausserhalb camera einblenden (resourcen schonen)
 	}
 
-	void SetSpawnPoint ()
+	IEnumerator PlayerGameOver()
 	{
-		float newPositionX = Random.Range(0.0f, 19.0f);
-		float newPositionY = Random.Range(2f, 15.0f);
-		float oldPositionZ = myCharacter.transform.position.z;
-		myCharacter.gameObject.transform.position = new Vector3(newPositionX,newPositionY,oldPositionZ);
-	}
-
-	public void ReSpawn()
-	{
-		//ReSpawn...
-		anim.SetBool(hash.spawnBool, true);
-		Debug.Log (this.gameObject.name + ": ReSpawn()");
-
-		SetSpawnPoint();
-		myCharacter.renderer.enabled = true;
-		myCharacterCollider2D.enabled=true;
-		//myCharacter.GetComponent<BoxCollider2D>().enabled = true;	//BAD PROGRAMMING!
+		yield return new WaitForSeconds(5f);
+		myCharacter.renderer.enabled = false;
 		myCharacter.rigidbody2D.isKinematic = true;
+		myCharacter.rigidbody2D.velocity = Vector2.zero;
 	}
-	
+
 /*
 	IEnumerator DamageEffect()
 	{
@@ -270,16 +314,6 @@ public class HealthController : MonoBehaviour {
 		isHit = false;
 	}
 */
-	IEnumerator SpawnDelay()
-	{
-		yield return new WaitForSeconds(deathTime);
-/*		anim.SetBool("HeadJumped", false);
-		anim.SetBool ("Spawn", true);
-*/
-		//respawn=true;
-		ReSpawn();
-		StartCoroutine(SpawnAnimationTime());
-	}
 
 	IEnumerator SpawnAnimationTime()
 	{
@@ -293,88 +327,21 @@ public class HealthController : MonoBehaviour {
 		disableSpawnProtection=true;
 	}
 
-//	IEnumerator PlayerGameOver()
-//	{
-//		Debug.Log("Restart in " + restartDelay + " seconds");
-//		yield return new WaitForSeconds(restartDelay);
-//		RestartScene();
-//		/* Funktioneirt nicht, mit if RestartScene im Update immer abfragen, sehr resourcen verschwendent!!!! 
-//		 */
-//	}
-
 	void stopControlls()
 	{
-//		if(isKI)
-//		{
-//			myKIScript.isDead = true;
-//			// myCharacter.GetComponent<KI>().enabled = false; // NICHT komplette Animator deaktivieren!
-//			//myCharacter.GetComponent<KI>().JumpAllowed = false;
-//			//myCharacter.GetComponent<KI>().MoveAllowed = false;
-//		}
-
 		if(myPlatformCharacterScript != null)
 		{
 			myPlatformCharacterScript.isDead = true;
 			//myCharacter.GetComponent<PlatformCharacter>().enabled = false;
 		}
-
 	}
 
 	void startControlls()
 	{
-//		if(isKI)
-//		{
-//			myKIScript.isDead = false;
-//			// myCharacter.GetComponent<KI>().enabled = true; // NICHT komplette Animator deaktivieren!
-//			//myCharacter.GetComponent<KI>().JumpAllowed = true;
-//			//myCharacter.GetComponent<KI>().MoveAllowed = true;
-//		}
-		
 		if(myPlatformCharacterScript != null)
 		{
 			myPlatformCharacterScript.isDead = false;
 			//myCharacter.GetComponent<PlatformCharacter>().enabled = true;
-		}
-	}
-
-
-	void Update()
-	{
-//		if(respawn)
-//		{
-//			respawn=false;
-//			anim.SetBool(hash.spawnBool, true);
-//			ReSpawn();
-//			// Ki und Controlls nach SpawnTime (SpawnAnimation) aktivieren
-//			StartCoroutine(SpawnAnimationTime());
-//		}
-		if(enableControlls) {
-			anim.SetBool(hash.spawnBool, false);
-			anim.SetBool(hash.spawnProtectionBool, true);
-			enableControlls = false;
-
-			// Ki und Controlls aktivieren
-			startControlls();
-
-			// Spieler wieder in Physic einbinden
-			myCharacter.rigidbody2D.isKinematic = false;
-
-			// Spieler kann wieder angreifen
-			feet.gameObject.SetActive(true);
-
-			// Spieler noch nicht angreifbar, erst nach Ablauf der SpawnProtection
-			StartCoroutine(SpawnProtection());
-		}
-		if(disableSpawnProtection)
-		{
-			disableSpawnProtection = false;
-//			anim.SetBool("Dead",false);
-//			anim.SetBool("Hitted",false);
-
-			//Spieler kann wieder angegriffen werden
-			headCollider2D.enabled = true;
-			isHit = false;
-			anim.SetBool(hash.spawnProtectionBool, false);
 		}
 	}
 }

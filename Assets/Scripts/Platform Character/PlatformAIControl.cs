@@ -50,6 +50,7 @@ public class PlatformAIControl : MonoBehaviour {
 		character = GetComponent<PlatformCharacter>();
 //		deltaLastJump = 0.0f;
 		deltaLastDirectionChange = 0.7f;
+		changeDirectionInterval = RandomAIReactionTime();				// neue Reaktionszeit setzen
 	}
 	
 	// Update is called once per frame
@@ -63,10 +64,11 @@ public class PlatformAIControl : MonoBehaviour {
 
 	void CheckTimeBetweenLastDirectionChange() {
 		deltaLastDirectionChange += Time.deltaTime;
-		if(deltaLastDirectionChange > changeDirectionInterval)				// Bot leichter machen
+		if(deltaLastDirectionChange > changeDirectionInterval)				// Bot individueller  machen
 		{																	// alle halbe Sekunde darf er Richtung wechseln
 			ableToChangeDirection=true;
 			deltaLastDirectionChange=0.0F;
+			changeDirectionInterval = RandomAIReactionTime();				// neue Reaktionszeit setzen
 		}
 		else
 			ableToChangeDirection=false;
@@ -175,6 +177,11 @@ public class PlatformAIControl : MonoBehaviour {
 		//		Debug.Log(character.name + " my position: " + myPosition);
 		//		Debug.Log(character.name + " hunts " + closest.name + " with position: " + closest.transform.position);
 		return closest;
+	}
+
+	float RandomAIReactionTime()
+	{
+		return Random.Range(0.1f,0.7f);
 	}
 
 	GameObject FindClosestPlayerWithGameControllerNew() {

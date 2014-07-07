@@ -31,8 +31,7 @@ public class HashID : MonoBehaviour {
 	public int deadBool;
 	public int hitTrigger;
 	public int spawnProtectionBool;
-	public int rageTrigger;
-	public int rageModusBool;
+	public int nextStateTrigger;
 
 	/**
 	 * Platform PowerUpBlock
@@ -54,12 +53,12 @@ public class HashID : MonoBehaviour {
 		deadState = 			Animator.StringToHash("Base Layer.Dead");
 		dieState = 				Animator.StringToHash("Base Layer.Die");
 		headJumpedState = 		Animator.StringToHash("Base Layer.HeadJumped");
-		spawnState = 			Animator.StringToHash("Base Layer.Spawn");
-		spawnProtectionState = 	Animator.StringToHash("Base Layer.SpawnProtection");
+		spawnState = 			Animator.StringToHash("Base Layer._Generic_Spawn");
+		spawnProtectionState = 	Animator.StringToHash("Base Layer._Generic_SpawnProtection");
 		idleState = 			Animator.StringToHash("Base Layer.Idle");
 		runState = 				Animator.StringToHash("Base Layer.Run");
 		changeRunDirectionState = Animator.StringToHash("Base Layer.ChangeRunDirection");
-		jumpState = 			Animator.StringToHash("Base Layer.Jump");
+		jumpState = 			Animator.StringToHash("Base Layer.JumpAndFall");
 
 		hSpeedFloat = Animator.StringToHash("hSpeed");
 		vSpeedFloat = Animator.StringToHash("vSpeed");
@@ -75,8 +74,7 @@ public class HashID : MonoBehaviour {
 		deadBool = Animator.StringToHash("Dead");
 		hitTrigger = Animator.StringToHash("HitTrigger");
 		spawnProtectionBool = Animator.StringToHash("SpawnProtection");
-		rageTrigger = Animator.StringToHash("RageTrigger");
-		rageModusBool = Animator.StringToHash("RageModus");
+		nextStateTrigger = Animator.StringToHash("NextStateTrigger");
 
 		/**
 		 * Platform PowerUpBlock

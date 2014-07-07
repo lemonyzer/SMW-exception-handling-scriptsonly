@@ -34,7 +34,7 @@ public class MusicBlockScript : MonoBehaviour {
 			{
 				backgroundMusicSource.clip = backgroundMusicAlternative;
 				backgroundMusicSource.Play();
-//				AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
+				//				AudioSource.PlayClipAtPoint(powerUpReleaseSound,transform.position,1);
 				stdMusic = false;
 			}
 			else
@@ -44,5 +44,20 @@ public class MusicBlockScript : MonoBehaviour {
 				stdMusic = true;
 			}
 		}
+		else if(other.gameObject.name == "Feet")
+		{
+			Debug.Log("feet");
+			other.gameObject.transform.parent.rigidbody2D.velocity = new Vector2(other.gameObject.transform.parent.rigidbody2D.velocity.x,14f);
+			//trampolin sound
+		}
 	}
+
+	
+//	void OnCollisionEnter2D(Collision2D collision)
+//	{
+//		if(collision.gameObject.layer == layer.feet)
+//		{
+//			collision.gameObject.rigidbody2D.velocity = new Vector2(collision.gameObject.rigidbody2D.velocity.x,14f);
+//		}
+//	}
 }

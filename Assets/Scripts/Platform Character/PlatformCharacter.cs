@@ -172,7 +172,14 @@ public class PlatformCharacter : MonoBehaviour {
 	void FixedUpdate () {
 		
 		//Actually move the player using his/her input
-		if(!isDead)
+		if(isDead)
+		{
+			rigidbody2D.velocity = new Vector2(0f,rigidbody2D.velocity.y);
+			inputJump = false;
+			inputVelocity = 0f;
+			isBouncing = false;
+		}
+		else
 		{
 			CheckPosition();
 			SetAnim();

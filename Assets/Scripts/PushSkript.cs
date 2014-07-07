@@ -35,30 +35,30 @@ public class PushSkript : MonoBehaviour {
 	}
 
 
-	void OnCollisionStay2D(Collision2D collision)
-	{
-		if(!myPlatformCharacter.isInRageModus)
-		{
-			if((collision.gameObject.layer == layer.player1) || 
-			   (collision.gameObject.layer == layer.player2) ||
-			   (collision.gameObject.layer == layer.player3) || 
-			   (collision.gameObject.layer == layer.player4))
-			{
-				float relativeVelocity = Mathf.Abs(collision.relativeVelocity.x);
-				relativeVelocity = 10f;
-				if(myCharacter.position.x < collision.contacts[0].point.x)
-				{
-					myPlatformCharacter.pushForce = -relativeVelocity;				// Collision rechts, nach links pushen
-					myPlatformCharacter.isBouncing = true;
-				}
-				else if(myCharacter.position.x > collision.contacts[0].point.x)
-				{
-					myPlatformCharacter.pushForce = relativeVelocity;				// Collision links, nach rechts pushen
-					myPlatformCharacter.isBouncing = true;
-				}
-			}
-		}
-	}
+//	void OnCollisionStay2D(Collision2D collision)
+//	{
+//		if(!myPlatformCharacter.isInRageModus)
+//		{
+//			if((collision.gameObject.layer == layer.player1) || 
+//			   (collision.gameObject.layer == layer.player2) ||
+//			   (collision.gameObject.layer == layer.player3) || 
+//			   (collision.gameObject.layer == layer.player4))
+//			{
+//				float relativeVelocity = Mathf.Abs(collision.relativeVelocity.x);
+//				relativeVelocity = 10f;
+//				if(myCharacter.position.x < collision.contacts[0].point.x)
+//				{
+//					myPlatformCharacter.pushForce = -relativeVelocity;				// Collision rechts, nach links pushen
+//					myPlatformCharacter.isBouncing = true;
+//				}
+//				else if(myCharacter.position.x > collision.contacts[0].point.x)
+//				{
+//					myPlatformCharacter.pushForce = relativeVelocity;				// Collision links, nach rechts pushen
+//					myPlatformCharacter.isBouncing = true;
+//				}
+//			}
+//		}
+//	}
 
 	void OnCollisionEnter2D(Collision2D collision) 
 	{
