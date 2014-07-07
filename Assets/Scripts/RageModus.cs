@@ -3,12 +3,13 @@ using System.Collections;
 
 public class RageModus : MonoBehaviour {
 
-	public float rageTime = 8f;
+	private float rageTime = 3*3.202f;
 	public bool isInRageModus = false;
 	private float oldMaxSpeed;
 
+	private GameObject invincibleSound;
 
-	Color[] rageAnim;
+	Color[] rageAnimationColors;
 	int currentAnimColorIndex = 0;
 
 	private float rageMaxSpeed;
@@ -16,7 +17,7 @@ public class RageModus : MonoBehaviour {
 	 * Character Animation 
 	 **/
 	//	private SpriteController spriteController;
-	public Animator anim;									// Animator State Machine
+//	public Animator anim;									// Animator State Machine
 
 	/** 
 	 * Connection to GameController 
@@ -37,64 +38,65 @@ public class RageModus : MonoBehaviour {
 	private SpriteRenderer mySpriteRenderer;
 	void InitRageAnimation()
 	{
-		rageAnim = new Color[6];
+		rageAnimationColors = new Color[6];
 
-//		for(int i=0; i<rageAnim.Length; i++)
+//		for(int i=0; i<rageAnimationColors.Length; i++)
 //		{
-//			rageAnim[i].r = 1;
-//			rageAnim[i].g = 0;
-//			rageAnim[i].b = 0;
-//			rageAnim[i].a = 1;
+//			rageAnimationColors[i].r = 1;
+//			rageAnimationColors[i].g = 0;
+//			rageAnimationColors[i].b = 0;
+//			rageAnimationColors[i].a = 1;
 //		}
 		int i=0;
-		rageAnim[i] = new Color(1f, 0f, 0f, 1f);
-//		rageAnim[i].r = 1;
-//		rageAnim[i].g = 0;
-//		rageAnim[i].b = 0;
-//		rageAnim[i].a = 1;
+		rageAnimationColors[i] = new Color(1f, 0f, 0f, 1f);
+//		rageAnimationColors[i].r = 1;
+//		rageAnimationColors[i].g = 0;
+//		rageAnimationColors[i].b = 0;
+//		rageAnimationColors[i].a = 1;
 		i++;
-		rageAnim[i] = new Color(1f, 1f, 0f, 1f);
-//		rageAnim[i].r = 1;
-//		rageAnim[i].g = 1;
-//		rageAnim[i].b = 0;
-//		rageAnim[i].a = 1;
+		rageAnimationColors[i] = new Color(1f, 1f, 0f, 1f);
+//		rageAnimationColors[i].r = 1;
+//		rageAnimationColors[i].g = 1;
+//		rageAnimationColors[i].b = 0;
+//		rageAnimationColors[i].a = 1;
 		i++;
-		rageAnim[i] = new Color(0f, 1f, 0f, 1f);
-//		rageAnim[i].r = 0;
-//		rageAnim[i].g = 1;
-//		rageAnim[i].b = 0;
-//		rageAnim[i].a = 1;
+		rageAnimationColors[i] = new Color(0f, 1f, 0f, 1f);
+//		rageAnimationColors[i].r = 0;
+//		rageAnimationColors[i].g = 1;
+//		rageAnimationColors[i].b = 0;
+//		rageAnimationColors[i].a = 1;
 		i++;
-		rageAnim[i] = new Color(0f, 1f, 1f, 1f);
-//		rageAnim[i].r = 0;
-//		rageAnim[i].g = 1;
-//		rageAnim[i].b = 1;
-//		rageAnim[i].a = 1;
+		rageAnimationColors[i] = new Color(0f, 1f, 1f, 1f);
+//		rageAnimationColors[i].r = 0;
+//		rageAnimationColors[i].g = 1;
+//		rageAnimationColors[i].b = 1;
+//		rageAnimationColors[i].a = 1;
 		i++;
-		rageAnim[i] = new Color(0f, 0f, 1f, 1f);
-//		rageAnim[i].r = 0;
-//		rageAnim[i].g = 0;
-//		rageAnim[i].b = 1;
-//		rageAnim[i].a = 1;
+		rageAnimationColors[i] = new Color(0f, 0f, 1f, 1f);
+//		rageAnimationColors[i].r = 0;
+//		rageAnimationColors[i].g = 0;
+//		rageAnimationColors[i].b = 1;
+//		rageAnimationColors[i].a = 1;
 		i++;
-		rageAnim[i] = new Color(1f, 1f, 1f, 1f);
-//		rageAnim[i].r = 1;
-//		rageAnim[i].g = 1;
-//		rageAnim[i].b = 1;
-//		rageAnim[i].a = 1;
-//		rageAnim[1] = Color.yellow;
-//		rageAnim[2] = Color.green;
-//		rageAnim[3] = Color.cyan;
-//		rageAnim[4] = Color.blue;
-//		rageAnim[5] = Color.white;
+		rageAnimationColors[i] = new Color(1f, 1f, 1f, 1f);
+//		rageAnimationColors[i].r = 1;
+//		rageAnimationColors[i].g = 1;
+//		rageAnimationColors[i].b = 1;
+//		rageAnimationColors[i].a = 1;
+//		rageAnimationColors[1] = Color.yellow;
+//		rageAnimationColors[2] = Color.green;
+//		rageAnimationColors[3] = Color.cyan;
+//		rageAnimationColors[4] = Color.blue;
+//		rageAnimationColors[5] = Color.white;
 	}
 
 	void Awake()
 	{
+		invincibleSound = GameObject.FindGameObjectWithTag(Tags.invincibleSound);
 		InitRageAnimation();
 		mySpriteRenderer = GetComponent<SpriteRenderer>();
 		myPlatformCharacter = GetComponent<PlatformCharacter>();
-		anim = GetComponent<Animator>();
+//		anim = GetComponent<Animator>();
 		bodyCollider2D = GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
 		feetCollider2D = transform.FindChild(Tags.feet).GetComponent<BoxCollider2D>();
@@ -116,11 +118,29 @@ public class RageModus : MonoBehaviour {
 		{
 //			Debug.Log("currentAnimColor:" + currentAnimColor);
 //			Debug.Log("SpriteRenderer Color:" + mySpriteRenderer.color);
-			currentAnimColorIndex = currentAnimColorIndex % rageAnim.Length;
-			mySpriteRenderer.color = rageAnim[currentAnimColorIndex];
+			currentAnimColorIndex = currentAnimColorIndex % rageAnimationColors.Length;
+			mySpriteRenderer.color = rageAnimationColors[currentAnimColorIndex];
 //			Debug.Log("new SpriteRenderer Color:" + mySpriteRenderer.color);
 			currentAnimColorIndex++;
 
+		}
+	}
+
+	void playSound()
+	{
+		if(invincibleSound != null)
+		{
+			gameController.audio.Stop();
+			invincibleSound.audio.Play();
+		}
+	}
+
+	void stopSound()
+	{
+		if(invincibleSound != null)
+		{
+			invincibleSound.audio.Stop();
+			gameController.audio.Play();
 		}
 	}
 
@@ -131,6 +151,9 @@ public class RageModus : MonoBehaviour {
 		myPlatformCharacter.setMaxSpeed(rageMaxSpeed);
 		headCollider2D.enabled = false;
 		feetCollider2D.enabled = false;
+
+		playSound();
+
 //		bodyCollider2D.isTrigger = false;
 
 //		disableCollision();
@@ -162,6 +185,8 @@ public class RageModus : MonoBehaviour {
 //		}
 		mySpriteRenderer.color = Color.white;
 //		enableCollision();
+
+		stopSound();
 
 		isInRageModus = false;
 		myPlatformCharacter.isInRageModus = false;

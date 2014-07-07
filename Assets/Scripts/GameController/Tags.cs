@@ -16,4 +16,7 @@ public class Tags : MonoBehaviour {
 	public const string gameController = "GameController";
 	public const string countDown = "CountDown";
 
+
+	public const string invincibleSound = "InvincibleSound";
+
 }

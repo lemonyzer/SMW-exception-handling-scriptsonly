@@ -57,7 +57,7 @@ public class LevelDesignerEditor : Editor {
 				script.useOffset = true;
 				script.offsetX = script.sprite.bounds.center.x;
 				script.offsetY = script.sprite.bounds.center.y;
-				Debug.Log("Center: " + script.sprite.bounds.center);
+//				Debug.Log("Center: " + script.sprite.bounds.center);
 			}
 			else
 			{
@@ -65,13 +65,13 @@ public class LevelDesignerEditor : Editor {
 			}
 			script.sizeX = script.sprite.bounds.extents.x*2;
 			script.sizeY = script.sprite.bounds.extents.y*2;
-			Debug.Log("Extends: " + script.sprite.bounds.extents);
+//			Debug.Log("Extends: " + script.sprite.bounds.extents);
 		}
 		else
 		{
 			script.sizeX = 1;
 			script.sizeY = 1;
-			Debug.Log("Extends: " + script.sprite.bounds.extents);
+//			Debug.Log("Extends: " + script.sprite.bounds.extents);
 			script.useOffset = false;
 		}
 		EditorGUILayout.EndHorizontal();

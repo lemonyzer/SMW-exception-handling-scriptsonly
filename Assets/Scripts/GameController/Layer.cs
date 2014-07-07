@@ -5,6 +5,10 @@ public class Layer : MonoBehaviour {
 
 	// Physic Layer
 
+	public LayerMask allPlayer;
+	public LayerMask whatIsGround;
+	public LayerMask whatIsWall;
+
 	public int player1;
 	public int player2;
 	public int player3;
@@ -52,6 +56,11 @@ public class Layer : MonoBehaviour {
 		player3 = LayerMask.NameToLayer(player3LayerName);
 		player4 = LayerMask.NameToLayer(player4LayerName);
 
+		allPlayer = 1 << player1;
+		allPlayer |= 1 << player2;
+		allPlayer |= 1 << player3;
+		allPlayer |= 1 << player4;
+
 		feet = LayerMask.NameToLayer(feetLayerName);
 		head = LayerMask.NameToLayer(headLayerName);
 
@@ -61,6 +70,12 @@ public class Layer : MonoBehaviour {
 		destroyAbleBlock = LayerMask.NameToLayer(destroyAbleBlockLayerName);
 		jumpAblePlatform = LayerMask.NameToLayer(jumpAblePlatformLayerName);
 		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
+
+		whatIsGround = 1 << floor;
+		whatIsGround |= 1 << jumpAblePlatform;
+		whatIsGround |= 1 << destroyAbleBlock;
+		
+		whatIsWall = whatIsGround;
 
 		powerUp = LayerMask.NameToLayer(powerUpLayerName);
 		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);

@@ -25,8 +25,8 @@ public class PlatformCharacter : MonoBehaviour {
 	public Vector2 wallCheckPosition = new Vector2(0.5f, 0); // Position, where the the Wall will be checked
 //	public float groundRadius = 0.2f;	// Size of the Circle @rround the Checkposition 
 	public float wallRadius = 0.1f;	// Size of the Circle @rround the Checkposition
-	public LayerMask whatIsGround;	// Floor, JumpAblePlatform, DestroyAblePlatform 
-	public LayerMask whatIsWall;	// Floor, JumpAblePlatform, DestroyAblePlatform
+//	public LayerMask whatIsGround;	// Floor, JumpAblePlatform, DestroyAblePlatform 
+//	public LayerMask whatIsWall;	// Floor, JumpAblePlatform, DestroyAblePlatform
 	
 	/** 
 	 * Character Status 
@@ -124,16 +124,16 @@ public class PlatformCharacter : MonoBehaviour {
 		//LayerMasks();	// <-- wichtig in Start... Awake ist zu früh
 	}
 
-	void LayerMasks()
-	{
-		whatIsGround = 1 << layer.floor;
-		whatIsGround |= 1 << layer.jumpAblePlatform;
-		whatIsGround |= 1 << layer.destroyAbleBlock;
-	}
+//	void LayerMasks()
+//	{
+//		whatIsGround = 1 << layer.floor;
+//		whatIsGround |= 1 << layer.jumpAblePlatform;
+//		whatIsGround |= 1 << layer.destroyAbleBlock;
+//	}
 
 	void Start() {
 		anim = GetComponent<Animator>();
-		LayerMasks();
+//		LayerMasks();
 
 		// if this is our paddle, it accepts input
 		// otherwise, if it is someone else’s paddle, it does not
@@ -162,10 +162,6 @@ public class PlatformCharacter : MonoBehaviour {
 	void Update()
 	{
 	}
-	
-
-
-
 
 
 	// FixedUpdate is called once per frame
@@ -211,13 +207,13 @@ public class PlatformCharacter : MonoBehaviour {
 		Debug.DrawLine(playerColliderTopLeftPos, playerColliderTopRightPos, Color.yellow);
 		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderBottomRightPos, Color.yellow);
 
-		grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, whatIsGround);
+		grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, layer.whatIsGround);
 //		if(gameObject.layer == layer.player1)
 //			Debug.Log(gameObject.name + " grounded: " + grounded);
-		//grounded = Physics2D.OverlapCircle(playerPos+groundCheckPosition, groundRadius, whatIsGround);
+		//grounded = Physics2D.OverlapCircle(playerPos+groundCheckPosition, groundRadius, layer.whatIsGround);
 //		Debug.DrawLine(playerPos, playerPos + groundCheckPosition + new Vector2(0,-groundRadius), Color.green);
 
-		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, whatIsWall);
+		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, layer.whatIsWall);
 		Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
 	}
 
