@@ -350,25 +350,25 @@ public class test : MonoBehaviour {
 		}
 	}
 	
-	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
-	{
-		if (stream.isWriting)
-		{
-			// Executed on the owner of this PhotonView; 
-			// The server sends it's position over the network
-			
-			stream.SendNext(transform.position);//"Encode" it, and send it
-			
-		}
-		else
-		{
-			// Executed on the others; 
-			// receive a position and set the object to it
-			
-			transform.position = (Vector3)stream.ReceiveNext();
-			
-		}
-	}
+//	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+//	{
+//		if (stream.isWriting)
+//		{
+//			// Executed on the owner of this PhotonView; 
+//			// The server sends it's position over the network
+//			
+//			stream.SendNext(transform.position);//"Encode" it, and send it
+//			
+//		}
+//		else
+//		{
+//			// Executed on the others; 
+//			// receive a position and set the object to it
+//			
+//			transform.position = (Vector3)stream.ReceiveNext();
+//			
+//		}
+//	}
 	
 	void AnalogStickAndButton () {
 		

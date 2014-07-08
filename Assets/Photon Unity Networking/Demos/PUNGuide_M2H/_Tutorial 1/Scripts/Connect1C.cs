@@ -12,8 +12,6 @@ public class Connect1C : Photon.MonoBehaviour
      * Via OnConnectedToPhoton(); we will either join an existing room (if any), otherwise create one. 
      */
 
-	string gameName = "sscw_v1.0_scene_";
-
     void Awake()
     {
         PhotonNetwork.ConnectUsingSettings("1.0");
@@ -88,7 +86,7 @@ public class Connect1C : Photon.MonoBehaviour
         }
         //We still didn't join any room: create one
         if (PhotonNetwork.room == null){
-			string roomName = gameName + Application.loadedLevelName;
+            string roomName = "TestRoom"+Application.loadedLevelName;
             PhotonNetwork.CreateRoom(roomName, new RoomOptions() {maxPlayers = 4}, null);
         }
     }
@@ -100,7 +98,7 @@ public class Connect1C : Photon.MonoBehaviour
     {
         Debug.Log("We received a room list update, total rooms now: " + PhotonNetwork.GetRoomList().Length);
 
-		string wantedRoomName = gameName + Application.loadedLevelName;
+        string wantedRoomName = "TestRoom" + Application.loadedLevelName;
         foreach (RoomInfo room in PhotonNetwork.GetRoomList())
         {
             if (room.name == wantedRoomName)
