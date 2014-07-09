@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;	// für Dictionary
 
 public class Inventory : ScriptableObject {
-
-//	public float money = 0;
-
+	
 	Dictionary<string, float> items = new Dictionary<string , float>();
 
 	public void AddItems(string itemName, float quantity)

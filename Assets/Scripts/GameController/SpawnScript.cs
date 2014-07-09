@@ -14,9 +14,6 @@ public class SpawnScript : MonoBehaviour {
 
 	public Dictionary<GameObject, Player> playerDictonary;
 
-//	public List<GameObject> characterAIPrefabList;
-//	public List<GameObject> characterUserPrefabList;
-
 	private GameObject gameController;
     private HashID hash;
     private GameObject countDown;
@@ -25,7 +22,7 @@ public class SpawnScript : MonoBehaviour {
 	private StatsManager statsManager;
 	private LobbyCharacterManager characterManager;
 
-	GameObject[] characterArray;
+	GameObject[] localCharacterArray;
 
 
 
@@ -36,9 +33,9 @@ public class SpawnScript : MonoBehaviour {
 		statsManager = GetComponent<StatsManager>();
 		characterManager = GetComponent<LobbyCharacterManager>();
 
-		characterArray = Resources.LoadAll<GameObject>("PlayerCharacter/local");
+		localCharacterArray = Resources.LoadAll<GameObject>("PlayerCharacter/local");
 
-		foreach(GameObject currCharacter in characterArray)
+		foreach(GameObject currCharacter in localCharacterArray)
 		{
 			Debug.Log(currCharacter.name);
 		}
