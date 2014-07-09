@@ -30,7 +30,7 @@ public class InventoryItemStarCollider : MonoBehaviour {
 	{
 		if(CollectedSound != null)
 			AudioSource.PlayClipAtPoint(CollectedSound,transform.position,1);
-		spawnScript.playerDictonary[player].getCharacter().getRageModus().startRageModus();
+		GameManager.playerDictionary.Get (player).getCharacter().getRageModus().startRageModus();
 		//		transform.GetComponent<AudioSource>().audio.loop=true;
 		if(InventoryManager.inventory != null)
 			InventoryManager.inventory.AddItems(itemName, value);

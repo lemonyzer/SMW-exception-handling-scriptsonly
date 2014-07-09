@@ -32,7 +32,7 @@ public class StatsManager : MonoBehaviour {
 	private Dictionary<string,int> teamPoints;
 	private Dictionary<string,int> nemesis;
 
-	private LobbyCharacterManager characterManager;
+//	private LobbyCharacterManager characterManager;
 	private int slotsCount;
 	private int teamsCount;
 
@@ -61,9 +61,9 @@ public class StatsManager : MonoBehaviour {
 
 		spawnScript = GetComponent<SpawnScript>();
 
-		characterManager = GetComponent<LobbyCharacterManager>();
-		slotsCount = characterManager.getNumberOfGameSlots();
-		teamsCount = characterManager.getNumberOfTeams();
+//		characterManager = GetComponent<LobbyCharacterManager>();
+//		slotsCount = characterManager.getNumberOfGameSlots();
+//		teamsCount = characterManager.getNumberOfTeams();
 
 		points = new Dictionary<string, int>();
 		initializePointsZero(slotsCount);
@@ -149,8 +149,10 @@ public class StatsManager : MonoBehaviour {
 	void AddPoint(GameObject player, int pointValue)
 	{
 		int currentPoints;// = points[player];
-		string playerID = spawnScript.playerDictonary[player].getPlayerID().ToString();
-		string playerCharacter = spawnScript.playerDictonary[player].getCharacter().getName();
+		string playerID = GameManager.playerDictionary.Get(player).getPlayerID().ToString();
+//		string playerID = spawnScript.playerDictionary[player].getPlayerID().ToString();
+		string playerCharacter = GameManager.playerDictionary.Get(player).getCharacter().getName();
+//		string playerCharacter = spawnScript.playerDictionary[player].getCharacter().getName();
 		if(points.TryGetValue(playerID, out currentPoints))
 		{
 			// Key exists
@@ -275,8 +277,8 @@ public class StatsManager : MonoBehaviour {
 	void AddNemesis(GameObject killer, GameObject victim)
 	{
 		int currentNemesis;// = points[player];
-		string killerID = spawnScript.playerDictonary[killer].getPlayerID().ToString();
-		string victimID = spawnScript.playerDictonary[victim].getPlayerID().ToString();
+		string killerID = GameManager.playerDictionary.Get(killer).getPlayerID().ToString();
+		string victimID = GameManager.playerDictionary.Get(victim).getPlayerID().ToString();
 		if(nemesis.TryGetValue(GetNemesisKey(killerID,victimID), out currentNemesis))
 		{
 			// Key Exists
@@ -316,9 +318,9 @@ public class StatsManager : MonoBehaviour {
 		{
 //			victim.GetComponent<HealthController>().ApplyDamage(damageValueHeadJump,true);
 
-			Player playerVictim = spawnScript.playerDictonary[victim];
-			Character characterVictim = spawnScript.playerDictonary[victim].getCharacter();
-			HealthController victimHealthController = spawnScript.playerDictonary[victim].getCharacter().getHealthController();
+			Player playerVictim = GameManager.playerDictionary.Get (victim);
+			Character characterVictim = GameManager.playerDictionary.Get (victim).getCharacter();
+			HealthController victimHealthController = GameManager.playerDictionary.Get (victim).getCharacter().getHealthController();
 
 			victimHealthController.ApplyDamage(attacker, damageValueHeadJump, true);
 
@@ -340,9 +342,9 @@ public class StatsManager : MonoBehaviour {
 	{
 		if(gameRunning)
 		{
-			Player playerVictim = spawnScript.playerDictonary[victim];
-			Character characterVictim = spawnScript.playerDictonary[victim].getCharacter();
-			HealthController victimHealthController = spawnScript.playerDictonary[victim].getCharacter().getHealthController();
+			Player playerVictim = GameManager.playerDictionary.Get (victim);
+			Character characterVictim = GameManager.playerDictionary.Get (victim).getCharacter();
+			HealthController victimHealthController = GameManager.playerDictionary.Get (victim).getCharacter().getHealthController();
 
 			victimHealthController.ApplyDamage(attacker, damageValueHeadJump, false);
 		}

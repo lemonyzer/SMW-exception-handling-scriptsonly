@@ -208,7 +208,7 @@ public class PlatformAIControl : MonoBehaviour {
 		if(spawnScript == null)
 			return null;
 		
-		foreach(GameObject go in spawnScript.playerDictonary.Keys)
+		foreach(GameObject go in GameManager.playerDictionary.Keys())
 		{
 			if(go != null)
 			{
@@ -218,7 +218,7 @@ public class PlatformAIControl : MonoBehaviour {
 				{
 					// Nur Spieler aus anderem Team (Teamlayer) können target werden!
 
-					if(!spawnScript.playerDictonary[go].getCharacter().getPlatformCharacter().isDead)
+					if(!GameManager.playerDictionary.Get (go).getCharacter().getPlatformCharacter().isDead)
 					{
 						// Nur wenn Spieler lebt
 					
@@ -281,7 +281,7 @@ public class PlatformAIControl : MonoBehaviour {
 		
 		if(target != null)
 		{
-			if(spawnScript.playerDictonary[target].getCharacter().getPlatformCharacter().isInRageModus)
+			if(GameManager.playerDictionary.Get (target).getCharacter().getPlatformCharacter().isInRageModus)
 			{
 				// Rage ganz nah, wegrennen!
 				inputVelocity = -targetDirection;

@@ -77,6 +77,11 @@ public class GameObjectsPlayerDictionary : ScriptableObject {
 		}
 	}
 
+	public Dictionary<GameObject, Player>.KeyCollection Keys()
+	{
+		return gameObjectsPlayerDictionary.Keys;
+	}
+
 	public void RemoveAll()
 	{
 		gameObjectsPlayerDictionary.Clear();

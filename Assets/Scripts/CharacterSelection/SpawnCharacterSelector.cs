@@ -7,7 +7,8 @@ public class SpawnCharacterSelector : MonoBehaviour {
 
 	public GameObject characterSelectorPrefab;
 
-	private LobbyCharacterManager lobbyCharacterManager;
+//	private LobbyCharacterManager lobbyCharacterManager;
+	private GameManager gameManager;
 
 	void Awake()
 	{
@@ -24,13 +25,13 @@ public class SpawnCharacterSelector : MonoBehaviour {
 	void SetServerPlayerTextToScreen()
 	{
 		string text = "Player " + 0 + "\nconnected";									
-		if(lobbyCharacterManager.player0GUIText != null)
-			lobbyCharacterManager.player0GUIText.text = text ;
+		if(gameManager.player0GUIText != null)
+			gameManager.player0GUIText.text = text ;
 	}
 
 	void Start()
 	{
-		lobbyCharacterManager = GetComponent<LobbyCharacterManager>();
+		gameManager = GetComponent<GameManager>();
 		if( Network.isServer )
 		{
 			SpawnServerSpawnCharacterSelector();
@@ -50,7 +51,7 @@ public class SpawnCharacterSelector : MonoBehaviour {
 		// when a player joins, tell them to spawn
 		networkView.RPC( "net_DoSpawn", connectedPlayer, Vector3.zero );
 
-		lobbyCharacterManager.SetAllPlayerSprites(connectedPlayer);
+		gameManager.SetAllPlayerSprites(connectedPlayer);
 
 		foreach(NetworkPlayer player in Network.connections)
 		{
@@ -83,9 +84,9 @@ public class SpawnCharacterSelector : MonoBehaviour {
 	void OnPlayerDisconnected( NetworkPlayer disconnectedPlayer )
 	{
 		// Character in PlayerPrefs freigeben
-		lobbyCharacterManager.RemovePlayerCharacter(disconnectedPlayer.ToString());
+		gameManager.RemovePlayerCharacter(disconnectedPlayer.ToString());
 
-		lobbyCharacterManager.SetAllPlayerSprites(RPCMode.All);
+		gameManager.SetAllPlayerSprites(RPCMode.All);
 
 		// tell all players
 		networkView.RPC( "PlayerDisconnectedFromLobby", RPCMode.All, disconnectedPlayer );
@@ -116,25 +117,25 @@ public class SpawnCharacterSelector : MonoBehaviour {
 		//		}
 		if(player.ToString() == "1")
 		{
-			if(lobbyCharacterManager.player1GUIText != null)
-				lobbyCharacterManager.player1GUIText.text = text;
+			if(gameManager.player1GUIText != null)
+				gameManager.player1GUIText.text = text;
 		}
 		else if(player.ToString() == "2")
 		{
-			if(lobbyCharacterManager.player2GUIText != null)
-				lobbyCharacterManager.player2GUIText.text = text;
+			if(gameManager.player2GUIText != null)
+				gameManager.player2GUIText.text = text;
 		}
 		else if(player.ToString() == "3")
 		{
-			if(lobbyCharacterManager.player3GUIText != null)
-                lobbyCharacterManager.player3GUIText.text = text;
+			if(gameManager.player3GUIText != null)
+				gameManager.player3GUIText.text = text;
         }
     }
     
     void OnDisconnectedFromServer( NetworkDisconnection cause )
 	{
 		// go back to the main menu
-		Application.LoadLevel( "mp_Multiplayer" );
+		Application.LoadLevel( "mp_MultiplayerMenu" );
 	}
 	
 	[RPC]

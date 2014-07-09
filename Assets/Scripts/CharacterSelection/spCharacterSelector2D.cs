@@ -24,7 +24,7 @@ public class spCharacterSelector2D : MonoBehaviour
 
 	private GameObject gameController;
 	private GameManager gameManager;
-	private LobbyCharacterManager lobbyCharacterManager;
+//	private LobbyCharacterManager lobbyCharacterManager;
 	private Layer layer;
 
 //	string[] assetsPaths;
@@ -38,7 +38,7 @@ public class spCharacterSelector2D : MonoBehaviour
 	{
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		gameManager = gameController.GetComponent<GameManager>();
-		lobbyCharacterManager = gameController.GetComponent<LobbyCharacterManager>();
+//		lobbyCharacterManager = gameController.GetComponent<LobbyCharacterManager>();
 		layer = gameController.GetComponent<Layer>();
 	}
 
@@ -92,7 +92,7 @@ public class spCharacterSelector2D : MonoBehaviour
 			//debugmsg = networkView.owner.ToString() + "\n";
 			//Debug.Log(networkView.owner.ToString());		// Server: 0
 															// Clients: 1 to Network.connections.Length;
-			GetClickPosition();
+			GetClickedCharacterPrefabName();
 		}
 	}
 
@@ -100,51 +100,38 @@ public class spCharacterSelector2D : MonoBehaviour
 	/**
 	 * Client Funktion, mit RPC an Server
 	 **/
-	void GetClickPosition()
+	void GetClickedCharacterPrefabName()
 	{
 		if(Input.GetMouseButtonUp(0))
 		{
 			debugmsg = "clicked" + "\n";
-			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);		
-			Vector2 origin = ray.origin;										// startPoint
-			Vector2 direction = ray.direction;									// direction
-			float distance = 100f;
-			RaycastHit2D hit = Physics2D.Raycast(origin,direction,distance);
-			if(hit.collider != null)
+			string selectedCharacterPrefabName = gameManager.GetSelectedCharacterName(Input.mousePosition);
+			if(selectedCharacterPrefabName != null)
 			{
-//				Debug.Log(hit.collider.name);
-				if(hit.collider.gameObject.layer == layer.player1 ||
-				   hit.collider.gameObject.layer == layer.player2 ||
-				   hit.collider.gameObject.layer == layer.player3 ||
-				   hit.collider.gameObject.layer == layer.player4)
+				clickedPosition = Input.mousePosition;
+				if(networkView == null)
 				{
-					clickedPosition = Input.mousePosition;
-					if(networkView == null)
-					{
-						// SinglePlayer
+					// SinglePlayer
 //						Debug.Log("SinglePlayer");
-						CharacterClickedSinglePlayer(clickedPosition);
+					CharacterClickedSinglePlayer(selectedCharacterPrefabName);
+				}
+				else
+				{
+					// Multiplayer
+					if(Network.isServer)										// wenn Client auch Server ist
+					{
+						// Client ist auch Server
+//						NetworkMessageInfo myInfo = new NetworkMessageInfo();
+//						NetworkPlayer myPlayer = networkView.owner;
+//	schreib schutz		myInfo.sender = myPlayer;
+//	schreib schutz		myInfo.networkView = this.networkView;
+						CharacterClicked(selectedCharacterPrefabName);											// Server ruft Funktion selbst auf
+//						networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// Server bekommt diese RPC (RPCMode.Server) nicht
 					}
 					else
 					{
-						// Multiplayer
-						if(Network.isServer)										// wenn Client auch Server ist
-						{
-							// Client ist auch Server
-	//						NetworkMessageInfo myInfo = new NetworkMessageInfo();
-	//						NetworkPlayer myPlayer = networkView.owner;
-	//	schreib schutz		myInfo.sender = myPlayer;
-	//	schreib schutz		myInfo.networkView = this.networkView;
-							CharacterClicked(clickedPosition);											// Server ruft Funktion selbst auf
-	//						networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// Server bekommt diese RPC (RPCMode.Server) nicht
-						}
-						else
-						{
-							// Client ist nur Client
-							networkView.RPC("CharacterClicked", RPCMode.Server, clickedPosition);		// RPC geht von Client an Server
-						}
-						Debug.Log(hit.collider.name);
-						debugmsg += hit.collider.name;
+						// Client ist nur Client
+						networkView.RPC("CharacterClicked", RPCMode.Server, selectedCharacterPrefabName);		// RPC geht von Client an Server
 					}
 				}
 			}
@@ -159,7 +146,7 @@ public class spCharacterSelector2D : MonoBehaviour
 	 * if in use RPC to requested Client and play characterInUseSound
 	 **/
 	[RPC]
-	void CharacterClicked(Vector3 recvPos, NetworkMessageInfo info)
+	void CharacterClicked(string characterPrefabName, NetworkMessageInfo info)
 	{
 //		Debug.LogWarning("RPC CharacterClicked");
 		if(!Network.isServer)
@@ -168,30 +155,30 @@ public class spCharacterSelector2D : MonoBehaviour
 		string playerClickedID = info.sender.ToString();
 		bool characterInUse = false;
 
-		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
-		GameObject prefab = GameObject.Find(characterName);
+		GameObject prefab = GameObject.Find(characterPrefabName);
 		if( prefab != null)
 		{
 			// Prefab (GameObject) in Scene gefunden
-			Debug.Log("Server: Prefab " + characterName + " gefunden.");
+			Debug.Log("Server: Prefab " + characterPrefabName + " in aktueller Scene gefunden.");
 
-			characterInUse = lobbyCharacterManager.CheckPrefabInUse(characterName);
+			characterInUse = gameManager.CheckPrefabInUse(characterPrefabName);
 			
 			if(!characterInUse)
 			{
-				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
-				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
-				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
 				// kein Spieler hat diesen Character gewählt, Client Character zuteilen und freigabe mitteilen.
-				
+
+				gameManager.SetPlayerCharacter(playerClickedID, characterPrefabName);	// Register CharacterPrefab with Player in PlayerPref
+
 				// Zuteilung allen Clients mitteilen
-	 			networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterName );	// RPC geht von Server an alle
+				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterPrefabName );	// RPC geht von Server an alle
+
+
 //				MarkCharacter(playerClickedID,characterName);
 				// RPCMode.All wird auch auf Server ausgeführt															// allen Clients Characterauswahl des Clients(playerClickedID) mitteilen
 				//			AllowSelectedCharacter(playerClickedID, recvPos);											// RPC auch am Server ausführen
 				// auch Master Clients Characterauswahl des Clients(playerClickedID) mitteilen
 				Vector3 pos = new Vector3(0f, 6.75f, 0f);
-				networkView.RPC( "net_DoSpawn", info.sender, pos, characterName);
+				networkView.RPC( "net_DoSpawn", info.sender, pos, characterPrefabName);
 			}
 			else
 			{
@@ -204,7 +191,7 @@ public class spCharacterSelector2D : MonoBehaviour
 		else
 		{
 			// keine Prefab (GameObject) mit passendem Name in Scene gefunden
-			Debug.LogError("Server: Prefab " + characterName + " NICHT gefunden.");
+			Debug.LogError("Server: Prefab " + characterPrefabName + " NICHT in aktueller Scene gefunden.");
 			return;																			// RPC abbrechen!
 		}
 
@@ -214,35 +201,36 @@ public class spCharacterSelector2D : MonoBehaviour
 	/**
 	 *	Server Funktion (RPC geht nicht von Server -> Server )
 	 **/
-	void CharacterClicked(Vector3 recvPos)
+	void CharacterClicked(string characterPrefabName)
 	{
 		//		Debug.LogWarning("local CharacterClicked");
 		if(!Network.isServer)
 			return;
 		
-		string playerClickedID = networkView.owner.ToString();
+		string playerClickedID = networkView.owner.ToString();				// Server, playerClickedID = 0
 		bool characterInUse = false;
 		
-		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
-		GameObject prefab = GameObject.Find(characterName);
+//		string characterName = gameManager.GetSelectedCharacterName(recvPos);
+		GameObject prefab = GameObject.Find(characterPrefabName);
 		
 		if( prefab != null)
 		{
 			// Prefab (GameObject) in Scene gefunden
-			Debug.Log("MasterClient: Prefab " + characterName + " gefunden.");
+			Debug.Log("MasterClient: Prefab " + characterPrefabName + " gefunden.");
 			
-			characterInUse = lobbyCharacterManager.CheckPrefabInUse(characterName);
+			characterInUse = gameManager.CheckPrefabInUse(characterPrefabName);
 			
 			if(!characterInUse)
 			{
-				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
-				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
 				// kein Spieler hat diesen Character gewählt, Client Character zuteilen und freigabe mitteilen.
+
+				gameManager.SetPlayerCharacter(playerClickedID, characterPrefabName);	// Register CharacterPrefab with Player in PlayerPref
 				
 				// Zuteilung allen Clients mitteilen
-				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterName );							// allen Clients Serverauswahl mitteilen (MasterClient bekommt diese RPC auch!)
+				networkView.RPC( "AllowSelectedCharacter", RPCMode.All, playerClickedID, characterPrefabName );							// allen Clients Serverauswahl mitteilen (MasterClient bekommt diese RPC auch!)
+
 				//MarkCharacter(playerClickedID,characterName);
-				DoSpawnServerPlayer(getRandomSpawnPosition(),characterName);
+				server_DoSpawnMasterClientCharacter(getRandomSpawnPosition(),characterPrefabName);
 			}
 			else
 			{
@@ -255,31 +243,31 @@ public class spCharacterSelector2D : MonoBehaviour
 		else
 		{
 			// keine Prefab (GameObject) mit passendem Name in Scene gefunden
-			Debug.LogError("Server: Prefab " + characterName + " NICHT gefunden.");
+			Debug.LogError("Server: Prefab " + characterPrefabName + " NICHT in aktueller Scene gefunden.");
 			return;																			// RPC abbrechen!
 		}
 	}
 
-	void CharacterClickedSinglePlayer(Vector3 recvPos)
+	void CharacterClickedSinglePlayer(string characterPrefabName)
 	{
 		string playerClickedID = ""+currentPlayer;
 		bool characterInUse = false;
 		
-		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
-		GameObject prefab = GameObject.Find(characterName);
+//		string characterName = lobbyCharacterManager.GetSelectedCharacterName(recvPos);
+		GameObject prefab = GameObject.Find(characterPrefabName);
 		
 		if( prefab != null)
 		{
-			// Prefab (GameObject) in Scene gefunden
-			Debug.Log("MasterClient: Prefab " + characterName + " gefunden.");
+			// Prefab (GameObject) in aktueller Scene gefunden
+			Debug.Log("MasterClient: Prefab " + characterPrefabName + " gefunden.");
 			
-			characterInUse = lobbyCharacterManager.CheckPrefabInUseSinglePlayer(characterName);
+			characterInUse = gameManager.CheckPrefabInUseSinglePlayer(characterPrefabName);
 			
 			if(!characterInUse)
 			{
-				lobbyCharacterManager.SetPlayerCharacter(playerClickedID, characterName);	// Register CharacterPrefab with Player in PlayerPref
-				Debug.Log("?Eingetragen: " + lobbyCharacterManager.GetPlayerCharacter(playerClickedID));
-				MarkCharacter(playerClickedID,characterName);
+				gameManager.SetPlayerCharacter(playerClickedID, characterPrefabName);	// Register CharacterPrefab with Player in PlayerPref
+				Debug.Log("?Eingetragen: " + gameManager.GetPlayerCharacter(playerClickedID));
+				MarkCharacter(playerClickedID,characterPrefabName);
 			}
 			else
 			{
@@ -291,8 +279,8 @@ public class spCharacterSelector2D : MonoBehaviour
 		}
 		else
 		{
-			// keine Prefab (GameObject) mit passendem Name in Scene gefunden
-			Debug.LogError("Server: Prefab " + characterName + " NICHT gefunden.");
+			// keine Prefab (GameObject) mit passendem Name in aktueller Scene gefunden
+			Debug.LogError("Server: Prefab " + characterPrefabName + " NICHT gefunden.");
 			return;																			// RPC abbrechen!
 		}
 	}
@@ -367,12 +355,11 @@ public class spCharacterSelector2D : MonoBehaviour
 		Debug.Log("Player " + playerID + " hat Character " + characterPrefabName + " gewählt");
 		AudioSource.PlayClipAtPoint(characterSelected,transform.position,1);
 
-
-		lobbyCharacterManager.SetPlayerSprite(playerID, characterPrefabName);
+		gameManager.SetPlayerSprite(playerID, characterPrefabName);
 
 		if(networkView == null)
 		{
-			SpawnPlayer(getRandomSpawnPosition(), characterPrefabName);
+			offline_SpawnPlayer(getRandomSpawnPosition(), characterPrefabName);
 			currentPlayer++;
 			if(currentPlayer == 4)
 				currentPlayer = 0;
@@ -389,7 +376,7 @@ public class spCharacterSelector2D : MonoBehaviour
 	}
 
 	[RPC]
-	void net_DoSpawn( Vector3 position, string characterPrefabName )
+	void net_DoSpawnClientCharacter( Vector3 position, string characterPrefabName )
 	{
 		// The object PikachuLanRigidBody2D must be a prefab in the project view.
 		// spawn the player paddle
@@ -397,24 +384,24 @@ public class spCharacterSelector2D : MonoBehaviour
 // wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
 //		GameObject myCharacter = GameObject.Find (characterPrefabName);
 
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(GameManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 //		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 		if(myCharacter != null)
 			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 
-	void DoSpawnServerPlayer( Vector3 position, string characterPrefabName )
+	void server_DoSpawnMasterClientCharacter( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacter = (GameObject) Resources.Load(GameManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		if(myCharacter != null)
 			Network.Instantiate( myCharacter, position, Quaternion.identity,0 );
 	}
 
 
-	void SpawnPlayer( Vector3 position, string characterPrefabName )
+	void offline_SpawnPlayer( Vector3 position, string characterPrefabName )
 	{
-		GameObject myCharacterPrefab = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLocal + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		if(myCharacterPrefab != null)
 		{
 			GameObject currentCharacter = (GameObject) Instantiate( myCharacterPrefab, position, Quaternion.identity);

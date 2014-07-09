@@ -7,7 +7,21 @@ using System.Collections;
 
 public class GameManager : MonoBehaviour {
 
+	public static string resourcesPathLan = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
+	public static string resourcesPathLocal = "PlayerCharacter/local/";
+
 	public static string gameSlotsCountPlayerPrefsString = "gameSlotsCount";
+	public static string noCharacter = "noCharacter";
+
+	public SpriteRenderer player0SpriteRenderer;
+	public SpriteRenderer player1SpriteRenderer;
+	public SpriteRenderer player2SpriteRenderer;
+	public SpriteRenderer player3SpriteRenderer;
+	public GUIText player0GUIText;
+	public GUIText player1GUIText;
+	public GUIText player2GUIText;
+	public GUIText player3GUIText;
+
 
 //	static public GameObjectDictionary gameObjectDictionary;
 //	static public GameObjectDictionary playerCharacterGameObjectDictionary;
@@ -25,7 +39,7 @@ public class GameManager : MonoBehaviour {
 	/**
 	 * Instanzierte CharacterPrefab GameObjects in  GameScene
 	 **/
-	static public GameObjectsPlayerDictionary playerDictonary;
+	static public GameObjectsPlayerDictionary playerDictionary;
 
 
 	/**
@@ -69,13 +83,13 @@ public class GameManager : MonoBehaviour {
 			// zB. mit PlayerPrefs (sind auch nach beenden des Programms vorhanden!)
 		}
 
-		if(playerDictonary == null)
+		if(playerDictionary == null)
 		{
 			// ScriptableObject wurde seit Appstart noch nicht erzeugt.
 			// Spätestens in CharacterSelectionScene erfolgt die erste Instanzierung!!!
 			initValues = true;
 			// instanz kann sceneübergrifend verwendet werden (wenn dieses Script in Scene eingebaut ist (am GameController zB.))
-			playerDictonary = (GameObjectsPlayerDictionary) ScriptableObject.CreateInstance(typeof(GameObjectsPlayerDictionary));
+			playerDictionary = (GameObjectsPlayerDictionary) ScriptableObject.CreateInstance(typeof(GameObjectsPlayerDictionary));
 			Debug.Log("ScriptableObject GameObjectsPlayerDictionary erzeugt");
 		}
 		if(initValues)
@@ -243,6 +257,23 @@ public class GameManager : MonoBehaviour {
 		}
 		return true;
 	}
+	/**
+	 * MulitplayerMode == OfflineBots
+	 **/
+	public bool CheckPrefabInUseSinglePlayer(string characterPrefabName)
+	{
+		for(int i=0; i < 4; i++)
+		{
+			if(PlayerHasValidCharacter(""+i))
+			{
+				if(GetPlayerCharacter(""+i) == characterPrefabName)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * MultiplayerMode == UnityNetwork
@@ -297,6 +328,102 @@ public class GameManager : MonoBehaviour {
 			}
 		}
 		return false;
+	}
+
+
+	public void SetAllPlayerSprites(NetworkPlayer target)
+	{
+		// Server (Master Client)
+		string playerID = "0"; 
+		if(ServerPlayerHasValidCharacter())
+			networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+		else
+			networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerID = player.ToString();
+			if(PlayerHasValidCharacter(playerID))
+			{
+				networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+			}
+			else
+				networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		}
+	}
+	
+	public void SetAllPlayerSprites(RPCMode target)
+	{
+		// Server (Master Client)
+		string playerID = "0"; 
+		if(ServerPlayerHasValidCharacter())
+			networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+		else
+			networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		// Clients
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerID = player.ToString();
+			if(PlayerHasValidCharacter(playerID))
+			{
+				networkView.RPC("SetPlayerSprite", target, playerID, GetPlayerCharacter(playerID));
+			}
+			else
+				networkView.RPC("SetPlayerSprite", target, playerID, noCharacter);
+		}
+	}
+	
+	[RPC]
+	public void SetPlayerSprite(string playerID, string characterPrefabName)
+	{
+		GameObject character;
+		Sprite characterSprite;
+		if(characterPrefabName == noCharacter)
+		{
+			characterSprite = null;
+		}
+		else
+		{
+			character = GameObject.Find(characterPrefabName);
+			if(character == null)
+				return;
+			characterSprite = character.GetComponent<SpriteRenderer>().sprite;
+			if(characterSprite == null)
+				return;
+		}
+		SpriteRenderer targetSpriteRenderer = GetPlayerSpriteRenderer(playerID);
+		if(targetSpriteRenderer != null)
+		{
+			targetSpriteRenderer.sprite = characterSprite;
+		}
+		else
+		{
+			Debug.LogError("GameManager, Player " + playerID + " hat kein SpriteRenderer"); 
+		}
+	}
+	
+	public SpriteRenderer GetPlayerSpriteRenderer(string playerID)
+	{
+		if(playerID == "0")
+		{
+			// Server
+			return player0SpriteRenderer;
+		}
+		else if(playerID == "1")
+		{
+			return player1SpriteRenderer;
+		}
+		else if(playerID == "2")
+		{
+			return player2SpriteRenderer;
+		}
+		else if(playerID == "3")
+		{
+			return player3SpriteRenderer;
+		}
+		else
+			return null;
 	}
 	
 }

@@ -30,7 +30,7 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 	void Awake ()
 	{
 
-		characterArray = Resources.LoadAll<GameObject>(LobbyCharacterManager.resourcesPathLan);
+		characterArray = Resources.LoadAll<GameObject>(LobbyCharacterManagerPlayerPrefs.resourcesPathLan);
 		characterDictonary = new Dictionary<string,GameObject>();
 		foreach(GameObject go in characterArray)
 		{
@@ -72,7 +72,7 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 
 	public string GetPlayerPrefsKey( string playerID)
 	{
-		string key = playerID + LobbyCharacterManager.suffixName;
+		string key = playerID + LobbyCharacterManagerPlayerPrefs.suffixName;
 		key = key.ToLower();
 		return key;
 	}
@@ -122,10 +122,10 @@ public class SpawnScriptPlayerPrefs : MonoBehaviour {
 		yield return new WaitForSeconds(2);
 		Debug.Log("After Waiting 2 Seconds");
 
-		string key = "0" + LobbyCharacterManager.suffixName;
+		string key = "0" + LobbyCharacterManagerPlayerPrefs.suffixName;
 		key = key.ToLower();
 		string serverCharacterName = PlayerPrefs.GetString(key);
-		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLan + serverCharacterName, typeof(GameObject));
+		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManagerPlayerPrefs.resourcesPathLan + serverCharacterName, typeof(GameObject));
 		Network.Instantiate( myCharacter, getRandomPosition(), Quaternion.identity,0 );
 		Debug.LogWarning("Server Player " + "0" + " Prefab Name: " + serverCharacterName);
 	}

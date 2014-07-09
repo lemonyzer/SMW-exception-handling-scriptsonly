@@ -12,7 +12,7 @@ public class SpawnScript : MonoBehaviour {
 	private int numberOfAIPlayer;
 	private int numberOfLocalUserPlayer;
 
-	public Dictionary<GameObject, Player> playerDictonary;
+//	public Dictionary<GameObject, Player> playerDictonary;
 
 	private GameObject gameController;
     private HashID hash;
@@ -20,7 +20,8 @@ public class SpawnScript : MonoBehaviour {
 	private Animator anim;
 	
 	private StatsManager statsManager;
-	private LobbyCharacterManager characterManager;
+//	private LobbyCharacterManager characterManager;
+	private GameManager gameManager;
 
 	GameObject[] localCharacterArray;
 
@@ -28,10 +29,10 @@ public class SpawnScript : MonoBehaviour {
 
 	void Awake ()
 	{
-		playerDictonary = new Dictionary<GameObject, Player>();
+//		playerDictonary = new Dictionary<GameObject, Player>();
 
 		statsManager = GetComponent<StatsManager>();
-		characterManager = GetComponent<LobbyCharacterManager>();
+		gameManager = GetComponent<GameManager>();
 
 		localCharacterArray = Resources.LoadAll<GameObject>("PlayerCharacter/local");
 
@@ -87,11 +88,11 @@ public class SpawnScript : MonoBehaviour {
 		//		NetworkViewID viewID = Network.AllocateViewID();
 		//		networkView.RPC("SpawnBox", RPCMode.AllBuffered, viewID, getRandomPosition(), serverCharacterName);
 		
-		for(int i=0; i < characterManager.getNumberOfGameSlots(); i++)
+		for(int i=0; i < gameManager.getNumberOfGameSlots(); i++)
 		{
-			string playerCharacterName = characterManager.GetPlayerCharacter(""+i);
+			string playerCharacterName = gameManager.GetPlayerCharacter(""+i);
 			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
-			GameObject currentCharacterPrefab = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
+			GameObject currentCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
 			if(currentCharacterPrefab != null)
 			{
 				GameObject currentCharacterGameObject = (GameObject)Instantiate(currentCharacterPrefab, getRandomPosition(), Quaternion.identity);
@@ -115,7 +116,7 @@ public class SpawnScript : MonoBehaviour {
 				Player currentPlayer = new Player(i, "Player", currentCharacter);
 
 				//currentCharacterGameObject.Awake();
-				playerDictonary.Add(currentCharacterGameObject,currentPlayer);
+				GameManager.playerDictionary.Add(currentCharacterGameObject,currentPlayer);
 			}
 
 			Debug.LogWarning("Player " + i + " Prefab Name: " + playerCharacterName);

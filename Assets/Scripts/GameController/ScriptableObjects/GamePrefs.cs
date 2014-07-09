@@ -12,11 +12,14 @@ public class GamePrefs : ScriptableObject {
 	}
 
 	public enum MultiplayerMode {
-		Bots,
+		OfflineBots,
+		OfflineVS,
 		UnityNetwork,
 		OnlinePhoton,
 		OnlineULink
 	}
+
+	private int[][] spawnZone;
 
 	private GameMode gameMode;
 	private MultiplayerMode multiplayerMode;
@@ -41,20 +44,20 @@ public class GamePrefs : ScriptableObject {
 	 * Getter / Setter Methods
 	 **/
 
-	public int GetGameMode()
+	public GameMode GetGameMode()
 	{
 		return gameMode;
 	}
-	public void SetGameMode(int mode)
+	public void SetGameMode(GameMode mode)
 	{
 		gameMode = mode;
 	}
 
-	public int GetMultiplayerMode()
+	public MultiplayerMode GetMultiplayerMode()
 	{
 		return multiplayerMode;
 	}
-	public void SetMultiplayerMode(int mode)
+	public void SetMultiplayerMode(MultiplayerMode mode)
 	{
 		multiplayerMode = mode;
 	}
