@@ -36,9 +36,9 @@ public class Beam : MonoBehaviour {
 		{
 			if(beamCollider.Length > 1)
 			{
-				Debug.Log(beamCollider.Length + " Beamcollider");
-				Debug.Log(beamCollider[0].center);
-				Debug.Log(beamCollider[1].center);
+//				Debug.Log(beamCollider.Length + " Beamcollider");
+//				Debug.Log(beamCollider[0].center);
+//				Debug.Log(beamCollider[1].center);
 				if(beamCollider[0].center.x <= beamCollider[1].center.x)
 				{
 					// alles ok, collider mit index 0 = links, collider mit index 1 = rechts
@@ -50,8 +50,8 @@ public class Beam : MonoBehaviour {
 					beamCollider[0] = beamCollider[1];
 					beamCollider[1] = temp;
 				}
-				Debug.Log(beamCollider[0].center);
-				Debug.Log(beamCollider[1].center);
+//				Debug.Log(beamCollider[0].center);
+//				Debug.Log(beamCollider[1].center);
 			}
 		}
 	}
@@ -66,9 +66,9 @@ public class Beam : MonoBehaviour {
 //		rightBeamZoneX = backgroundCenterPositionX + (backgroundWidth * 0.5f) - saveBeamOffsetX;	// - !!!
 		leftBeamZoneX = beamCollider[0].center.x + beamCollider[0].size.x*0.5f + saveBeamOffsetX;
 		rightBeamZoneX = beamCollider[1].center.x - beamCollider[0].size.x*0.5f - saveBeamOffsetX;
-		Debug.Log(backgroundSpriteRenderer.bounds);
-		Debug.Log(leftBeamZoneX);
-		Debug.Log(rightBeamZoneX);
+//		Debug.Log(backgroundSpriteRenderer.bounds);
+//		Debug.Log(leftBeamZoneX);
+//		Debug.Log(rightBeamZoneX);
 		beamableObject=false;
 	}
 

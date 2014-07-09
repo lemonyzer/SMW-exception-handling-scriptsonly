@@ -40,6 +40,7 @@ public class GameManager : MonoBehaviour {
 			initValues = true;
 			// instanz kann sceneübergrifend verwendet werden (wenn dieses Script in Scene eingebaut ist (am GameController zB.))
 			gamePrefs = (GamePrefs) ScriptableObject.CreateInstance(typeof(GamePrefs));
+			Debug.Log("ScriptableObject gamePrefs erzeugt");
 		}
 		if(initValues)
 		{
@@ -54,6 +55,7 @@ public class GameManager : MonoBehaviour {
 			initValues = true;
 			// instanz kann sceneübergrifend verwendet werden (wenn dieses Script in Scene eingebaut ist (am GameController zB.))
 			playerSelectedCharacterPrefabDictionary = (SelectedCharacterPrefabDictionary) ScriptableObject.CreateInstance(typeof(SelectedCharacterPrefabDictionary));
+			Debug.Log("ScriptableObject playerSelectedCharacterPrefabDictionary erzeugt");
 		}
 		if(initValues)
 		{
@@ -68,6 +70,7 @@ public class GameManager : MonoBehaviour {
 			initValues = true;
 			// instanz kann sceneübergrifend verwendet werden (wenn dieses Script in Scene eingebaut ist (am GameController zB.))
 			playerDictonary = (GameObjectsPlayerDictionary) ScriptableObject.CreateInstance(typeof(GameObjectsPlayerDictionary));
+			Debug.Log("ScriptableObject GameObjectsPlayerDictionary erzeugt");
 		}
 		if(initValues)
 		{

@@ -33,10 +33,12 @@ public class Inventory : ScriptableObject {
 		
 		if(items.TryGetValue(itemName, out oldValue))
 		{
+			// alten Wert überschreiben
 			items[itemName] = quantity;
 		}
 		else
 		{
+			// noch nicht vorhanden, item eintragen
 			items.Add(itemName, quantity);
 		}
 	}
