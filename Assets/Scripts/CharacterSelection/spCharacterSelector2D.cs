@@ -2,7 +2,7 @@
 using System.Collections;
 //using UnityEditor;
 
-public class PUNCharacterSelection2D : MonoBehaviour
+public class spCharacterSelector2D : MonoBehaviour
 {
 	private int currentPlayer = 0;
 
@@ -22,6 +22,8 @@ public class PUNCharacterSelection2D : MonoBehaviour
 	
 	private string debugmsg = "";
 
+	private GameObject gameController;
+	private GameManager gameManager;
 	private LobbyCharacterManager lobbyCharacterManager;
 	private Layer layer;
 
@@ -34,8 +36,10 @@ public class PUNCharacterSelection2D : MonoBehaviour
 
 	void Start()
 	{
-		lobbyCharacterManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<LobbyCharacterManager>();
-		layer = lobbyCharacterManager.GetComponent<Layer>();
+		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		gameManager = gameController.GetComponent<GameManager>();
+		lobbyCharacterManager = gameController.GetComponent<LobbyCharacterManager>();
+		layer = gameController.GetComponent<Layer>();
 	}
 
 

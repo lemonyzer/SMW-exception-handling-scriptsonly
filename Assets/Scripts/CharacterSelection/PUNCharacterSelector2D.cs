@@ -2,7 +2,7 @@
 using System.Collections;
 //using UnityEditor;
 
-public class spCharacterSelection2D : MonoBehaviour
+public class PUNCharacterSelector2D : MonoBehaviour
 {
 	private int currentPlayer = 0;
 

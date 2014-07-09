@@ -53,23 +53,47 @@ public class SelectedCharacterPrefabDictionary : ScriptableObject {
 		{
 			result = currentValue;
 		}
+		else
+		{
+			// existiert nicht!
+			result = null;
+		}
 
 		return result;
 	}
 
-	public void Delete(string playerID)
+	public void Remove(string playerID)
 	{
 		string removedCharacterPrefabName = null;
 		
 		if(selectedCharacterPrefabDictionary.TryGetValue(playerID, out removedCharacterPrefabName))
 		{
 			selectedCharacterPrefabDictionary.Remove(playerID);
-			Debug.Log("SelectedCharacterPrefabDictionary: Player " + playerID + " Character " + removedCharacterPrefabName + " deleted");
+			Debug.Log("SelectedCharacterPrefabDictionary: Player " + playerID + " Character " + removedCharacterPrefabName + " removed, (Character is free to use)");
 		}
 		else
 		{
 			Debug.Log("SelectedCharacterPrefabDictionary: Player " + playerID + " hatte kein Character gewählt, nix zum Löschen");
 		}
-		
+	}
+
+	public void RemoveAll()
+	{
+		string removedCharacterPrefabName = null;
+//		for(IEnumerator e = selectedCharacterPrefabDictionary.GetEnumerator(); e.MoveNext();)
+//		{
+//			e.Current...
+//		}
+//		foreach(string key in selectedCharacterPrefabDictionary.Keys)
+//		{
+//			selectedCharacterPrefabDictionary.Remove(key);
+//		}
+//
+//		foreach(KeyValuePair<string,string> cObj in selectedCharacterPrefabDictionary)
+//		{
+//
+//		}
+		selectedCharacterPrefabDictionary.Clear();
+		Debug.Log("SelectedCharacterPrefabDictionary: Alle Charactere Zuordnungen freigegeben");
 	}
 }

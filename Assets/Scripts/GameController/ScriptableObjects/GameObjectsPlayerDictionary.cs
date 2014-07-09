@@ -62,7 +62,7 @@ public class GameObjectsPlayerDictionary : ScriptableObject {
 		return result;
 	}
 
-	public void Delete(GameObject gameObject)
+	public void Remove(GameObject gameObject)
 	{
 		Player removedPlayer = null;
 		
@@ -75,7 +75,11 @@ public class GameObjectsPlayerDictionary : ScriptableObject {
 		{
 			Debug.Log("GameObjectsPlayerDictionary: Player " + removedPlayer.getPlayerID() + " hatte kein Character gewählt, nix zum Löschen");
 		}
-		
 	}
 
+	public void RemoveAll()
+	{
+		gameObjectsPlayerDictionary.Clear();
+		Debug.Log("GameObjectsPlayerDictionary: Player zuordnungen entfernt");
+	}
 }

@@ -2,7 +2,7 @@
 using System.Collections;
 //using UnityEditor;
 
-public class CharacterSelection2D : MonoBehaviour
+public class CharacterSelector2D : MonoBehaviour
 {
 	private Vector3 clickedPosition = Vector3.zero;
 	public AudioClip characterInUseSound;

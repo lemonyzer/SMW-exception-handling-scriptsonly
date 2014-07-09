@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class LobbyCharacterManager : MonoBehaviour {
+public class LobbyCharacterManagerPlayerPrefs : MonoBehaviour {
 
 	public static string resourcesPathLan = "PlayerCharacter/UnityNetwork Lan RigidBody2D/";
 	public static string resourcesPathLocal = "PlayerCharacter/local/";
@@ -10,8 +10,7 @@ public class LobbyCharacterManager : MonoBehaviour {
 	public static string gameSlotsCount = "gameSlotsCount";
 	public static string gameTeamsCount = "gameTeamsCount";
 	public static string gameAICount = "gameAICount";
-
-
+	
 	private int slots;
 
 	public GUIText player0GUIText;
@@ -196,6 +195,8 @@ public class LobbyCharacterManager : MonoBehaviour {
 			else
 			{
 //				Debug.LogError("PlayerPrefs " + key + " with value " + value + " no GameObject in Scene found");
+				// Invalid Character, delete!
+				RemovePlayerCharacter(playerId);
 				return false;
 			}
 		}
