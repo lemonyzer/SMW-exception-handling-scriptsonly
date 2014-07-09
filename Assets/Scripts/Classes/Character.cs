@@ -8,6 +8,7 @@ public class Character : IComparable<Character>
 	private Sprite characterSprite;
 	private GameObject characterPrefab;
 
+	private Animator platformAnimator;
 	private PlatformCharacter platformCharacter;
 	private HealthController healthController;
 	private PushSkript pushSkript;
@@ -26,7 +27,7 @@ public class Character : IComparable<Character>
 		this.isAI = isAI;
 		this.characterName = prefab.name;
 		this.characterSprite = prefab.GetComponent<SpriteRenderer>().sprite;
-
+		this.platformAnimator = prefab.GetComponent<Animator>();
 		this.platformCharacter = prefab.GetComponent<PlatformCharacter>();
 		if(platformCharacter == null)
 			Debug.LogError(characterName + " hat kein PlatformCharacter script!!!");
@@ -54,6 +55,11 @@ public class Character : IComparable<Character>
 			this.platformUserControlPC.enabled = true;
 			this.platformAIControl.enabled = false;
 		}
+	}
+
+	public Animator GetAnimator()
+	{
+		return this.platformAnimator;
 	}
 
 	public HealthController getHealthController()

@@ -112,8 +112,15 @@ public class SpawnScript : MonoBehaviour {
 					currentCharacterGameObject.tag = Tags.ai;
 					currentCharacter = new Character(currentCharacterGameObject,true);			// AI Controller
 				}
+				currentCharacterGameObject.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
 
 				Player currentPlayer = new Player(i, "Player", currentCharacter);
+
+				currentPlayer.getCharacter().GetAnimator().SetBool(hash.headJumpedBool,false);
+				currentPlayer.getCharacter().GetAnimator().SetBool(hash.gameOverBool,false);
+				currentPlayer.getCharacter().GetAnimator().SetBool(hash.deadBool,true);
+				currentPlayer.getCharacter().GetAnimator().SetBool(hash.spawnBool,true);
+				currentPlayer.getCharacter().GetAnimator().SetTrigger(hash.hitTrigger);
 
 				//currentCharacterGameObject.Awake();
 				GameManager.playerDictionary.Add(currentCharacterGameObject,currentPlayer);

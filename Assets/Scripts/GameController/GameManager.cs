@@ -63,6 +63,7 @@ public class GameManager : MonoBehaviour {
 			// Werte initialisieren
 			// zB. mit PlayerPrefs (sind auch nach beenden des Programms vorhanden!)
 			int slots = PlayerPrefs.GetInt(gameSlotsCountPlayerPrefsString);
+			Debug.Log("PlayerPrefs: " + slots + " (" + gameSlotsCountPlayerPrefsString + ")");
 			if(slots <= 0)
 				slots = 4;										// vertraue keinem Userinput!
 			setNumberOfGameSlots(slots);
@@ -101,6 +102,86 @@ public class GameManager : MonoBehaviour {
 //				playerDictonary.SetGameObject(""+i,null);
 //			}
 		}
+
+		initLayout();
+	}
+
+	void initLayout()
+	{
+		if(Screen.dpi != 0)
+		{
+			minButtonHeight = 20f * Screen.height / Screen.dpi;
+		}
+		else
+			minButtonHeight = 20f;
+
+		// Disable screen dimming
+		Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+
+	}
+
+	private float minButtonHeight;
+	private bool levelloading = false;
+
+	// ArgumentException: You can only call GUI functions from inside OnGUI.
+	void OnGUI()
+	{
+		if(Application.loadedLevelName != "sp_CharacterSelection" &&
+		   Application.loadedLevelName != "sp_CharacterSelection" &&
+		   Application.loadedLevelName != "pun_CharacterSelection")
+		{
+			return;
+		}
+//		if(levelloading)
+//			return;
+		if(networkView == null)
+		{
+			// Local
+			if(PlayerAndBotsHaveValidCharacter())
+			{
+				if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ))
+				{
+					levelloading = true;
+					Application.LoadLevel("sp_classic_selected_character");
+				}
+			}
+		}
+		else
+		{
+			// Multiplayer
+			if(Network.isServer)
+			{
+				if(EveryPlayerHasValidCharacter())
+				{
+					if(GUILayout.Button( "Start Game", GUILayout.Width( 100f ), GUILayout.Height (minButtonHeight) ))
+					{
+						DebugListAllPlayer();
+						networkView.RPC("StartGame", RPCMode.All, "mp_classic_selected_character");
+					}
+				}
+			}
+		}
+	}
+
+	void DebugListAllPlayer()
+	{
+		string playerCharacterName = GetPlayerCharacter("0");
+		Debug.LogWarning("Player " + "0" + " Character Prefab Name: " + playerCharacterName);
+		
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			playerCharacterName = GetPlayerCharacter(player.ToString());
+			Debug.LogWarning("Player " + player.ToString() + " Character Prefab Name: " + playerCharacterName);
+		}
+	}
+	
+	[RPC]
+	void StartGame(string sceneName)
+	{
+		// starte das gewünschte Level auf allen Clients
+		// Hash / static string scenename/levelname
+		NetworkLevelLoader.Instance.LoadLevel(sceneName,0);
 	}
 	
 	void Update()
@@ -157,7 +238,7 @@ public class GameManager : MonoBehaviour {
 	
 	public int getNumberOfGameSlots()
 	{
-		Debug.Log("GameSlots" + gamePrefs.GetGameSlots());
+		Debug.Log("GameSlots " + gamePrefs.GetGameSlots());
 		return gamePrefs.GetGameSlots();
 	}
 	
@@ -213,7 +294,8 @@ public class GameManager : MonoBehaviour {
 			{
 				// in aktueller Szene kein GameObject mit passendem Namen gefunden!!!
 				Debug.LogError("Achtung! falscher PrefabName im Dictionary!!!!");
-				DeleteInvalidCharacter(playerId);
+				Debug.LogError(playerId + " " + playerPrefabName);
+//				DeleteInvalidCharacter(playerId);
 				return false;
 			}
 		}

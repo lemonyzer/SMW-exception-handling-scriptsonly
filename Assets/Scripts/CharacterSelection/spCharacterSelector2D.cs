@@ -266,7 +266,7 @@ public class spCharacterSelector2D : MonoBehaviour
 			if(!characterInUse)
 			{
 				gameManager.SetPlayerCharacter(playerClickedID, characterPrefabName);	// Register CharacterPrefab with Player in PlayerPref
-				Debug.Log("?Eingetragen: " + gameManager.GetPlayerCharacter(playerClickedID));
+//				Debug.Log("?Eingetragen: " + gameManager.GetPlayerCharacter(playerClickedID));
 				MarkCharacter(playerClickedID,characterPrefabName);
 			}
 			else
@@ -407,6 +407,7 @@ public class spCharacterSelector2D : MonoBehaviour
 			GameObject currentCharacter = (GameObject) Instantiate( myCharacterPrefab, position, Quaternion.identity);
 			if(currentPlayer == 0)
 			{
+				currentCharacter.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
 				currentCharacter.GetComponent<PlatformUserControlKeyboard>().enabled = true;
 				currentCharacter.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
 			}

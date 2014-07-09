@@ -69,7 +69,7 @@ public class GamePrefs : ScriptableObject {
 	public void SetGameSlots(int slots)
 	{
 		gameSlots = slots;
-		Debug.Log("GameSlots initialisiert: " + slots);
+		Debug.Log("GameSlots: " + slots);
 	}
 
 	public int GetTeamSlots()
