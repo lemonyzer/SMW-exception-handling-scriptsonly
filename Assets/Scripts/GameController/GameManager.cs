@@ -47,8 +47,27 @@ public class GameManager : MonoBehaviour {
 	 **/
 	private bool initValues = false;
 
+
+	/**
+	 * Einträge löschen
+	 **/
+	void Reset()
+	{
+		if(Application.loadedLevelName != "sp_CharacterSelection" &&
+		   Application.loadedLevelName != "mp_CharacterSelection" &&
+		   Application.loadedLevelName != "pun_CharacterSelection")
+		{
+			return;
+		}
+		if(playerSelectedCharacterPrefabDictionary != null)
+			playerSelectedCharacterPrefabDictionary.RemoveAll();
+		if(playerDictionary != null)
+		playerDictionary.RemoveAll();
+	}
+
 	void Awake()
 	{
+		Reset();
 		if(gamePrefs == null)
 		{
 			// ScriptableObject wurde seit Appstart noch nicht erzeugt.
@@ -128,7 +147,7 @@ public class GameManager : MonoBehaviour {
 	void OnGUI()
 	{
 		if(Application.loadedLevelName != "sp_CharacterSelection" &&
-		   Application.loadedLevelName != "sp_CharacterSelection" &&
+		   Application.loadedLevelName != "mp_CharacterSelection" &&
 		   Application.loadedLevelName != "pun_CharacterSelection")
 		{
 			return;
@@ -507,5 +526,11 @@ public class GameManager : MonoBehaviour {
 		else
 			return null;
 	}
-	
+
+
+	static public void SetupCharacterGameObjectLAN(GameObject currentCharacter)
+	{
+		currentCharacter.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
+	}
+
 }

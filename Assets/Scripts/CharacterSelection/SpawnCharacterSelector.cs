@@ -135,7 +135,7 @@ public class SpawnCharacterSelector : MonoBehaviour {
     void OnDisconnectedFromServer( NetworkDisconnection cause )
 	{
 		// go back to the main menu
-		Application.LoadLevel( "mp_MultiplayerMenu" );
+		Application.LoadLevel( "mp_Multiplayer" );
 	}
 	
 	[RPC]

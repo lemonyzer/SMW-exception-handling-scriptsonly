@@ -387,8 +387,11 @@ public class CharacterSelector2D : MonoBehaviour
 //		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
 		if(myCharacterPrefab != null)
 		{
+			myCharacterPrefab.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
 			GameObject myCharacter = (GameObject) Network.Instantiate( myCharacterPrefab, position, Quaternion.identity,0 );
-			//		myCharacter.layer = layer.player1234;
+			myCharacter.GetComponent<PlatformUserControlKeyboard>().enabled = true;
+			myCharacter.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
+			myCharacterPrefab.transform.Find("CharacterSelectionArea").gameObject.SetActive(true);
 		}
 		else
 			Debug.LogError(characterPrefabName + " Prefab nicht gefunden in " + GameManager.resourcesPathLan);
@@ -398,7 +401,14 @@ public class CharacterSelector2D : MonoBehaviour
 	{
 		GameObject myCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLan + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
 		if(myCharacterPrefab != null)
-			Network.Instantiate( myCharacterPrefab, position, Quaternion.identity,0 );
+		{
+			myCharacterPrefab.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
+			GameObject myCharacter = (GameObject) Network.Instantiate( myCharacterPrefab, position, Quaternion.identity,0 );
+			myCharacter.GetComponent<PlatformUserControlKeyboard>().enabled = true;
+			myCharacter.GetComponent<PlatformUserControlAnalogStickAndButton>().enabled = true;
+			myCharacterPrefab.transform.Find("CharacterSelectionArea").gameObject.SetActive(true);
+		}
+
 		else
 			Debug.LogError(characterPrefabName + " Prefab nicht gefunden in " + GameManager.resourcesPathLan);
 	}
@@ -418,6 +428,7 @@ public class CharacterSelector2D : MonoBehaviour
 			{
 				currentCharacter.GetComponent<PlatformAIControl>().enabled = true;
 			}
+			currentCharacter.transform.Find("CharacterSelectionArea").gameObject.SetActive(false);
 		}
 	}
 

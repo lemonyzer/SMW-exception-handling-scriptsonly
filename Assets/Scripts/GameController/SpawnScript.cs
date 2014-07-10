@@ -71,9 +71,72 @@ public class SpawnScript : MonoBehaviour {
 	void Start () {
 
 		StartCoroutine(StartCountDown());
-		StartCoroutine(InstantiateCharacters());
+		if(networkView == null)
+		{
+			// Offline
+			StartCoroutine(InstantiateCharacters());
+		}
+		else
+		{
+			if(Network.isServer)
+			{
+				// Server fordert Clients auf Character zu instantieren
+
+				// server doesn’t trigger OnPlayerConnected, manually spawn
+				StartCoroutine(InstantiateServerCharacter());
+				StartCoroutine(RequestClientsCharacterInstantiation());
+//				Network.Instantiate( (GameObject)(characterUserPrefabList.ToArray()[characterPrefabID]), getRandomPosition(), Quaternion.identity,0 );
+
+			}
+		}
+	}
+	
+	/**
+	 * Mulitplayer (Server)
+	 **/
+	IEnumerator InstantiateServerCharacter()
+	{
+		Debug.Log("Before Waiting 3 seconds");
+		yield return new WaitForSeconds(3);
+		Debug.Log("After Waiting 3 Seconds");
+
+		string serverCharacterName =  GameManager.playerSelectedCharacterPrefabDictionary.Get("0");
+
+		GameObject myCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLan + serverCharacterName, typeof(GameObject));
+		Network.Instantiate( myCharacterPrefab, getRandomPosition(), Quaternion.identity,0 );
+		Debug.LogWarning("Server Player " + "0" + " Prefab Name: " + serverCharacterName);
 	}
 
+	/**
+	 * Mulitplayer (Clients)
+	 **/
+	IEnumerator RequestClientsCharacterInstantiation()
+	{
+		
+		Debug.Log("Before Waiting 3 seconds");
+		yield return new WaitForSeconds(3);
+		Debug.Log("After Waiting 3 Seconds");
+		
+		//		string key = "0" + LobbyCharacterManager.suffixName;
+		//		key = key.ToLower();
+		//		string serverCharacterName = PlayerPrefs.GetString(key);
+		//
+		//		NetworkViewID viewID = Network.AllocateViewID();
+		//		networkView.RPC("SpawnBox", RPCMode.AllBuffered, viewID, getRandomPosition(), serverCharacterName);
+		
+		foreach(NetworkPlayer player in Network.connections)
+		{
+			string playerCharacterName = GameManager.playerSelectedCharacterPrefabDictionary.Get(player.ToString());
+			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
+			networkView.RPC( "net_DoSpawnGameScene", player, getRandomPosition(), playerCharacterName);
+			Debug.LogWarning("Player " + player.ToString() + " Prefab Name: " + playerCharacterName);
+		}
+	}
+
+
+	/**
+	 * SinglePlayer with Bots
+	 **/
 	IEnumerator InstantiateCharacters()
 	{
 		
@@ -90,7 +153,7 @@ public class SpawnScript : MonoBehaviour {
 		
 		for(int i=0; i < gameManager.getNumberOfGameSlots(); i++)
 		{
-			string playerCharacterName = gameManager.GetPlayerCharacter(""+i);
+			string playerCharacterName = GameManager.playerSelectedCharacterPrefabDictionary.Get(""+i);
 			//			GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + playerCharacterName, typeof(GameObject));
 			GameObject currentCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLocal + playerCharacterName, typeof(GameObject));
 			if(currentCharacterPrefab != null)
@@ -131,56 +194,8 @@ public class SpawnScript : MonoBehaviour {
 	}
 
 	void Update() {
-//		if(Network.connections.Length > 0)
-//		{
-//			Debug.Log("min. 1 Client verbunden ");
-//			if(startGameTrigger)
-//			{
-//				startGameTrigger = false;
-//				anim.SetBool(hash.countDownEnabledBool,true);
-//				anim.SetTrigger(hash.startCountDownTrigger);
-//				StartCoroutine(StartCountDown());
-//			}
-//		}
-	}
-	
-//	public void StartSpawn()
-//	{
-//		int characterID = -1;
-//		GameObject currentCharacter;
-//		for(int i=0; i<numberOfAIPlayer; i++)
-//		{
-//			characterID = PlayerPrefs.GetInt("AI"+i+"Character");
-//			Debug.Log("AI " + i + " CharacterID: " + characterID);
-//			if(characterID != null)
-//			{
-//				if(characterID >=0 && characterID < characterAIPrefabList.Count)
-//				{
-//					currentCharacter = (GameObject)Instantiate(characterAIPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-//					statsScript.AddPlayer(currentCharacter);
-//                }
-//            }
-//        }
-//
-//		characterID = -1;
-//		for(int i=0; i<numberOfLocalUserPlayer; i++)
-//		{
-//			characterID = PlayerPrefs.GetInt("User"+i+"Character");
-//			Debug.Log("User " + i + " CharacterID: " + characterID);
-//			if(characterID != null)
-//			{
-//				if(characterID >=0 && characterID < characterUserPrefabList.Count)
-//				{
-//					currentCharacter = (GameObject)Instantiate(characterUserPrefabList.ToArray()[i], getRandomPosition(), Quaternion.identity);
-//					currentCharacter.GetComponent<Animator>().SetTrigger(hash.hitTrigger);
-//					statsScript.AddPlayer(currentCharacter);
-//                }
-//            }
-//        }
-//		startGameTrigger = true;
-//    }
 
+	}
 
 	IEnumerator StartCountDown()
 	{
@@ -190,5 +205,38 @@ public class SpawnScript : MonoBehaviour {
 		anim.SetBool(hash.countDownEnabledBool,false);
 //      startSpawning = true;
 //		StartSpawn();
+	}
+
+
+	[RPC]
+	void net_DoSpawnGameScene( Vector3 position, string characterPrefabName )
+	{
+		// The object PikachuLanRigidBody2D must be a prefab in the project view.
+		// spawn the player paddle
+		
+		// wäre Besser?! (alle GameObjects in scene, keine "manipulation") .... geht aber nicht, GameObject vorher clonen mit Instantiate(....)
+		//		GameObject myCharacter = GameObject.Find (characterPrefabName);
+		
+		//		GameObject myCharacter = (GameObject) Resources.Load(LobbyCharacterManager.resourcesPath + characterPrefabName, typeof(GameObject)); // in Resources Folder! \Assests\Resources\characterPrefabName
+		GameObject myCharacterPrefab = (GameObject) Resources.Load(GameManager.resourcesPathLan + characterPrefabName, typeof(GameObject));
+		Debug.Log("RPC try to Spawn: " + myCharacterPrefab.name);
+		//		PlatformCharacter myPlatformCharacter = myCharacter.GetComponent<PlatformCharacter>();
+		//		AudioSource.PlayClipAtPoint(myPlatformCharacter.jumpSound,transform.position,1);
+		if(myCharacterPrefab != null)
+		{
+			GameObject myCharacter = (GameObject) Network.Instantiate( myCharacterPrefab, position, Quaternion.identity,0 );
+			GameManager.SetupCharacterGameObjectLAN(myCharacter);
+			networkView.RPC ("net_RegisterCharacterGameObject", RPCMode.Server, myCharacter);
+		}
+	}
+
+	[RPC]
+	void net_RegisterCharacter(GameObject playerCharacter, NetworkMessageInfo info)
+	{
+		Debug.Log("Server: " + playerCharacter.name + " empfangen!");
+
+		Character character = new Character(playerCharacter,false);
+		Player requestedClient = new Player( int.Parse(info.sender.ToString()), info.sender.ToString()+" lanPlayer", character );
+		GameManager.playerDictionary.Add(playerCharacter, requestedClient);
 	}
 }
