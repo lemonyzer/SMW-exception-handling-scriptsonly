@@ -22,8 +22,7 @@ public class SpawnScriptPhoton : MonoBehaviour {
     private HashID hash;
     private GameObject countDown;
 	private Animator anim;
-
-	private Stats statsScript;
+	
 
 
 	void Awake ()
@@ -34,9 +33,9 @@ public class SpawnScriptPhoton : MonoBehaviour {
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
 
-		statsScript = GetComponent<Stats>();
-		if(statsScript == null)
-			Debug.LogError("GameController hat kein StatsScript");
+//		statsScript = GetComponent<Stats>();
+//		if(statsScript == null)
+//			Debug.LogError("GameController hat kein StatsScript");
 
 		startGameTrigger = false;
         startSpawning = false;

@@ -34,14 +34,12 @@ public class PlatformAIControl : MonoBehaviour {
 	private bool inputJump;
 
 	private GameObject gameController;
-	private Stats stats;
 	private SpawnScript spawnScript;
 	private PlatformCharacter myPlatformCharacter;
 	
 	void Awake() {
 		myPlatformCharacter = GetComponent<PlatformCharacter>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
-		stats = gameController.GetComponent<Stats>();
 		spawnScript = gameController.GetComponent<SpawnScript>();
 	}
 
