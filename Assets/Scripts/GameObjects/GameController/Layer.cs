@@ -66,9 +66,9 @@ public class Layer : MonoBehaviour {
 		allPlayer |= 1 << player3;
 		allPlayer |= 1 << player4;
 		
-//		feet = LayerMask.NameToLayer(feetLayerName);
-//		head = LayerMask.NameToLayer(headLayerName);
-//		
+		feet = LayerMask.NameToLayer(feetLayerName);
+		head = LayerMask.NameToLayer(headLayerName);
+		
 //		enemy = LayerMask.NameToLayer(enemyLayerName);
 
 		ground = LayerMask.NameToLayer(groundLayerName);

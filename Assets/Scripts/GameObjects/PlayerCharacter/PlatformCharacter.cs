@@ -7,7 +7,8 @@ public class PlatformCharacter : MonoBehaviour {
 	// used for interpolation
 	private Vector3 readNetworkPos;
 	// whether this paddle can accept player input
-	public bool AcceptsInput = true;
+//	public bool AcceptsInput = true;
+	public RealOwner realOwner;
 //	public float gravity=10;
 
 	/**
@@ -57,7 +58,7 @@ public class PlatformCharacter : MonoBehaviour {
 	 * Character Movement 
 	 **/
 	private float maxSpeed = 8.0f;							// max horizontal Speed
-	private Vector2 jumpForce = new Vector2(10.0F, 14.0F);	// jump Force : wall jump, jump
+	private Vector2 jumpForce = new Vector2(10.0F, 10.0F);	// jump Force : wall jump, jump
 
 	/// <summary>
 	/// The user input.
@@ -134,14 +135,15 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Start() {
 		anim = GetComponent<Animator>();
+		realOwner = GetComponent<RealOwner>();
 //		LayerMasks();
 
 		// if this is our paddle, it accepts input
 		// otherwise, if it is someone else’s paddle, it does not
-		if(Network.peerType == NetworkPeerType.Disconnected)
-			AcceptsInput = true;
-		else
-			AcceptsInput = networkView.isMine;
+//		if(Network.peerType == NetworkPeerType.Disconnected)
+//			AcceptsInput = true;
+//		else
+//			AcceptsInput = networkView.isMine;
 	}
 	
 	// The Move function is designed to be called from a separate component
@@ -230,48 +232,36 @@ public class PlatformCharacter : MonoBehaviour {
 			anim.SetBool(hash.walledBool, walled);
 			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
 			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
+			if(gameObject.name.StartsWith("Kirby"))
+		   	{	
+				Debug.Log(gameObject.name + ": " + rigidbody2D.velocity);
+			}
 		}
 	}
 
 
 	void FixedMove()
 	{
-//		 does not accept input, interpolate network pos
-//		 jetzt über NetworkRigidBody2D
-		if( !AcceptsInput )
+		if(controlsEnabled)
 		{
-			//transform.position = Vector3.Lerp( transform.position, readNetworkPos, 100f * Time.deltaTime );
-//			transform.position = readNetworkPos;
-			// don’t use player input
-			inputJump = false;
-			inputVelocity = 0f;
+			inputJump = inputPCJump || inputTouchJump;
+			if(!jumpAllowed)
+				inputJump = false;
+			
+			inputVelocity = inputPCVelocity + inputTouchVelocity;
+			if(!moveAllowed)
+				inputVelocity = 0f;
+			
+			if(inputVelocity > 1f)
+				inputVelocity = 1f;
+			else if(inputVelocity < -1f)
+				inputVelocity = -1f;
 		}
 		else
 		{
-			if(controlsEnabled)
-			{
-				inputJump = inputPCJump || inputTouchJump;
-				if(!jumpAllowed)
-					inputJump = false;
-				
-				inputVelocity = inputPCVelocity + inputTouchVelocity;
-				if(!moveAllowed)
-					inputVelocity = 0f;
-				
-				if(inputVelocity > 1f)
-					inputVelocity = 1f;
-				else if(inputVelocity < -1f)
-					inputVelocity = -1f;
-			}
-			else
-			{
-				inputJump = false;
-				inputVelocity = 0f;
-			}
+			inputJump = false;
+			inputVelocity = 0f;
 		}
-
-
-
 
 		if(isBouncing)
 		{
@@ -339,28 +329,29 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		
 		// gedrosselte velocity übernehmen
-		rigidbody2D.velocity = new Vector2(inputVelocity, rigidbody2D.velocity.y);
+		rigidbody2D.AddForce( new Vector2(inputVelocity,0));
+//		rigidbody2D.velocity = new Vector2(inputVelocity, rigidbody2D.velocity.y);
 		
-		/**
-		 * Animator status Update
-		 **/
-		if(anim == null)
-		{
-			Debug.LogError("Animator not set");
-		}
-		else
-		{
-			anim.SetFloat(hash.hSpeedFloat, inputVelocity);
-		}
+//		/**
+//		 * Animator status Update
+//		 **/
+//		if(anim == null)
+//		{
+//			Debug.LogError("Animator not set");
+//		}
+//		else
+//		{
+//			anim.SetFloat(hash.hSpeedFloat, inputVelocity);					// BUG! in Mulitplayer ist input nicht von jedem Spieler gesetzt!!!!
+//		}
 			
 		/**
 		 * Check Direction Change
 		 **/
-		if(inputVelocity > 0f && !facingRight)
+		if(rigidbody2D.velocity.x > 0f && !facingRight)						// BUG Input!!!
 		{
 			Flip();
 		}
-		else if(inputVelocity < 0f && facingRight)
+		else if(rigidbody2D.velocity.x < 0f && facingRight)					// BUG Input!!!
 		{
 			Flip();
 		}
@@ -383,6 +374,9 @@ public class PlatformCharacter : MonoBehaviour {
 			{
 				anim.SetBool(hash.groundedBool,false);
 			}
+			// JumpOnAblePlatforms neues Design erlaubt Force Ray nach oben deaktiviert alle getroffenen Platformen
+			// Ray -> wird zu Box höher und breiter als Character, -> JumpingSaveZone wird autom. gewährleistet! einfacher Levelbau
+			// JumpingSaveZone verhindert das Anstoßen an Kanten der Platform
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 			
@@ -448,5 +442,19 @@ public class PlatformCharacter : MonoBehaviour {
 		theScale.x *= -1;
 		transform.localScale = theScale;
 		
+	}
+
+	[RPC]
+	void DeactivateKinematic()
+	{
+		gameObject.rigidbody2D.isKinematic = false;
+		gameObject.rigidbody2D.WakeUp();
+	}
+	
+	[RPC]
+	void ActivateKinematic()
+	{
+		gameObject.rigidbody2D.isKinematic = true;
+		gameObject.rigidbody2D.WakeUp();
 	}
 }

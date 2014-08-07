@@ -285,6 +285,7 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 //			SpawnAuthorativeCharacterSelector(PhotonNetwork.player);			// Authorative CharacterSelector des MasterClients
 //		}
 	}
+	
 
 	void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
 	{
@@ -497,7 +498,7 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 
 			// Call an RPC on this new PhotonView, set the PhotonPlayer who controls this new player
 			newObjectsview.RPC("SetCharacterControlsOwner", PhotonTargets.AllBuffered, realOwner);
-			newObjectsview.RPC("DeaktivateKinematic", PhotonTargets.AllBuffered);
+			newObjectsview.RPC("DeactivateKinematic", PhotonTargets.AllBuffered);
 		}
 		else
 			Debug.LogError("Empty prefabFilename string: " + characterPrefabName);
@@ -898,7 +899,7 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 
 				// Authorative: PlayerCharacter is instantiated by MasterClient,
 				// and CharacterControlsScript is enabled on Owner Client
-				SpawnAuthorativePlayerCharacter(player, characterPrefabName, new Vector3(Random.Range(-10,10),1,Random.Range(-10,10)));
+				SpawnAuthorativePlayerCharacter(player, characterPrefabName, new Vector3(Random.Range(0,10),1,0));
 
 				// Zuteilung allen Clients mitteilen
 				photonView.RPC( "AllowSelectedCharacter", PhotonTargets.AllBufferedViaServer, playerClickedID, characterPrefabName );	// RPC geht von Server an alle

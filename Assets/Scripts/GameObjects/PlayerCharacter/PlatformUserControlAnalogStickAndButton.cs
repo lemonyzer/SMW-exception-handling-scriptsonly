@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
+public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 
 	private PlatformCharacter character;
+	private RealOwner realOwner;
 	
 	/**
 	 * Debugging GUI Element
@@ -54,6 +55,7 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 	// Use this for initialization
 	void Start() {
 		character = GetComponent<PlatformCharacter>();
+		realOwner = GetComponent<RealOwner>();
 
 		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
 		stickTexture = (GUITexture) Instantiate(stickTexture);					// needed? pre-instantiete in hierachie?!
@@ -102,12 +104,26 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update() {
-		if( networkView == null || networkView.isMine )
+		if(PhotonNetwork.player == realOwner.owner)
 		{
 			AnalogStickAndButton();
 			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
-
 		}
+	}
+
+	void FixedUpdate()
+	{
+		if(PhotonNetwork.player == realOwner.owner)
+		{
+			photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed);
+		}
+	}
+
+	[RPC]
+	void SendMovementInput(float inputX, bool inputJump)
+	{
+		//Called on the server
+		character.MoveTouch(inputX, inputJump);
 	}
 
 
@@ -366,5 +382,11 @@ public class PlatformUserControlAnalogStickAndButton : MonoBehaviour {
 		if(debugging != null)
 			debugging.text = debugmsg;
 
+	}
+
+	void OnDestroy()
+	{
+		Destroy(analogStickTexture);
+		Destroy(stickTexture);
 	}
 }

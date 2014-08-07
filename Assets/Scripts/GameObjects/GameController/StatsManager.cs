@@ -147,6 +147,10 @@ public class StatsManager : Photon.MonoBehaviour {
 
 			photonView.RPC("SyncHeadJump", PhotonTargets.AllBuffered, attackersRealOwner, victimsRealOwner);
 		}
+		else
+		{
+			Debug.Log("current GameState = " +GameState.currentState.ToString());
+		}
 	}
 
 	[RPC]

@@ -68,8 +68,14 @@ public class SendDamageTrigger : MonoBehaviour {
 					{
 						//Angriff zählt nur bei Fallbewegung
 
+						Debug.Log(targetHead.name);
+						Debug.Log(other.transform.name);
+						Debug.Log(other.transform.parent.name);
+
 						targetHead = other.gameObject;
 						targetCharacterGameObject = targetHead.transform.parent.gameObject;
+
+
 
 						if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
 						{
@@ -93,11 +99,12 @@ public class SendDamageTrigger : MonoBehaviour {
 					}
 					else
 					{
-						Debug.Log( myCharacterGameObject.name + ": " + "Angriff zählt nur bei Fallbewegung");
+						Debug.LogWarning( myCharacterGameObject.name + ": " + "Angriff zählt nur bei Fallbewegung");
 					}
 					
 					// Angreifenden Player nach oben schleudern
-					myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+					//myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+					myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
 				}
 			}
 		}
@@ -112,7 +119,8 @@ public class SendDamageTrigger : MonoBehaviour {
 	{
 		if(other.gameObject.layer == layer.head)
 		{
-			myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+			//myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
+			myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
 		}
 	}
 }

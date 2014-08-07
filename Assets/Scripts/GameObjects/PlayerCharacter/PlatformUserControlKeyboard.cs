@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlatformUserControlKeyboard : MonoBehaviour {
+public class PlatformUserControlKeyboard : Photon.MonoBehaviour {
 	
 	private PlatformCharacter character;
-	
+	private RealOwner realOwner;
 	/**
 	 * Debugging GUI Element
 	 **/
@@ -25,6 +25,7 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	// Use this for initialization
 	void Start() {
 		character = GetComponent<PlatformCharacter>();
+		realOwner = GetComponent<RealOwner>();
 	}
 	
 	void ApplicationPlatformCheck()
@@ -57,9 +58,28 @@ public class PlatformUserControlKeyboard : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
-		Keyboard();
-		character.MoveKeyboard(inputVelocity, inputJump);		// Transfer Input to Character
+		if(PhotonNetwork.player == realOwner.owner)
+		{
+			Keyboard();
+			character.MoveKeyboard(inputVelocity, inputJump);		// Transfer Input to Character
+		}
 	}
+
+	void FixedUpdate()
+	{
+		if(PhotonNetwork.player == realOwner.owner)
+		{
+			photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, inputVelocity, inputJump);
+		}
+	}
+
+	// darf nur einmal vorkommen!
+//	[RPC]
+//	void SendMovementInput(float inputX, bool inputJump)
+//	{
+//		//Called on the server
+//		character.MoveKeyboard(inputX, inputJump);
+//	}
 	
 	void Keyboard() {
 

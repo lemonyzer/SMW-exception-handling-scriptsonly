@@ -89,6 +89,7 @@ public class PhotonCharacterSelectorAuthorative : Photon.MonoBehaviour
 			else 
 			{
 				// nothing spawnable hitted
+				Debug.Log(this.ToString() + ": wrong Tag!");
 			}
 		}
 		else
