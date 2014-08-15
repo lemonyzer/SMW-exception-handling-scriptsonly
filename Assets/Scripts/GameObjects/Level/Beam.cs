@@ -78,22 +78,26 @@ public class Beam : MonoBehaviour {
 //		GameObject original;
 		beamableObject = false;
 
-		if(other.gameObject.layer == layer.player1)
+		if(other.gameObject.layer == layer.player)
 		{
 			beamableObject = true;
 		}
-		else if(other.gameObject.layer == layer.player2)
-		{
-			beamableObject = true;
-		}
-		else if(other.gameObject.layer == layer.player3)
-		{
-			beamableObject = true;
-		}
-		else if(other.gameObject.layer == layer.player4)
-		{
-			beamableObject = true;
-		}
+//		else if(other.gameObject.layer == layer.player1)
+//		{
+//			beamableObject = true;
+//		}
+//		else if(other.gameObject.layer == layer.player2)
+//		{
+//			beamableObject = true;
+//		}
+//		else if(other.gameObject.layer == layer.player3)
+//		{
+//			beamableObject = true;
+//		}
+//		else if(other.gameObject.layer == layer.player4)
+//		{
+//			beamableObject = true;
+//		}
 		else if(other.gameObject.layer == layer.powerUp)
 		{
 			beamableObject = true;

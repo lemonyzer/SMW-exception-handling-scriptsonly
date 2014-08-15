@@ -158,14 +158,22 @@ public class StatsManager : Photon.MonoBehaviour {
 	{
 		if(GameState.currentState == GameState.States.Running)
         {
-			Player playerAttacker = playerDictionary.GetPlayer(attackersRealOwner);
-			Player playerVictim = playerDictionary.GetPlayer(victimsRealOwner);
-		
-			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
-		
-			victimsAnimationController.HeadJumpAnimation();
+			if(attackersRealOwner != null &&
+			   victimsRealOwner != null)
+			{
+				Player playerAttacker = playerDictionary.GetPlayer(attackersRealOwner);
+				Player playerVictim = playerDictionary.GetPlayer(victimsRealOwner);
+			
+				AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
+			
+				victimsAnimationController.HeadJumpAnimation();
 
-			AddKill(playerAttacker, playerVictim);
+				AddKill(playerAttacker, playerVictim);
+			}
+			else
+			{
+				Debug.LogError("Character ohne RealOwner beteiligt! BOT?");
+			}
 		}
     }
 

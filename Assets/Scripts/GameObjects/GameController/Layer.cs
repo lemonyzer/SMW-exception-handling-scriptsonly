@@ -8,11 +8,13 @@ public class Layer : MonoBehaviour {
 	public LayerMask allPlayer;
 	public LayerMask whatIsGround;
 	public LayerMask whatIsWall;
-	
-	public int player1;
-	public int player2;
-	public int player3;
-	public int player4;
+
+	public int player;
+
+//	public int player1;
+//	public int player2;
+//	public int player3;
+//	public int player4;
 	
 	public int enemy;
 	public int feet;
@@ -30,12 +32,14 @@ public class Layer : MonoBehaviour {
 	public int groundStopper;
 	
 	public int fader;
-	
-	public const string player1LayerName = "Player1";
-	public const string player2LayerName = "Player2";
-	public const string player3LayerName = "Player3";
-	public const string player4LayerName = "Player4";
-	
+
+	public const string playerLayerName = "Player";
+
+//	public const string player1LayerName = "Player1";
+//	public const string player2LayerName = "Player2";
+//	public const string player3LayerName = "Player3";
+//	public const string player4LayerName = "Player4";
+//	
 	public const string feetLayerName = "Feet";
 	public const string headLayerName = "Head";
 	
@@ -56,15 +60,18 @@ public class Layer : MonoBehaviour {
 	void Awake()
 	{
 		Debug.LogWarning("Layer: Awake() - init public layer integers, scripts layer instantiation have to be AFTER this initialisation, NOT IN AWAKE!!!" );
-		player1 = LayerMask.NameToLayer(player1LayerName);
-		player2 = LayerMask.NameToLayer(player2LayerName);
-		player3 = LayerMask.NameToLayer(player3LayerName);
-		player4 = LayerMask.NameToLayer(player4LayerName);
-		
-		allPlayer = 1 << player1;
-		allPlayer |= 1 << player2;
-		allPlayer |= 1 << player3;
-		allPlayer |= 1 << player4;
+		player = LayerMask.NameToLayer(playerLayerName);
+//		player1 = LayerMask.NameToLayer(player1LayerName);
+//		player2 = LayerMask.NameToLayer(player2LayerName);
+//		player3 = LayerMask.NameToLayer(player3LayerName);
+//		player4 = LayerMask.NameToLayer(player4LayerName);
+
+		allPlayer = 1 << player;
+
+//		allPlayer = 1 << player1;
+//		allPlayer |= 1 << player2;
+//		allPlayer |= 1 << player3;
+//		allPlayer |= 1 << player4;
 		
 		feet = LayerMask.NameToLayer(feetLayerName);
 		head = LayerMask.NameToLayer(headLayerName);

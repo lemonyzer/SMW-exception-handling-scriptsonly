@@ -53,18 +53,19 @@ public class ReSpawnScript : MonoBehaviour {
 	{
 		rigidbody2D.isKinematic = true;
 		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
+
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
 
 		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,false);				// bad!!! 
 		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.destroyAbleBlock,false);
 		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-		myBodyCollider.enabled = true;
+		myBodyCollider.enabled = false;
 		// Body Trigger aktivieren, PowerUps einsammeln
 		myBodyTrigger.enabled = true;
 		//					myCharacterCollider2D.enabled = false;
@@ -79,7 +80,7 @@ public class ReSpawnScript : MonoBehaviour {
 		//					// verhindern dass das GameObject durch die Gravität in Boden fällt
 		//					myCharacter.rigidbody2D.isKinematic = true;
 		
-		/* Ki und Controlls aktivieren */
+		/* Ki und Controlls deaktivieren */
 		myPlatformCharacterScript.isDead = true;
 	}
 
@@ -87,11 +88,12 @@ public class ReSpawnScript : MonoBehaviour {
 	{
 		rigidbody2D.isKinematic = false;
 		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
+
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
@@ -117,11 +119,12 @@ public class ReSpawnScript : MonoBehaviour {
 	{
 		rigidbody2D.isKinematic = false;
 		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,false);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,false);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,false);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,false);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,false);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,false);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,false);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,false);
+
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
@@ -189,6 +192,10 @@ public class ReSpawnScript : MonoBehaviour {
 		if(debugSpawn && myCharacter.name.StartsWith("Carbuncle"))
 			Debug.LogWarning("StartSpawnAnimation()");
 		myCharacter.renderer.enabled = false;				// sieht besser aus
+
+		// neue Position halten
+		rigidbody2D.isKinematic = true;
+
 		// Random Spawn Position
 		SetSpawnPosition();
 

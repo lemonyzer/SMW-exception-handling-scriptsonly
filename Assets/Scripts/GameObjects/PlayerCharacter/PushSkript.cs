@@ -68,10 +68,11 @@ public class PushSkript : MonoBehaviour {
 			 * Compare layer > 10 & layer < 14 effektiver?
 			 * mit layermask layer 11,12,13,14 und verknüpfen und vergleichen?
 			 ***/
-			if((collision.gameObject.layer == layer.player1) || 
-			   (collision.gameObject.layer == layer.player2) ||
-			   (collision.gameObject.layer == layer.player3) || 
-			   (collision.gameObject.layer == layer.player4))
+//			if((collision.gameObject.layer == layer.player1) || 
+//			   (collision.gameObject.layer == layer.player2) ||
+//			   (collision.gameObject.layer == layer.player3) || 
+//			   (collision.gameObject.layer == layer.player4))
+			if(collision.gameObject.layer == layer.player)
 			{
 	//			Debug.Log(myCharacter.name + ": Collision's relative Velocity = " + collision.relativeVelocity);
 

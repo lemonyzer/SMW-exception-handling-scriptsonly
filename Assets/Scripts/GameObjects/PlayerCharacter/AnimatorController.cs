@@ -109,25 +109,20 @@ public class AnimatorController : MonoBehaviour {
 	void SetCharacterColliderHeadJumped()
 	{
 		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
-		
+
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
+		myBodyCollider.enabled = false;
 		myBodyTrigger.enabled = false;
-//					myCharacterCollider2D.enabled = false;
 		
 		// FeetCollider deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
 		myFeetTrigger.enabled = false;
 		myHeadTrigger.enabled = false;
-//					feet.gameObject.SetActive(false);
-//					headCollider2D.enabled = false;
+//		feet.gameObject.SetActive(false);
+//		head.gameObject.SetActive(false);
 
-//					// verhindern dass das GameObject durch die Gravität in Boden fällt
-//					myCharacter.rigidbody2D.isKinematic = true;
+		// Jeder Character hat einen GroundStopper (erkennt nur Collisionen mit Ground,Floor,Blocks)
+//		verhindern dass das GameObject durch die Gravität in Boden fällt
+//		myCharacter.rigidbody2D.isKinematic = true;
 		
 		/* Ki und Controlls deaktivieren */
 		stopControlls();

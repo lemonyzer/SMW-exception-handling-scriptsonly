@@ -199,43 +199,43 @@ public class RageModus : MonoBehaviour {
 		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
 	}
 
-	void disableCollision()
-	{
-		int currentLayer = gameObject.layer;
-		for(int i=0; i<4; i++)
-		{
-			if(i==0)
-				currentLayer = layer.player1;
-			if(i==1)
-				currentLayer = layer.player2;
-			if(i==2)
-				currentLayer = layer.player3;
-			if(i==3)
-				currentLayer = layer.player4;
-			
-			if(gameObject.layer != currentLayer)
-				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,true);
-		}
-	}
+//	void disableCollision()
+//	{
+//		int currentLayer = gameObject.layer;
+//		for(int i=0; i<4; i++)
+//		{
+//			if(i==0)
+//				currentLayer = layer.player1;
+//			if(i==1)
+//				currentLayer = layer.player2;
+//			if(i==2)
+//				currentLayer = layer.player3;
+//			if(i==3)
+//				currentLayer = layer.player4;
+//			
+//			if(gameObject.layer != currentLayer)
+//				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,true);
+//		}
+//	}
 
-	void enableCollision()
-	{
-		int currentLayer = gameObject.layer;
-		for(int i=0; i<4; i++)
-		{
-			if(i==0)
-				currentLayer = layer.player1;
-			if(i==1)
-				currentLayer = layer.player2;
-			if(i==2)
-				currentLayer = layer.player3;
-			if(i==3)
-				currentLayer = layer.player4;
-			
-			if(gameObject.layer != currentLayer)
-				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,false);
-		}
-	}
+//	void enableCollision()
+//	{
+//		int currentLayer = gameObject.layer;
+//		for(int i=0; i<4; i++)
+//		{
+//			if(i==0)
+//				currentLayer = layer.player1;
+//			if(i==1)
+//				currentLayer = layer.player2;
+//			if(i==2)
+//				currentLayer = layer.player3;
+//			if(i==3)
+//				currentLayer = layer.player4;
+//			
+//			if(gameObject.layer != currentLayer)
+//				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,false);
+//		}
+//	}
 
 	void OnCollisionEnter2D (Collision2D collision)
 	{
@@ -247,22 +247,26 @@ public class RageModus : MonoBehaviour {
 				if(this.gameObject.layer != collision.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
 				{
 					bool enemyObject = false;
-					if(collision.gameObject.layer == layer.player1)
+					if(collision.gameObject.layer == layer.player)
 					{
 						enemyObject = true;
 					}
-					else if(collision.gameObject.layer == layer.player2)
-					{
-						enemyObject = true;
-					}
-					else if(collision.gameObject.layer == layer.player3)
-					{
-						enemyObject = true;
-					}
-					else if(collision.gameObject.layer == layer.player4)
-					{
-						enemyObject = true;
-					}
+//					if(collision.gameObject.layer == layer.player1)
+//					{
+//						enemyObject = true;
+//					}
+//					else if(collision.gameObject.layer == layer.player2)
+//					{
+//						enemyObject = true;
+//					}
+//					else if(collision.gameObject.layer == layer.player3)
+//					{
+//						enemyObject = true;
+//					}
+//					else if(collision.gameObject.layer == layer.player4)
+//					{
+//						enemyObject = true;
+//					}
 					//				else if(other.gameObject.layer == layer.powerUp)
 					//				{
 					//					enemyObject = true;
