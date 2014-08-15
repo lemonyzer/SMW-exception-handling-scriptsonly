@@ -232,10 +232,10 @@ public class PlatformCharacter : MonoBehaviour {
 			anim.SetBool(hash.walledBool, walled);
 			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
 			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
-			if(gameObject.name.StartsWith("Kirby"))
-		   	{	
-				Debug.Log(gameObject.name + ": " + rigidbody2D.velocity);
-			}
+//			if(gameObject.name.StartsWith("Kirby"))
+//		   	{	
+//				Debug.Log(gameObject.name + ": " + rigidbody2D.velocity);
+//			}
 		}
 	}
 
@@ -329,8 +329,8 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		
 		// gedrosselte velocity übernehmen
-		rigidbody2D.AddForce( new Vector2(inputVelocity,0));
-//		rigidbody2D.velocity = new Vector2(inputVelocity, rigidbody2D.velocity.y);
+//		rigidbody2D.AddForce( new Vector2(inputVelocity,0));
+		rigidbody2D.velocity = new Vector2(inputVelocity, rigidbody2D.velocity.y);
 		
 //		/**
 //		 * Animator status Update

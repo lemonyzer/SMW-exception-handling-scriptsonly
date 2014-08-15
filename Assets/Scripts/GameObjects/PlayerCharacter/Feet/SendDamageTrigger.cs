@@ -68,11 +68,11 @@ public class SendDamageTrigger : MonoBehaviour {
 					{
 						//Angriff zählt nur bei Fallbewegung
 
-						Debug.Log(targetHead.name);
-						Debug.Log(other.transform.name);
-						Debug.Log(other.transform.parent.name);
-
 						targetHead = other.gameObject;
+//						Debug.Log(targetHead.name);
+//						Debug.Log(other.transform.name);
+						Debug.Log(this.ToString() + ": " + this.transform.parent.name + " ---HeadJump---> " + other.transform.parent.name);
+
 						targetCharacterGameObject = targetHead.transform.parent.gameObject;
 
 

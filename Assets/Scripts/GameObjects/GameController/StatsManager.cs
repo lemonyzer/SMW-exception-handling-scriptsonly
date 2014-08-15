@@ -149,7 +149,7 @@ public class StatsManager : Photon.MonoBehaviour {
 		}
 		else
 		{
-			Debug.Log("current GameState = " +GameState.currentState.ToString());
+			Debug.LogWarning("current GameState = " + GameState.currentState.ToString() + " HeadJump zählt nicht!");
 		}
 	}
 

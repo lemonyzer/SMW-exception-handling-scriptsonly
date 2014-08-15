@@ -386,7 +386,10 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 
 	void OnDestroy()
 	{
-		Destroy(analogStickTexture);
-		Destroy(stickTexture);
+		if(analogStickTexture != null)
+			Destroy(analogStickTexture);
+
+		if(stickTexture != null)
+			Destroy(stickTexture);
 	}
 }

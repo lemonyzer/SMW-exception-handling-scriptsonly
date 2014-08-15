@@ -30,7 +30,9 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 	 *  CharacterPrefab GameObjects in  GameScene
 	 **/
 	PlayerDictionary syncedLocalPersistentPlayerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
-	
+
+
+	public GameState.States currentGameSate = GameState.currentState;
 	
 	/**
 	 * Initialisieren von ScriptableObjects, wie zB. letzte SinglePlayer Characterauswahl aus PlayerPrefs laden
@@ -1160,10 +1162,12 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 			if(player.getPhotonPlayer().isMasterClient)
 			{
 				GUILayout.Label(player.getName(), masterSmallStyle);	// um Text anzuzeigen
+				GUILayout.Label(player.getPoints().ToString());
 			}
 			else
 			{
 				GUILayout.Label(player.getName());	// um Text anzuzeigen
+				GUILayout.Label(player.getPoints().ToString());
 			}
 			// Character Name
 			if(player.getCharacter() != null)
