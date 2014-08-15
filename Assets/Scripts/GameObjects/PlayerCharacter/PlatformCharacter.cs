@@ -359,7 +359,9 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			changedRunDirection = false;
 		}
-		
+
+
+		// wird nur lokal und auf masterclient ausgeführt (wegen input abfrage)
 		if(grounded && inputJump) {
 			// Do Jump
 			if(jumpSound != null)

@@ -32,12 +32,23 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 	PlayerDictionary syncedLocalPersistentPlayerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
 
 
-	public GameState.States currentGameSate = GameState.currentState;
+	// nicht mehr static ?!
+	//public GameState.States currentGameState = GameState.currentState;
+
 	
 	/**
 	 * Initialisieren von ScriptableObjects, wie zB. letzte SinglePlayer Characterauswahl aus PlayerPrefs laden
 	 **/
 	private bool initValues = false;
+
+
+	public AudioSource myAudioSource;
+	public AudioClip roomBackgroundMusic;
+	private Animator anim;
+	private HashID hash;
+	public AudioClip beepAudioClip;
+	public AudioClip goAudioClip;
+	public AudioClip gameBackgroundMusic;
 
 	/**
 	 * PhotonGameManager is also Manager of PlayerDictionary
@@ -150,6 +161,84 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 	void Update()
 	{
 		BackButton();
+		if(PhotonNetwork.isMasterClient)
+		{
+			// abfrage ob bereits gestartet=?!
+			if(GameState.currentState == GameState.States.Initializing)
+			{
+				if(EveryPlayerHasCharacter())
+				{
+					Debug.Log("Every Player has Character!");
+					photonView.RPC ("EverybodyReady", PhotonTargets.All);
+				}
+			}
+		}
+	}
+
+	[RPC]
+	void EverybodyReady()
+	{
+		Debug.LogWarning("RPC EverybodyReady");
+		PrepareAndStartCountDownAnimation();
+	}
+
+	void PrepareAndStartCountDownAnimation()
+	{
+		// hide all character gameobjects
+		ShowAllCharacters(false);
+
+		// hide all character gameobjects
+		GameState.currentState = GameState.States.Starting;
+		
+		// music off
+		myAudioSource.Stop();
+		StartCoroutine(startCountDown());
+	}
+
+	IEnumerator startCountDown()
+	{
+		//start CountDown
+		anim.SetTrigger(hash.startCountDownTrigger);
+		// 3, 2, 1, GO...
+		// beep sound every second
+		// 3
+		yield return new WaitForSeconds(1.0f); 
+		AudioSource.PlayClipAtPoint(beepAudioClip,transform.position,1);
+		// 2
+		yield return new WaitForSeconds(1.0f); 
+		AudioSource.PlayClipAtPoint(beepAudioClip,transform.position,1);
+		// 1
+		yield return new WaitForSeconds(1.0f); 
+		AudioSource.PlayClipAtPoint(beepAudioClip,transform.position,1);
+		// GO
+		yield return new WaitForSeconds(1.0f); 
+		AudioSource.PlayClipAtPoint(goAudioClip,transform.position,1);
+
+		StartCountDownAnimationFinished();			// needs to be public!!!
+	}
+
+	public void StartCountDownAnimationFinished()	// needs to be public!!!
+	{
+		// music on
+		myAudioSource.clip = gameBackgroundMusic;
+		myAudioSource.loop = true;
+		myAudioSource.Play();
+		ShowAllCharacters(true);
+		// renderer enable true
+		// spawn animation
+		GameState.currentState = GameState.States.Running;
+	}
+
+	void ShowAllCharacters(bool enabled)
+	{
+		foreach(PhotonPlayer pPlayer in PhotonNetwork.playerList)
+		{
+			GameObject character = syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(pPlayer);
+			if(character != null)
+			{
+				character.renderer.enabled = enabled;
+			}
+		}
 	}
 
 	void Awake()
@@ -177,14 +266,23 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 
 		// Kommunikationsbeginn/fortzsetzung (Buffered RPC's werden abgearbeitet)
 		PhotonNetwork.isMessageQueueRunning = true;
+
+		// Start Countdown Animation 3,2,1 
+		anim = GetComponent<Animator>();
+		hash = GetComponent<HashID>();
+
+		GameState.currentState = GameState.States.Initializing;
 	}
 
 
-//	void Start()
-//	{
-//		PhotonNetwork.autoCleanUpPlayerObjects = true;
-//		// removes 
-//	}
+	void Start()
+	{
+		// Looping Background Audio CLip
+		myAudioSource = GetComponent<AudioSource>();
+		myAudioSource.clip = roomBackgroundMusic;
+		myAudioSource.loop = true;
+		myAudioSource.Play();
+	}
 
 	/**
 	 * Class GamePrefs

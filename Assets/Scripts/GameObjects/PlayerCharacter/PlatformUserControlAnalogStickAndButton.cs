@@ -37,8 +37,10 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 	float deltaX=0;
 	float deltaY=0;
 	
-	public GUITexture analogStickTexture;
-	public GUITexture stickTexture;
+	public GUITexture prefabAnalogStickTexture;
+	public GUITexture prefabStickTexture;
+	GUITexture analogStickTexture;
+	GUITexture stickTexture;
 	float analogStickTextureWidth;
 	float analogStickTextureHeight;
 	float stickTextureWidth;
@@ -57,8 +59,8 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 		character = GetComponent<PlatformCharacter>();
 		realOwner = GetComponent<RealOwner>();
 
-		analogStickTexture = (GUITexture) Instantiate(analogStickTexture);		// needed? pre-instantiete in hierachie?!
-		stickTexture = (GUITexture) Instantiate(stickTexture);					// needed? pre-instantiete in hierachie?!
+		analogStickTexture = (GUITexture) Instantiate(prefabAnalogStickTexture);		// needed? pre-instantiete in hierachie?!
+		stickTexture = (GUITexture) Instantiate(prefabStickTexture);					// needed? pre-instantiete in hierachie?!
 		analogStickTextureWidth = analogStickTexture.pixelInset.width;
 		analogStickTextureHeight = analogStickTexture.pixelInset.height;
 		stickTextureWidth = stickTexture.pixelInset.width;
