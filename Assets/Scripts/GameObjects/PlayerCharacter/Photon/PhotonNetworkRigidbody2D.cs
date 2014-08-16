@@ -32,8 +32,8 @@ public class PhotonNetworkRigidbody2D : Photon.MonoBehaviour {
 			float angularVelocity = rigidbody2D.angularVelocity;
 			stream.Serialize(ref pos);
 			stream.Serialize(ref velocity);
-			stream.Serialize(ref rot);
-			stream.Serialize(ref angularVelocity);
+//			stream.Serialize(ref rot);
+//			stream.Serialize(ref angularVelocity);
 		}
 		// Read data from remote client
 		else
@@ -44,8 +44,8 @@ public class PhotonNetworkRigidbody2D : Photon.MonoBehaviour {
 			float angularVelocity = 0;
 			stream.Serialize(ref pos);
 			stream.Serialize(ref velocity);
-			stream.Serialize(ref rot);
-			stream.Serialize(ref angularVelocity);
+//			stream.Serialize(ref rot);
+//			stream.Serialize(ref angularVelocity);
 			
 			// Shift the buffer sideways, deleting state 20
 			for (int i=m_BufferedState.Length-1;i>=1;i--)

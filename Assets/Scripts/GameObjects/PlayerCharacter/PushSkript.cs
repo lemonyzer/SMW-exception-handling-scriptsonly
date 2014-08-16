@@ -74,7 +74,7 @@ public class PushSkript : MonoBehaviour {
 //			   (collision.gameObject.layer == layer.player4))
 			if(collision.gameObject.layer == layer.player)
 			{
-	//			Debug.Log(myCharacter.name + ": Collision's relative Velocity = " + collision.relativeVelocity);
+				Debug.Log(myCharacter.name + ": Collision's relative Velocity = " + collision.relativeVelocity);
 
 				float relativeVelocity = Mathf.Abs(collision.relativeVelocity.x);
 

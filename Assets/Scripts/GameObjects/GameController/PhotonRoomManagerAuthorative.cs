@@ -96,8 +96,37 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 	 **/
 	void BackButton()
 	{
+		if(Input.GetKeyDown(KeyCode.Menu))
+		{
+			if(photonView != null)
+			{
+				// Photon Network disconnect
+				if(PhotonNetwork.inRoom)
+				{
+					if(PhotonNetwork.isMasterClient)
+					{
+						// sync some late infos?
+						// set new MasterClient
+						if(PhotonNetwork.room.playerCount == 1)
+						{
+							// last player in room, delete everything
+							PhotonNetwork.DestroyAll();
+						}
+					}
+					else
+					{
+						// RPC leave?
+					}
+					PhotonNetwork.LeaveRoom();
+					PhotonNetwork.Disconnect();
+				}
+			}
+			Application.LoadLevel(Scenes.mainmenu);
+		}
+
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
+			Debug.Log("Escape found");
 			if(networkView == null && photonView == null)
 			{
 				Debug.Log("SinglePlayer");
@@ -264,14 +293,14 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 		oldMasterClient = PhotonNetwork.masterClient;
 		Debug.Log("Awake: oldMasterClient = " + oldMasterClient.name);
 
-		// Kommunikationsbeginn/fortzsetzung (Buffered RPC's werden abgearbeitet)
-		PhotonNetwork.isMessageQueueRunning = true;
-
 		// Start Countdown Animation 3,2,1 
 		anim = GetComponent<Animator>();
 		hash = GetComponent<HashID>();
-
+		
 		GameState.currentState = GameState.States.Initializing;
+
+		// Kommunikationsbeginn/fortzsetzung (Buffered RPC's werden abgearbeitet)
+		PhotonNetwork.isMessageQueueRunning = true;
 	}
 
 

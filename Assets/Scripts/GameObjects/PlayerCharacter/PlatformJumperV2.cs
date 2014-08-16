@@ -14,6 +14,7 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 	bool isInJumpAbleSaveZone = false;
 	BoxCollider2D bodyCollider;
+	BoxCollider2D groundStopper;
 
 	GameObject gameController;
 //	PlatformCharacter myPlatformCharacter;
@@ -22,6 +23,10 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 	SpriteRenderer spriteRenderer;
 
+
+
+
+
 	void Awake()
 	{
 		spriteRenderer = GetComponent<SpriteRenderer>();
@@ -29,15 +34,46 @@ public class PlatformJumperV2 : MonoBehaviour {
 		layer = gameController.GetComponent<Layer>();
 //		myPlatformCharacter = GetComponent<PlatformCharacter>();
 
-
-
 		bodyCollider = GetComponent<BoxCollider2D>();
+		groundStopper = transform.FindChild(Tags.groundStopper).GetComponent<BoxCollider2D>();
 	}
 
 	// Use this for initialization
 	void Start () {
 		whatIsJumpAbleSaveZone = 1 << layer.jumpAblePlatformSaveZone;
 		jumpOnPlatform = 1 << layer.jumpAblePlatform;
+
+
+		CalculateColliderEdges();
+	}
+
+	Vector2 playerBodyColliderTopLeftPos;
+	Vector2 playerBodyColliderBottomRightPos;
+	Vector2 playerBodyColliderBottomLeftPos;
+//	Vector2 playerGroundStopperColliderBottomLeftPos;
+
+	Vector2 platformColliderFinderTopLeftPos;
+	Vector2 platformColliderFinderBottomRightPos;
+
+
+	void CalculateColliderEdges()
+	{
+		playerBodyColliderTopLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
+		                                           transform.position.y + bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Top Left
+		
+		playerBodyColliderBottomRightPos = new Vector2(transform.position.x + bodyCollider.size.x*0.5f + bodyCollider.center.x,
+		                                               transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Right
+		
+		playerBodyColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
+		                                              transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Left
+
+//		playerGroundStopperColliderBottomLeftPos = new Vector2(transform.position.x - groundStopper.size.x*0.5f + groundStopper.center.x,
+//		                                              transform.position.y - groundStopper.size.y*0.5f + groundStopper.center.y);	// Collider Bottom Left
+
+		platformColliderFinderTopLeftPos = new Vector2(-groundStopper.size.x, groundStopper.size.y) + playerBodyColliderTopLeftPos;		// höhe (nach oben) und breite (nach links) verschieben
+		platformColliderFinderBottomRightPos = new Vector2(groundStopper.size.x,0) + playerBodyColliderBottomRightPos;				// breite (nach rechts) verschieben
+
+
 	}
 	
 	// Update is called once per frame
@@ -60,59 +96,27 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 		// Overlap Area in Collision with JumpOnPlatform, disable in Unity
 
-		Vector2 playerBodyColliderTopLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
-		                                                   transform.position.y + bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Top Left
-		
-		Vector2 playerBodyColliderBottomRightPos = new Vector2(transform.position.x + bodyCollider.size.x*0.5f + bodyCollider.center.x,
-		                                                       transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Right
-
-		Vector2 platformColliderFinderTopLeftPos = new Vector2(-bodyCollider.size.x, bodyCollider.size.y) + playerBodyColliderTopLeftPos;		// höhe (nach oben) und breite (nach links) verschieben
-		Vector2 platformColliderFinderBottomRightPos = new Vector2(bodyCollider.size.x,0) + playerBodyColliderBottomRightPos;				// breite (nach rechts) verschieben
-
+		CalculateColliderEdges();
 
 		Debug.DrawLine(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, Color.green);
-
-		// to much
-//		Collider[] platformColliders = Physics2D.OverlapAreaAll(playerTopLeftPos, playerBottomRightPos, layer.jumpAblePlatform);
-//
-//
-//		foreach(Collider collider in platformColliders)
-//		{
-//			Physics2D.IgnoreCollision(bodyCollider,collider,true);
-//		}
 
 		Collider2D platformColliderAbove = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
 		if(platformColliderAbove != null)
 		{
-			Physics2D.IgnoreCollision(bodyCollider,platformColliderAbove,true);
+			Physics2D.IgnoreCollision(bodyCollider, platformColliderAbove, true);
+			Physics2D.IgnoreCollision(groundStopper, platformColliderAbove, true);
 //			Debug.LogWarning(platformColliderAbove.name + " found");
 		}
-//		else
-//		{
-//			Debug.Log("not found");
-//		}
-		
-//		Collider platformColliderUnderneath = Physics2D.OverlapArea(playerTopLeftPos, playerBottomRightPos, layer.jumpAblePlatform);
-//		if(platformColliderUnderneath != null)
-//			Physics2D.IgnoreCollision(bodyCollider,platformColliderUnderneath,false);
 
-
-
-		Vector2 playerBodyColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
-		                                                      transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Left
-
-
-
-		Collider2D platformColliderBelow = Physics2D.OverlapArea(playerBodyColliderBottomLeftPos, platformColliderFinderBottomRightPos  - new Vector2(0,1), jumpOnPlatform);
+		Collider2D platformColliderBelow = Physics2D.OverlapArea(playerBodyColliderBottomLeftPos,
+		                                                         platformColliderFinderBottomRightPos  - new Vector2(0,1),
+		                                                         jumpOnPlatform);
 		if(platformColliderBelow != null)
 		{
 			Physics2D.IgnoreCollision(bodyCollider, platformColliderBelow, false);
+			Physics2D.IgnoreCollision(groundStopper, platformColliderBelow, false);
 //			Debug.LogWarning(platformColliderAbove.name + " found");
 		}
-//		else
-//		{
-//			Debug.Log("not found");
-//		}
 	}
 
 	/**

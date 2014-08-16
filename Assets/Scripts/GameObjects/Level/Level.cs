@@ -26,10 +26,10 @@ public class Level : MonoBehaviour {
 	{
 		if(backgroundFound)
 		{
-			float x,y,z=0;
-			x = Camera.main.transform.position.x;
-			y = Camera.main.transform.position.y;
-			z = 0;
+//			float x,y,z=0;
+//			x = Camera.main.transform.position.x;
+//			y = Camera.main.transform.position.y;
+			float z = 0;
 
 			float left = bgSpriteRenderer.sprite.bounds.center.x - Camera.main.transform.position.x;
 			float bottom = bgSpriteRenderer.sprite.bounds.center.y - Camera.main.transform.position.y;

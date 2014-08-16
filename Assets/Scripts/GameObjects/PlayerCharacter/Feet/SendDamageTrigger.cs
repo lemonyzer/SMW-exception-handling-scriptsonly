@@ -38,6 +38,10 @@ public class SendDamageTrigger : MonoBehaviour {
 	void Start () {
 		myCharacterGameObject = transform.parent.gameObject;
 		myPlatformCharacterScript = myCharacterGameObject.GetComponent<PlatformCharacter>();
+		if(myPlatformCharacterScript == null)
+		{
+			Debug.LogError("CharacterScript not found!");
+		}
 //		myHealthController = myCharacterGameObject.GetComponent<HealthController>();
 //		if(myHealthController == null)
 //			Debug.LogError( myCharacterGameObject.name + "'s has no HealthController");
@@ -46,13 +50,17 @@ public class SendDamageTrigger : MonoBehaviour {
 	// Update is called once per frame
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(!(Network.peerType == NetworkPeerType.Disconnected))
+//		if(!(Network.peerType == NetworkPeerType.Disconnected))
+//		{
+//			// connected
+//			if(!Network.isServer)
+//			{
+//				return;
+//			}
+//		}
+		if(!PhotonNetwork.isMasterClient)
 		{
-			// connected
-			if(!Network.isServer)
-			{
-				return;
-			}
+			return;
 		}
 		if(myPlatformCharacterScript != null)
 		{
@@ -103,8 +111,8 @@ public class SendDamageTrigger : MonoBehaviour {
 					}
 					
 					// Angreifenden Player nach oben schleudern
-					//myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
-					myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
+					//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
+					myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
 				}
 			}
 		}
@@ -119,8 +127,8 @@ public class SendDamageTrigger : MonoBehaviour {
 	{
 		if(other.gameObject.layer == layer.head)
 		{
-			//myCharacterGameObject.rigidbody2D.velocity = new Vector2(0.0F,10.0F);
-			myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
+			//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
+			myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
 		}
 	}
 }

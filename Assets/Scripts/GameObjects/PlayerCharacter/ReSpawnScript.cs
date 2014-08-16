@@ -96,7 +96,7 @@ public class ReSpawnScript : MonoBehaviour {
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
-		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
+		myBodyCollider.enabled = false;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
 		// Body Trigger aktivieren, PowerUps einsammeln
 		myBodyTrigger.enabled = true;
 		//					myCharacterCollider2D.enabled = false;
