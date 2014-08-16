@@ -23,7 +23,7 @@ public class Layer : MonoBehaviour {
 	public int ground;
 	public int tagAble;
 	public int floor;
-	public int destroyAbleBlock;
+	public int block;
 	public int jumpAblePlatform;
 	public int jumpAblePlatformSaveZone;
 	
@@ -48,7 +48,7 @@ public class Layer : MonoBehaviour {
 	public const string groundLayerName = "Ground";
 	public const string tagAbleLayerName = "TagAble";
 	public const string floorLayerName = "Floor";
-	public const string destroyAbleBlockLayerName = "DestroyAbleBlock";
+	public const string blockLayerName = "Block";
 	public const string jumpAblePlatformLayerName = "JumpOnAblePlatform";
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
 	
@@ -81,7 +81,7 @@ public class Layer : MonoBehaviour {
 		ground = LayerMask.NameToLayer(groundLayerName);
 		tagAble = LayerMask.NameToLayer(tagAbleLayerName);
 //		floor = LayerMask.NameToLayer(floorLayerName);
-//		destroyAbleBlock = LayerMask.NameToLayer(destroyAbleBlockLayerName);
+		block = LayerMask.NameToLayer(blockLayerName);
 		jumpAblePlatform = LayerMask.NameToLayer(jumpAblePlatformLayerName);
 		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
 
@@ -89,12 +89,12 @@ public class Layer : MonoBehaviour {
 //		whatIsGround |= 1 << tagAble;
 //		whatIsGround = 1 << floor;
 		whatIsGround |= 1 << jumpAblePlatform;
-//		whatIsGround |= 1 << destroyAbleBlock;
+		whatIsGround |= 1 << block;
 		
 		whatIsWall = whatIsGround;
 		
-//		powerUp = LayerMask.NameToLayer(powerUpLayerName);
-//		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
+		powerUp = LayerMask.NameToLayer(powerUpLayerName);
+		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
 //		fader = LayerMask.NameToLayer(faderLayerName);
 	}
 

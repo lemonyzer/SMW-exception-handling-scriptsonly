@@ -61,7 +61,7 @@ public class ReSpawnScript : MonoBehaviour {
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
 
 		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,false);				// bad!!! 
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.destroyAbleBlock,false);
+		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.block,false);
 		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)

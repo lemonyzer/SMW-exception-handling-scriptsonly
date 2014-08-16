@@ -11,6 +11,8 @@ public class PlatformCharacter : MonoBehaviour {
 	public RealOwner realOwner;
 //	public float gravity=10;
 
+	public PhotonView myPhotonView;
+
 	/**
 	 * Debugging GUI Element
 	 **/
@@ -58,7 +60,7 @@ public class PlatformCharacter : MonoBehaviour {
 	 * Character Movement 
 	 **/
 	private float maxSpeed = 8.0f;							// max horizontal Speed
-	private Vector2 jumpForce = new Vector2(10.0F, 10.0F);	// jump Force : wall jump, jump
+	private Vector2 jumpSpeed = new Vector2(8.0F, 8.0F);	// jump Force : wall jump, jump
 
 	/// <summary>
 	/// The user input.
@@ -113,6 +115,8 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Awake()
 	{
+		myPhotonView = GetComponent<PhotonView>();
+
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		bodyCollider2D = GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
@@ -242,6 +246,26 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void FixedMove()
 	{
+
+		/**
+		 * Check Direction Change
+		 **/
+		if(rigidbody2D.velocity.x > 0f && !facingRight)						
+		{
+			Flip();
+		}
+		else if(rigidbody2D.velocity.x < 0f && facingRight)					
+		{
+			Flip();
+		}
+		else
+		{
+			changedRunDirection = false;
+		}
+
+		if(!PhotonNetwork.isMasterClient)
+			return;
+
 		if(controlsEnabled)
 		{
 			inputJump = inputPCJump || inputTouchJump;
@@ -363,44 +387,52 @@ public class PlatformCharacter : MonoBehaviour {
 
 		// wird nur lokal und auf masterclient ausgeführt (wegen input abfrage)
 		if(grounded && inputJump) {
-			// Do Jump
-			if(jumpSound != null)
-				AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
-			else
-				Debug.LogError("jumpSound nicht gesetzt!");
-			if(anim == null)
-			{
-				Debug.LogError("Animator not set");
-			}
-			else
-			{
-				anim.SetBool(hash.groundedBool,false);
-			}
-			// JumpOnAblePlatforms neues Design erlaubt Force Ray nach oben deaktiviert alle getroffenen Platformen
-			// Ray -> wird zu Box höher und breiter als Character, -> JumpingSaveZone wird autom. gewährleistet! einfacher Levelbau
-			// JumpingSaveZone verhindert das Anstoßen an Kanten der Platform
-			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpForce.y);		//<--- besser für JumpAblePlatforms	
+			myPhotonView.RPC("SyncJump", PhotonTargets.All);
+			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpSpeed.y);		//<--- besser für JumpAblePlatforms	
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
-			
 		}
 		else if(!grounded && walled && inputJump) {
-			// Do WallJump
-			AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
-			rigidbody2D.velocity = new Vector2(0,0);									//alte Geschwindigkeit entfernen
-			Flip();																		//Charakter drehen
-			if(anim == null)
-			{
-				Debug.LogError("Animator not set");
-			}
-			else
-			{
-				anim.SetBool(hash.groundedBool,false);
-				anim.SetBool(hash.walledBool,false);
-			}
-			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpForce.x, jumpForce.y);	//<--- besser für JumpAblePlatforms
+			myPhotonView.RPC("SyncWallJump", PhotonTargets.All);
+			rigidbody2D.velocity = new Vector2(0,0);												//alte Geschwindigkeit entfernen
+			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpSpeed.x, jumpSpeed.y);	//<--- besser für JumpAblePlatforms
 		}
 //		rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,rigidbody2D.velocity.y-gravity);		//<--- besser für JumpAblePlatforms	
 		
+	}
+
+	[RPC]
+	public void SyncJump()
+	{
+		// Do Jump
+		if(jumpSound != null)
+			AudioSource.PlayClipAtPoint(jumpSound,transform.position,1);				//JumpSound
+		else
+			Debug.LogError("jumpSound nicht gesetzt!");
+		if(anim == null)
+		{
+			Debug.LogError("Animator not set");
+		}
+		else
+		{
+			anim.SetBool(hash.groundedBool,false);
+		}
+	}
+
+	[RPC]
+	public void SyncWallJump()
+	{
+		// Do WallJump
+		AudioSource.PlayClipAtPoint(wallJumpSound,transform.position,1);			//WallJump
+		Flip();																		//Charakter drehen
+		if(anim == null)
+		{
+			Debug.LogError("Animator not set");
+		}
+		else
+		{
+			anim.SetBool(hash.groundedBool,false);
+			anim.SetBool(hash.walledBool,false);
+		}
 	}
 	
 	public void StartJump() {

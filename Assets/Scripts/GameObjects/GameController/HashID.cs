@@ -36,6 +36,8 @@ public class HashID : MonoBehaviour {
 	/**
 	 * Platform PowerUpBlock
 	 **/
+	public int powerUpBlockReleaseTrigger;
+	public int powerUpBlockLoadedTrigger;
 	public int hasPowerUpBool;
 	
 	/**
@@ -80,6 +82,8 @@ public class HashID : MonoBehaviour {
 		 * Platform PowerUpBlock
 		 **/
 		hasPowerUpBool = Animator.StringToHash("hasPowerUp");
+		powerUpBlockReleaseTrigger = Animator.StringToHash("PowerUpBlockReleaseTrigger");
+		powerUpBlockLoadedTrigger = Animator.StringToHash("PowerUpBlockLoadedTrigger");
 		
 		/**
 		 * CountDown

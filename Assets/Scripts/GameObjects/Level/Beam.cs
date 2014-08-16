@@ -78,6 +78,9 @@ public class Beam : MonoBehaviour {
 //		GameObject original;
 		beamableObject = false;
 
+		//Simple Debug
+//		Debug.Log(this.ToString() + ": OnTriggerEnter2D() " + other.name);
+
 		if(other.gameObject.layer == layer.player)
 		{
 			beamableObject = true;

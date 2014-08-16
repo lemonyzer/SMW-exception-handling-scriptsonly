@@ -61,7 +61,7 @@ public class PlatformUserControlKeyboard : Photon.MonoBehaviour {
 		if(PhotonNetwork.player == realOwner.owner)
 		{
 			Keyboard();
-			character.MoveKeyboard(inputVelocity, inputJump);		// Transfer Input to Character
+//			character.MoveKeyboard(inputVelocity, inputJump);		// Transfer Input to Character
 		}
 	}
 

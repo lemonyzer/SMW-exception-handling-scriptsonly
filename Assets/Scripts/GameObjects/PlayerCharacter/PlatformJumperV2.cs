@@ -2,6 +2,7 @@
 using System.Collections;
 
 /**
+ * V3: optimized
  * V2: 
  * no extra Layer for each Player needed!!!!
  * no JumpSaveZone needed
@@ -34,7 +35,23 @@ public class PlatformJumperV2 : MonoBehaviour {
 		layer = gameController.GetComponent<Layer>();
 //		myPlatformCharacter = GetComponent<PlatformCharacter>();
 
-		bodyCollider = GetComponent<BoxCollider2D>();
+//		bodyCollider = GetComponent<BoxCollider2D>();
+
+		BoxCollider2D[] myBody = GetComponents<BoxCollider2D>();
+		if(myBody == null)
+			return;
+		foreach(BoxCollider2D coll in myBody)
+		{
+			if(coll.isTrigger)
+			{
+//				myBodyTrigger = coll;
+			}
+			else
+			{
+				bodyCollider = coll;
+			}
+		}
+
 		groundStopper = transform.FindChild(Tags.groundStopper).GetComponent<BoxCollider2D>();
 	}
 
@@ -63,22 +80,22 @@ public class PlatformJumperV2 : MonoBehaviour {
 		
 		playerBodyColliderBottomRightPos = new Vector2(transform.position.x + bodyCollider.size.x*0.5f + bodyCollider.center.x,
 		                                               transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Right
-		
-		playerBodyColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
-		                                              transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Left
+
+//		playerBodyColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider.size.x*0.5f + bodyCollider.center.x,
+//		                                              transform.position.y - bodyCollider.size.y*0.5f + bodyCollider.center.y);	// Collider Bottom Left
 
 //		playerGroundStopperColliderBottomLeftPos = new Vector2(transform.position.x - groundStopper.size.x*0.5f + groundStopper.center.x,
 //		                                              transform.position.y - groundStopper.size.y*0.5f + groundStopper.center.y);	// Collider Bottom Left
 
-		platformColliderFinderTopLeftPos = new Vector2(-groundStopper.size.x, groundStopper.size.y) + playerBodyColliderTopLeftPos;		// höhe (nach oben) und breite (nach links) verschieben
-		platformColliderFinderBottomRightPos = new Vector2(groundStopper.size.x,0) + playerBodyColliderBottomRightPos;				// breite (nach rechts) verschieben
+		platformColliderFinderTopLeftPos = playerBodyColliderTopLeftPos + new Vector2(-1,1);		// höhe (nach oben) und breite (nach links) verschieben
+		platformColliderFinderBottomRightPos = playerBodyColliderBottomRightPos + new Vector2(1,-1);				// breite (nach rechts) verschieben
 
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		JumpAblePlatformV2();
+		JumpAblePlatformV3();
 	}
 
 	void JumpAblePlatformV2()
@@ -116,6 +133,51 @@ public class PlatformJumperV2 : MonoBehaviour {
 			Physics2D.IgnoreCollision(bodyCollider, platformColliderBelow, false);
 			Physics2D.IgnoreCollision(groundStopper, platformColliderBelow, false);
 //			Debug.LogWarning(platformColliderAbove.name + " found");
+		}
+	}
+
+
+	void JumpAblePlatformV3()
+	{
+		/**
+		 * OverlapArea
+		 * __________
+		 * |		|
+		 * |		|
+		 * | *....*	|		<-- Character Collider Top
+		 * | |	  |	|
+		 * | |    | |
+		 * | *....*	|		<-- Character Collider Bottom
+		 * |		|
+		 * |________|
+		 * 
+		 * Sprungbewegung:
+		 * rigidbody.velocity.y > 0 	--> ignore collision
+		 *
+		 * Fallbewegung:
+		 * rigidbody.velocity.y <= 0	--> collision on!
+		 * 
+		 **/
+		
+		// Overlap Area in Collision with JumpOnPlatform, disable in Unity
+		
+		CalculateColliderEdges();
+		
+		Debug.DrawLine(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, Color.green);
+		
+		Collider2D platformCollider = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
+
+		bool ignore = false;
+		if(rigidbody2D.velocity.y > 0)
+			ignore = true;
+		else
+			ignore = false;
+
+		if(platformCollider != null)
+		{
+			Physics2D.IgnoreCollision(bodyCollider, platformCollider, ignore);
+			Physics2D.IgnoreCollision(groundStopper, platformCollider, ignore);
+			//			Debug.LogWarning(platformColliderAbove.name + " found");
 		}
 	}
 

@@ -109,7 +109,7 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 		if(PhotonNetwork.player == realOwner.owner)
 		{
 			AnalogStickAndButton();
-			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+			//character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character			<---- BUG, runs more often than fixed update!
 		}
 	}
 
@@ -118,6 +118,13 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 		if(PhotonNetwork.player == realOwner.owner)
 		{
 			photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed);
+
+//			// clients movement simulieren, sollte sich direkter anfühlen
+//			// movement nicht doppelt aufrufen
+//			if(!PhotonNetwork.isMasterClient)
+//			{
+//				character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+//			}
 		}
 	}
 
