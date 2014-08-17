@@ -58,8 +58,8 @@ public class ReSpawnScript : MonoBehaviour {
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = false;
-		// Body Trigger aktivieren, PowerUps einsammeln
-		myBodyTrigger.enabled = true;
+		// Body Trigger aktivieren, PowerUps einsammeln 			<<---- problem!!!! wird auch zum angriffserkennung (attack & hitarea) im ragemodus benutzt! 
+		myBodyTrigger.enabled = false;						
 		//					myCharacterCollider2D.enabled = false;
 		
 		// FeetCollider aktivieren (Gegenspieler nehmen Schaden)
@@ -86,11 +86,13 @@ public class ReSpawnScript : MonoBehaviour {
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
 
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
+
+		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = false;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
-		// Body Trigger aktivieren, PowerUps einsammeln
-		myBodyTrigger.enabled = true;
+		// Body Trigger aktivieren, PowerUps einsammeln 			<<---- problem!!!! wird auch zum angriffserkennung (attack & hitarea) im ragemodus benutzt! 
+		myBodyTrigger.enabled = false;
 		//					myCharacterCollider2D.enabled = false;
 		
 		// FeetCollider aktivieren (Gegenspieler nehmen Schaden)
@@ -116,6 +118,7 @@ public class ReSpawnScript : MonoBehaviour {
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,false);
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,false);
 
+		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
 //		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
@@ -188,8 +191,11 @@ public class ReSpawnScript : MonoBehaviour {
 		// neue Position halten
 		rigidbody2D.isKinematic = true;
 
-		// Random Spawn Position
-		SetSpawnPosition();
+		if(PhotonNetwork.isMasterClient)
+		{
+			// Random Spawn Position
+			SetSpawnPosition();
+		}
 
 		// Spawn Animation
 		anim.SetBool(hash.spawnBool, true);

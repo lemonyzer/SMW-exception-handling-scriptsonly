@@ -83,27 +83,32 @@ public class SendDamageTrigger : MonoBehaviour {
 
 						targetCharacterGameObject = targetHead.transform.parent.gameObject;
 
-
-
-						if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
+						if(!targetCharacterGameObject.GetComponent<PlatformCharacter>().isInRageModus)
 						{
-							// Angriff zählt nur wenn Gegenspieler nicht durch mich durchspringt
-							statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);			// Alternative: statsManager oder HealthController können auch SpawnProtection abfragen!
+							if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
+							{
+								// Angriff zählt nur wenn Gegenspieler nicht durch mich durchspringt
+								statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);			// Alternative: statsManager oder HealthController können auch SpawnProtection abfragen!
+							}
+							else
+							{
+								Debug.LogWarning(targetCharacterGameObject.name + " durchspringt " + myCharacterGameObject.name + ", feet-head trigger zählt nicht als angriff");
+								Debug.Log(myCharacterGameObject.name + " " + myCharacterGameObject.rigidbody2D.velocity.y + " < " + targetCharacterGameObject.rigidbody2D.velocity.y + " " + targetCharacterGameObject.name);
+							}
+							//targetCharacterGameObject.GetComponent<HealthController>().ApplyDamage(damageValue,true);
+
+							//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
+
+
+							/** 
+							 * SendMessage, Parameter vorher in Array packen!
+							 * head.SendMessage("ApplyDamage",damageValue,SendMessageOptions.DontRequireReceiver);	// BESSER ??!!!! 
+							 **/
 						}
 						else
 						{
-							Debug.LogWarning(targetCharacterGameObject.name + " durchspringt " + myCharacterGameObject.name + ", feet-head trigger zählt nicht als angriff");
-							Debug.Log(myCharacterGameObject.name + " " + myCharacterGameObject.rigidbody2D.velocity.y + " < " + targetCharacterGameObject.rigidbody2D.velocity.y + " " + targetCharacterGameObject.name);
+							Debug.LogWarning("anderer Spieler ist im RageModus und kann nicht angegriffen werden!");
 						}
-						//targetCharacterGameObject.GetComponent<HealthController>().ApplyDamage(damageValue,true);
-
-						//AudioSource.PlayClipAtPoint(deathSound,transform.position,1);								//wird zu oft ausgeführT!!!
-
-
-						/* SendMessage, Parameter vorher in Array packen!
-					 *  
-					 * head.SendMessage("ApplyDamage",damageValue,SendMessageOptions.DontRequireReceiver);	// BESSER ??!!!! 
-					 */
 					}
 					else
 					{

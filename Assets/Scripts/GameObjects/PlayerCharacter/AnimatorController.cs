@@ -67,7 +67,7 @@ public class AnimatorController : MonoBehaviour {
 		}
 		myFeetTrigger = transform.Find(Tags.feet).GetComponent<BoxCollider2D>();
 		myHeadTrigger = transform.Find(Tags.head).GetComponent<BoxCollider2D>();
-//		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
+		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
 	}
 
 	void Awake() {
@@ -254,7 +254,7 @@ public class AnimatorController : MonoBehaviour {
 
 	void DeadAnimationPhysics()
 	{
-		rigidbody2D.velocity = new Vector2(0f, 20f);
+		rigidbody2D.velocity = new Vector2(0f, 10f);
 	}
 
 	void GameOver() 

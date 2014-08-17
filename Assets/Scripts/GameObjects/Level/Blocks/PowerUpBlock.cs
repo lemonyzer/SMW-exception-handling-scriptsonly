@@ -55,13 +55,17 @@ public class PowerUpBlock : Photon.MonoBehaviour {
 			{
 				if(HeadTriggerUnderBlock(other))
 				{
-//					if(other.gameObject.transform.parent.rigidbody2D.velocity.y > 0f)			// nur zerstören wenn Spieler nach oben springt
-//					{
+					if(other.gameObject.transform.parent.rigidbody2D.velocity.y >= 0f)			// nur zerstören wenn Spieler nach oben springt
+					{
 						if(hasPowerUp)
 						{
 							photonView.RPC("ReleasingRandomPowerUp", PhotonTargets.All);
 						}
-//					}
+					}
+					else
+					{
+						Debug.LogError(this.ToString() + ": nicht gesprungen!");
+					}
 				}
 			}
 		}

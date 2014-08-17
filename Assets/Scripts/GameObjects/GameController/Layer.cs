@@ -21,8 +21,8 @@ public class Layer : MonoBehaviour {
 	public int head;
 
 	public int ground;
-	public int tagAble;
-	public int floor;
+//	public int tagAble;
+//	public int floor;
 	public int block;
 	public int jumpAblePlatform;
 	public int jumpAblePlatformSaveZone;
@@ -46,10 +46,10 @@ public class Layer : MonoBehaviour {
 	public const string enemyLayerName = "Enemy";
 
 	public const string groundLayerName = "Ground";
-	public const string tagAbleLayerName = "TagAble";
-	public const string floorLayerName = "Floor";
+//	public const string tagAbleLayerName = "TagAble";
+//	public const string floorLayerName = "Floor";
 	public const string blockLayerName = "Block";
-	public const string jumpAblePlatformLayerName = "JumpOnAblePlatform";
+	public const string jumpAblePlatformLayerName = "JumpOnPlatform";
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
 	
 	public const string powerUpLayerName = "PowerUp";
@@ -79,7 +79,7 @@ public class Layer : MonoBehaviour {
 //		enemy = LayerMask.NameToLayer(enemyLayerName);
 
 		ground = LayerMask.NameToLayer(groundLayerName);
-		tagAble = LayerMask.NameToLayer(tagAbleLayerName);
+//		tagAble = LayerMask.NameToLayer(tagAbleLayerName);
 //		floor = LayerMask.NameToLayer(floorLayerName);
 		block = LayerMask.NameToLayer(blockLayerName);
 		jumpAblePlatform = LayerMask.NameToLayer(jumpAblePlatformLayerName);

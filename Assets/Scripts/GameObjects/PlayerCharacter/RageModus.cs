@@ -7,6 +7,8 @@ public class RageModus : MonoBehaviour {
 	public bool isInRageModus = false;
 	private float oldMaxSpeed;
 
+	// Sound
+	public AudioClip invincibleAudioClip;
 	private GameObject invincibleSound;
 
 	Color[] rageAnimationColors;
@@ -138,6 +140,14 @@ public class RageModus : MonoBehaviour {
 			gameController.audio.Stop();
 			invincibleSound.audio.Play();
 		}
+
+		if(invincibleAudioClip != null)
+		{
+			gameController.audio.Stop();
+			this.audio.loop = true;
+			this.audio.clip = invincibleAudioClip;
+			this.audio.Play();
+		}
 	}
 
 	void stopSound()
@@ -147,14 +157,20 @@ public class RageModus : MonoBehaviour {
 			invincibleSound.audio.Stop();
 			gameController.audio.Play();
 		}
+		if(invincibleAudioClip != null)
+		{
+			this.audio.Stop();
+			gameController.audio.Play();
+		}
 	}
 
-	public void startRageModus()
+	[RPC]
+	public void StartRageModus()
 	{
 		oldMaxSpeed = myPlatformCharacter.getMaxSpeed();
 		rageMaxSpeed = oldMaxSpeed * 1.2f;
 		myPlatformCharacter.setMaxSpeed(rageMaxSpeed);
-		headCollider2D.enabled = false;
+//		headCollider2D.enabled = false;						// wird benötigt um blocks zu zerstören... SendDamageTrigger wird durch isInRageMode abgebrochen
 		feetCollider2D.enabled = false;
 
 		playSound();
@@ -195,7 +211,7 @@ public class RageModus : MonoBehaviour {
 
 		isInRageModus = false;
 		myPlatformCharacter.isInRageModus = false;
-		headCollider2D.enabled = true;
+//		headCollider2D.enabled = true;				// wurde nicht deaktiviert... // wird benötigt um blocks zu zerstören... SendDamageTrigger wird durch isInRageMode abgebrochen
 		feetCollider2D.enabled = true;
 		myPlatformCharacter.setMaxSpeed(oldMaxSpeed);
 //		bodyCollider2D.isTrigger = false;
@@ -246,54 +262,63 @@ public class RageModus : MonoBehaviour {
 	{
 		if(PhotonNetwork.isMasterClient)
 		{
-			if(other.gameObject.layer == layer.player)
-			{
-				statsManager.InvincibleAttack(this.gameObject, other.gameObject);
-			}
-			else if(other.gameObject.layer == layer.head)
-			{
-				statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
-			}
-			else if(other.gameObject.layer == layer.feet)
-			{
-				statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
-			}
-			else
-			{
-				
-			}
-		}
-	}
-
-	void OnCollisionEnter2D (Collision2D collision)
-	{
-		// Network.peerType == PeerState.Disconnected
-		if(Network.isServer || networkView == null)
-		{
 			if(isInRageModus)
 			{
-				if(this.gameObject.layer != collision.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
+				if(other.gameObject.layer == layer.player)
 				{
-					bool enemyObject = false;
-					if(collision.gameObject.layer == layer.player)
+					if(!other.gameObject.GetComponent<RageModus>().isInRageModus)
 					{
-						enemyObject = true;
+						// nur wenn anderer Spieler nicht auch in RageModus ist!
+						statsManager.InvincibleAttack(this.gameObject, other.gameObject);
 					}
-					//				else if(other.gameObject.layer == layer.powerUp)
-					//				{
-					//					enemyObject = true;
-					//				}
+				}
+				else if(other.gameObject.layer == layer.head)
+				{
+					// spieler in spawnprotection wird auch angegriffen!!!!
+					//statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
+				}
+				else if(other.gameObject.layer == layer.feet)
+				{
+					// spieler in spawnprotection wird auch angegriffen!!!!
+					//statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
+				}
+				else
+				{
 					
-					if(enemyObject)
-					{
-						//networkView.RPC
-						//other.gameObject.GetComponent<NetworkView>().RPC(
-						statsManager.InvincibleAttack(this.gameObject, collision.gameObject);			// Layerfilter -> wir sind auf PlatformCharacter ebene (nicht im child feet/head)
-						//other.gameObject.GetComponent<HealthController>().ApplyDamage(this.gameObject, 1 ,true);
-					}
 				}
 			}
 		}
 	}
+
+//	void OnCollisionEnter2D (Collision2D collision)
+//	{
+//		// Network.peerType == PeerState.Disconnected
+//		if(Network.isServer || networkView == null)
+//		{
+//			if(isInRageModus)
+//			{
+//				if(this.gameObject.layer != collision.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
+//				{
+//					bool enemyObject = false;
+//					if(collision.gameObject.layer == layer.player)
+//					{
+//						enemyObject = true;
+//					}
+//					//				else if(other.gameObject.layer == layer.powerUp)
+//					//				{
+//					//					enemyObject = true;
+//					//				}
+//					
+//					if(enemyObject)
+//					{
+//						//networkView.RPC
+//						//other.gameObject.GetComponent<NetworkView>().RPC(
+//						statsManager.InvincibleAttack(this.gameObject, collision.gameObject);			// Layerfilter -> wir sind auf PlatformCharacter ebene (nicht im child feet/head)
+//						//other.gameObject.GetComponent<HealthController>().ApplyDamage(this.gameObject, 1 ,true);
+//					}
+//				}
+//			}
+//		}
+//	}
 
 }

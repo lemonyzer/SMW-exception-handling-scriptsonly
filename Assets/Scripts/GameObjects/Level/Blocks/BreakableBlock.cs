@@ -42,10 +42,15 @@ public class BreakableBlock : Photon.MonoBehaviour {
 				Debug.Log("Parent: " + other.gameObject.transform.parent.name);
 				if(HeadTriggerUnderBlock(other))
 				{
-					if(other.gameObject.transform.parent.rigidbody2D.velocity.y > 0f)			// nur zerstören wenn Spieler nach oben springt
+					// velocity funktioniert nicht, da Player Collider mit BlockCollider collidiert und velocity = 0 setzt!
+					if(other.gameObject.transform.parent.rigidbody2D.velocity.y >= 0f)			// nur zerstören wenn Spieler nach oben springt
 					{
-						other.gameObject.transform.parent.rigidbody2D.velocity = Vector2.zero;	// collision simulieren (player stoppt bei trigger erkennung kurz)
+//						other.gameObject.transform.parent.rigidbody2D.velocity = Vector2.zero;	// collision simulieren (player stoppt bei trigger erkennung kurz)
 						photonView.RPC("Breaking", PhotonTargets.AllBuffered);				// all buffered, level is changeing!!
+					}
+					else
+					{
+						Debug.LogError(this.ToString() + ": nicht gesprungen!");
 					}
 				}
 			}
