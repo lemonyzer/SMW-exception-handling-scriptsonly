@@ -133,9 +133,10 @@ public class AnimatorController : MonoBehaviour {
 		SetCharacterColliderHeadJumped();
 
 		// zusätzlich durch Boden fallen
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.block,true);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.block,true);
+//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,true);
+		myGroundStopperCollider.enabled = false;
 
 
 	}

@@ -208,7 +208,7 @@ public class StatsManager : Photon.MonoBehaviour {
 			
 			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
 			
-			victimsAnimationController.HeadJumpAnimation();
+			victimsAnimationController.InvincibleAttackAnimation();
 			
 			AddKill(playerAttacker, playerVictim);
         }

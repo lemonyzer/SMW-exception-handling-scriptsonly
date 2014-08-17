@@ -79,7 +79,7 @@ public class PlayerDictionary : ScriptableObject {
 		}
 		else
 		{
-			Debug.LogError(photonPlayer.name + " has no Player set in Dictionary!!!");
+//			Debug.LogError(photonPlayer.name + " has no Player set in Dictionary!!!");
 		}
 		return null;
 	}

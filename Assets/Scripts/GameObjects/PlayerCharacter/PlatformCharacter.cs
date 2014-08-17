@@ -491,4 +491,56 @@ public class PlatformCharacter : MonoBehaviour {
 		gameObject.rigidbody2D.isKinematic = true;
 		gameObject.rigidbody2D.WakeUp();
 	}
+
+	void OnTriggerEnter2D(Collider2D other)
+	{
+		if(other.gameObject.layer == layer.powerUp)
+		{
+			PowerUp currentPowerUp = other.gameObject.GetComponent<PowerUp>();
+			if(currentPowerUp == null)
+			{
+				Debug.LogError("PowerUp has no PowerUp Script Component! Identification with Tag?");
+			}
+			else
+			{
+				Debug.Log(this.ToString() +": TriggerEnter2D with " + currentPowerUp.powerUpName + " ("+ currentPowerUp.name + ")" );
+				if(currentPowerUp.powerUpName == "Star")
+				{
+					GetComponent<RageModus>().startRageModus();
+				}
+				else if(currentPowerUp.powerUpName == "FireFlower")
+				{
+
+				}
+				else if(currentPowerUp.powerUpName == "BoBomb")
+				{
+
+				}
+				else if(currentPowerUp.powerUpName == "1up")
+				{
+					
+				}
+				else if(currentPowerUp.powerUpName == "2up")
+				{
+					
+				}
+				else if(currentPowerUp.powerUpName == "3up")
+				{
+					
+				}
+				else if(currentPowerUp.powerUpName == "5up")
+				{
+					
+				}
+				else
+				{
+					Debug.LogWarning("unknown PowerUp found! " + currentPowerUp.powerUpName);
+				}
+				if(PhotonNetwork.isMasterClient)
+				{
+					PhotonNetwork.Destroy(other.gameObject);
+				}
+			}
+		}
+	}
 }

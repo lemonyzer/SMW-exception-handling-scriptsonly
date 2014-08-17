@@ -52,8 +52,8 @@ public class Level : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		Debug.Log("Cam Position: " + Camera.main.transform.position);
-		Debug.Log("Renderer Bounds: " + bgSpriteRenderer.bounds);
-		Debug.Log("Sprite Bounds: " + bgSpriteRenderer.sprite.bounds);
+		Debug.Log(this.ToString() +": Cam Position: " + Camera.main.transform.position);
+		Debug.Log(this.ToString() +": Renderer Bounds: " + bgSpriteRenderer.bounds);
+		Debug.Log(this.ToString() +": Sprite Bounds: " + bgSpriteRenderer.sprite.bounds);
 	}
 }

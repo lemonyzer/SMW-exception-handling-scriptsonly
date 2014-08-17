@@ -46,23 +46,15 @@ public class ReSpawnScript : MonoBehaviour {
 		}
 		myFeetTrigger = transform.Find(Tags.feet).GetComponent<BoxCollider2D>();
 		myHeadTrigger = transform.Find(Tags.head).GetComponent<BoxCollider2D>();
-//		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
+		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
 	}
 
 	void SetSpawnAnimationCharacterCollider()
 	{
 		rigidbody2D.isKinematic = true;
 		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
 
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,true);
-
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.floor,false);				// bad!!! 
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.block,false);
-		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.jumpAblePlatform,false);
+		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
 		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = false;

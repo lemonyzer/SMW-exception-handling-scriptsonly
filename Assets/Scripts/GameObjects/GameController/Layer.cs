@@ -59,7 +59,7 @@ public class Layer : MonoBehaviour {
 	
 	void Awake()
 	{
-		Debug.LogWarning("Layer: Awake() - init public layer integers, scripts layer instantiation have to be AFTER this initialisation, NOT IN AWAKE!!!" );
+		Debug.LogWarning(this.ToString() + ": Awake() - init public layer integers, scripts layer instantiation have to be AFTER this initialisation, NOT IN AWAKE!!!" );
 		player = LayerMask.NameToLayer(playerLayerName);
 //		player1 = LayerMask.NameToLayer(player1LayerName);
 //		player2 = LayerMask.NameToLayer(player2LayerName);
@@ -98,14 +98,14 @@ public class Layer : MonoBehaviour {
 //		fader = LayerMask.NameToLayer(faderLayerName);
 	}
 
-	void OnLevelWasLoaded()
-	{
-		Debug.LogWarning("Layer: OnLevelWasLoaded()" );
-	}
-
-	void Start()
-	{
-		Debug.LogWarning("Layer: Start()" );
-	}
+//	void OnLevelWasLoaded()
+//	{
+//		Debug.LogWarning(this.ToString() + ": OnLevelWasLoaded()" );
+//	}
+//
+//	void Start()
+//	{
+//		Debug.LogWarning(this.ToString() + ": Start()" );
+//	}
 	
 }

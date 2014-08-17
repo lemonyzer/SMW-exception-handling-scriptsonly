@@ -92,7 +92,12 @@ public class RageModus : MonoBehaviour {
 
 	void Awake()
 	{
-		invincibleSound = GameObject.FindGameObjectWithTag(Tags.invincibleSound);
+		try {
+			invincibleSound = GameObject.FindGameObjectWithTag(Tags.invincibleSound);
+		}catch(System.Exception e)
+		{
+			Debug.LogError( "GameObject invincibleSound nicht in Scene gefunden!!!" );
+		}
 		InitRageAnimation();
 		mySpriteRenderer = GetComponent<SpriteRenderer>();
 		myPlatformCharacter = GetComponent<PlatformCharacter>();
@@ -237,6 +242,29 @@ public class RageModus : MonoBehaviour {
 //		}
 //	}
 
+	void OnTriggerEnter2D (Collider2D other)
+	{
+		if(PhotonNetwork.isMasterClient)
+		{
+			if(other.gameObject.layer == layer.player)
+			{
+				statsManager.InvincibleAttack(this.gameObject, other.gameObject);
+			}
+			else if(other.gameObject.layer == layer.head)
+			{
+				statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
+			}
+			else if(other.gameObject.layer == layer.feet)
+			{
+				statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
+			}
+			else
+			{
+				
+			}
+		}
+	}
+
 	void OnCollisionEnter2D (Collision2D collision)
 	{
 		// Network.peerType == PeerState.Disconnected
@@ -251,22 +279,6 @@ public class RageModus : MonoBehaviour {
 					{
 						enemyObject = true;
 					}
-//					if(collision.gameObject.layer == layer.player1)
-//					{
-//						enemyObject = true;
-//					}
-//					else if(collision.gameObject.layer == layer.player2)
-//					{
-//						enemyObject = true;
-//					}
-//					else if(collision.gameObject.layer == layer.player3)
-//					{
-//						enemyObject = true;
-//					}
-//					else if(collision.gameObject.layer == layer.player4)
-//					{
-//						enemyObject = true;
-//					}
 					//				else if(other.gameObject.layer == layer.powerUp)
 					//				{
 					//					enemyObject = true;

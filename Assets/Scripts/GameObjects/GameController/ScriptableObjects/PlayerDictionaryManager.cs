@@ -38,15 +38,15 @@ public class PlayerDictionaryManager : MonoBehaviour {
 		}
 	}
 
-	void OnLevelWasLoaded()
-	{
-		Debug.LogWarning(this.ToString() + ": OnLevelWasLoaded()");
-	}
-
-	void Start()
-	{
-		Debug.LogWarning(this.ToString() + ": Start()");
-	}
+//	void OnLevelWasLoaded()
+//	{
+//		Debug.LogWarning(this.ToString() + ": OnLevelWasLoaded()");
+//	}
+//
+//	void Start()
+//	{
+//		Debug.LogWarning(this.ToString() + ": Start()");
+//	}
 
 	/**
 	 * Delete selection made previously ( all characters can be clicked )

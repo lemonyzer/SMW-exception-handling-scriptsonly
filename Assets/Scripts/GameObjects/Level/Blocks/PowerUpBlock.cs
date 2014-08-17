@@ -3,20 +3,22 @@ using System.Collections;
 
 public class PowerUpBlock : Photon.MonoBehaviour {
 
-	public string targetTag = "Head";
-	private float powerUpRespawnTime = 0.1f;
+//	public string targetTag = "Head";
+	private float powerUpRespawnTime = 0.5f;
 	public bool hasPowerUp = true;
 
 	public AudioClip powerUpReleaseSound;
 	public AudioClip powerUpReloadedSound;
 
 	public GameObject[] powerups;
-	public float powerUpStayTime = 8.0f;
+//	public float powerUpStayTime = 8.0f;
 
 	private Animator anim;
 	GameObject gameController;
 	private HashID hash;
 	private Layer layer;
+
+	private GameObject powerupClone;
 
 
 	// Use this for initialization
@@ -120,18 +122,36 @@ public class PowerUpBlock : Photon.MonoBehaviour {
 			//Vector3 offset = new Vector3(.5f,.5f,0.0f);
 			Vector3 offset = new Vector3(0,1,0);
 			int i = Random.Range(0, powerups.Length-1);
-			GameObject powerupClone = (GameObject)Instantiate(powerups[i],transform.position + offset ,Quaternion.identity);
+			powerupClone = (GameObject)PhotonNetwork.Instantiate( powerups[i].name, transform.position + offset, Quaternion.identity,0 );
+			//GameObject powerupClone = (GameObject)Instantiate(powerups[i],transform.position + offset ,Quaternion.identity);
 			if(powerupClone.rigidbody2D != null)
 			{
-				powerupClone.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
+				int direction = RandomSign();
+				powerupClone.rigidbody2D.velocity = new Vector2(direction*10f,8f);
+				//powerupClone.rigidbody2D.AddForce(new Vector2(-250.0f,350.0f));
 			}
 			else
 			{
 				
 			}
-			Destroy(powerupClone,powerUpStayTime);
+			powerupClone.GetComponent<PowerUp>().StartDestroyTimer();
+//			StartCoroutine(DestroyPowerUp());	// BAD Programming!! powerupClone loses referenz if new PowerUp Spawns...
+//			Destroy(powerupClone,powerUpStayTime);
 		}
 	}
+
+	int RandomSign()
+	{
+		return Random.value < .5? 1 : -1;
+	}
+
+
+//	IEnumerator DestroyPowerUp()
+//	{
+//		yield return new WaitForSeconds(powerUpStayTime);
+//		if(powerupClone != null)											
+//			PhotonNetwork.Destroy (powerupClone);					// BAD Programming!! powerupClone loses referenz if new PowerUp Spawns...
+//	}
 
 	[RPC]
 	void BlockReloaded()

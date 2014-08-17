@@ -282,16 +282,16 @@ public class PhotonRoomManagerAuthorative : Photon.MonoBehaviour {
 
 		if(PhotonNetwork.isMessageQueueRunning)
 		{
-			Debug.LogError("MessageQueue is running, NOT ALLOWED AT THIS MOMENT!!!");
+			Debug.LogError(this.ToString() + ": (Awake) MessageQueue is running, NOT ALLOWED AT THIS MOMENT!!!");
 		}
 		else
 		{
-			Debug.Log("MessageQueue is queuing!!!");
+			Debug.Log(this.ToString() + ": (Awake) MessageQueue is queuing!!!");
 		}
 
 		// wichtig, vor kommunications beginn alten MasterClient = aktueller Master Client setzen.
 		oldMasterClient = PhotonNetwork.masterClient;
-		Debug.Log("Awake: oldMasterClient = " + oldMasterClient.name);
+		Debug.Log(this.ToString() + ": (Awake) oldMasterClient = " + oldMasterClient.name);
 
 		// Start Countdown Animation 3,2,1 
 		anim = GetComponent<Animator>();
