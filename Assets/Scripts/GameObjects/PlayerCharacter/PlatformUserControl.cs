@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
+public class PlatformUserControl : Photon.MonoBehaviour {
 
 	private PlatformCharacter character;
 	private RealOwner realOwner;
@@ -109,31 +109,65 @@ public class PlatformUserControlAnalogStickAndButton : Photon.MonoBehaviour {
 		if(PhotonNetwork.player == realOwner.owner)
 		{
 			AnalogStickAndButton();
-			//character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character			<---- BUG, runs more often than fixed update!
+			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character			<---- BUG, runs more often than fixed update!
 		}
 	}
 
-	void FixedUpdate()
-	{
-		if(PhotonNetwork.player == realOwner.owner)
-		{
-			photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed);
+//	void FixedUpdate()
+//	{
+//		if(PhotonNetwork.player == realOwner.owner)
+//		{
+//			//photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed);
+//
+////			// clients movement simulieren, sollte sich direkter anfühlen
+////			// movement nicht doppelt aufrufen
+////			if(!PhotonNetwork.isMasterClient)
+////			{
+//			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
+//			Debug.LogWarning("Old Position: " + transform.position);
+//			character.FixedMove();	// problem... (new position?)
+//			Debug.LogWarning("New Position: " + transform.position);
+//			//
+//
+//			photonView.RPC("ProcessInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed, transform.position);
+////			}
+//		}
+//	}
 
-//			// clients movement simulieren, sollte sich direkter anfühlen
-//			// movement nicht doppelt aufrufen
-//			if(!PhotonNetwork.isMasterClient)
-//			{
-//				character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
-//			}
-		}
-	}
-
-	[RPC]
-	void SendMovementInput(float inputX, bool inputJump)
-	{
-		//Called on the server
-		character.MoveTouch(inputX, inputJump);
-	}
+//	[RPC]
+//	void SendMovementInput(float inputX, bool inputJump)
+//	{
+//		//Called on the server
+//		character.MoveTouch(inputX, inputJump);
+//	}
+//
+//	[RPC]
+//	void ProcessInput(float recvedInputX, bool recvedInputJump, Vector3 recvedPosition, PhotonMessageInfo info)
+//	{
+//
+////		// momentan gehören alle PhotonViews dem MasterClient!
+////		if(photonView.isMine)
+////		{
+////			return;
+////		}
+//
+//		if(PhotonNetwork.isMasterClient)
+//		{
+//			// auf Master Client darf es nicht ausgeführt werden (doppelte Bewegung!)
+//			return;
+//		}
+//
+//		// execute input
+//		character.MoveTouch(recvedInputX, recvedInputJump);
+//		// move
+//		character.FixedMove();
+//		//compaire new position with recved position
+//
+//		if(Vector3.Distance(transform.position, recvedPosition) > 0.1f)
+//		{
+//			photonView.RPC("CorrectState", info.sender, transform.position);
+//		}
+//	}
 
 
 	// In Game Scene jetzt!

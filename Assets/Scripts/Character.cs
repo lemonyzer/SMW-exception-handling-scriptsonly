@@ -73,7 +73,7 @@ public class Character : IComparable<Character>
 
 		characterScript = instantiatedPrefab.GetComponent<PlatformCharacter>();
 //		characterAIScript = instantiatedPrefab.GetComponent<PlatformAIControl>();
-		characterInputControlsScript = instantiatedPrefab.GetComponent<PlatformUserControlAnalogStickAndButton>();
+		characterInputControlsScript = instantiatedPrefab.GetComponent<PlatformUserControl>();
 		bodyCollider2D = instantiatedPrefab.GetComponent<Collider2D>();
 	}
 

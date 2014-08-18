@@ -66,8 +66,8 @@ public class PlatformCharacter : MonoBehaviour {
 	/// The user input.
 	/// </summary>
 	/// 
-	private float inputVelocity = 0f;
-	private bool inputJump = false;	
+	public float inputVelocity = 0f;
+	public bool inputJump = false;	
 	private float inputPCVelocity = 0f;
 	private bool inputPCJump = false;							// stores Input Key 
 	private float inputTouchVelocity = 0f;
@@ -186,7 +186,8 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			CheckPosition();
 			SetAnim();
-			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
+			// wird manuel aufgerufen!
+//			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
 		}
 	}
 
@@ -243,8 +244,19 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+	public void Simulate()
+	{
+		if(inputJump)
+		{
+			transform.Translate( new Vector3( inputVelocity, 1f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+		}
+		else
+		{
+			transform.Translate( new Vector3( inputVelocity, 0f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+		}
+	}
 
-	void FixedMove()
+	public void FixedMove()
 	{
 
 		/**
