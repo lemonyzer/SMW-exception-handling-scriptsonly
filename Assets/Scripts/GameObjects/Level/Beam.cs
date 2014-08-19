@@ -64,8 +64,9 @@ public class Beam : MonoBehaviour {
 		backgroundWidth = backgroundSpriteRenderer.bounds.size.x;
 //		leftBeamZoneX = backgroundCenterPositionX - (backgroundWidth * 0.5f) + saveBeamOffsetX;	// + !!!
 //		rightBeamZoneX = backgroundCenterPositionX + (backgroundWidth * 0.5f) - saveBeamOffsetX;	// - !!!
-		leftBeamZoneX = beamCollider[0].center.x + beamCollider[0].size.x*0.5f + saveBeamOffsetX;
-		rightBeamZoneX = beamCollider[1].center.x - beamCollider[0].size.x*0.5f - saveBeamOffsetX;
+		//transform position fehlt
+		leftBeamZoneX = transform.position.x + beamCollider[0].center.x + beamCollider[0].size.x*0.5f + saveBeamOffsetX;
+		rightBeamZoneX = transform.position.x + beamCollider[1].center.x - beamCollider[0].size.x*0.5f - saveBeamOffsetX;
 //		Debug.Log(backgroundSpriteRenderer.bounds);
 //		Debug.Log(leftBeamZoneX);
 //		Debug.Log(rightBeamZoneX);

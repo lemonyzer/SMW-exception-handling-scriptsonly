@@ -154,7 +154,7 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
-		if(PhotonNetwork.player == realOwner.owner)
+		if(!PhotonNetwork.connected || PhotonNetwork.player == realOwner.owner)
 		{
 			ApplicationPlatformInputCheck();		//
 			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)

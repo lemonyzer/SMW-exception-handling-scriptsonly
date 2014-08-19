@@ -196,6 +196,10 @@ public class PlatformCharacter : MonoBehaviour {
 			SetAnim();
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
+			if(!PhotonNetwork.connected)
+			{
+				Simulate();
+			}
 		}
 	}
 
@@ -252,15 +256,47 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+	float gravity = 8;
+	public Vector3 moveDirection = Vector3.zero;
+	float jumpPower = 6;
 	public void Simulate()
 	{
-		if(inputScript.inputJump)
+		CheckPosition();
+		SimulateAnimation();
+		// Horizontal Movement
+		moveDirection.x = inputScript.inputHorizontal * maxSpeed;
+
+		// Vertical Movement
+		if(grounded)
 		{
-			transform.Translate( new Vector3( inputScript.inputHorizontal, 1f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+			moveDirection.y = 0;
+			if(inputScript.inputJump)
+			{
+				SyncJump();
+				moveDirection.y = jumpPower;
+			}
 		}
 		else
 		{
-			transform.Translate( new Vector3( inputScript.inputHorizontal, 0f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+
+			moveDirection.y -= gravity * Time.fixedDeltaTime;
+		}
+
+		transform.Translate( moveDirection * Time.fixedDeltaTime );
+	}
+	void SimulateAnimation()
+	{
+		if(inputScript.inputHorizontal != 0f)
+		{
+			anim.SetFloat(hash.hSpeedFloat, inputScript.inputHorizontal);
+			if(facingRight && inputScript.inputHorizontal < 0)
+			{
+				Flip ();
+			}
+			else if( !facingRight  && inputScript.inputHorizontal > 0)
+			{
+				Flip ();
+			}
 		}
 	}
 
