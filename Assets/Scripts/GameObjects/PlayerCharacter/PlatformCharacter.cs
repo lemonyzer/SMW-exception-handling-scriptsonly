@@ -8,7 +8,7 @@ public class PlatformCharacter : MonoBehaviour {
 	private Vector3 readNetworkPos;
 	// whether this paddle can accept player input
 //	public bool AcceptsInput = true;
-	public RealOwner realOwner;
+	public RealOwner ownerScript;
 //	public float gravity=10;
 
 	public PhotonView myPhotonView;
@@ -62,12 +62,18 @@ public class PlatformCharacter : MonoBehaviour {
 	private float maxSpeed = 8.0f;							// max horizontal Speed
 	private Vector2 jumpSpeed = new Vector2(8.0F, 8.0F);	// jump Force : wall jump, jump
 
+
+	/**
+	 * Controls Input
+	 **/
+	PlatformUserControl inputScript;
+
 	/// <summary>
 	/// The user input.
 	/// </summary>
 	/// 
-	public float inputVelocity = 0f;
-	public bool inputJump = false;	
+	private float inputVelocity = 0f;
+	private bool inputJump = false;	
 	private float inputPCVelocity = 0f;
 	private bool inputPCJump = false;							// stores Input Key 
 	private float inputTouchVelocity = 0f;
@@ -117,6 +123,8 @@ public class PlatformCharacter : MonoBehaviour {
 	{
 		myPhotonView = GetComponent<PhotonView>();
 
+		inputScript = GetComponent<PlatformUserControl>();
+
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		bodyCollider2D = GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
@@ -139,7 +147,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Start() {
 		anim = GetComponent<Animator>();
-		realOwner = GetComponent<RealOwner>();
+		ownerScript = GetComponent<RealOwner>();
 //		LayerMasks();
 
 		// if this is our paddle, it accepts input
@@ -178,8 +186,8 @@ public class PlatformCharacter : MonoBehaviour {
 		if(isDead)
 		{
 			rigidbody2D.velocity = new Vector2(0f,rigidbody2D.velocity.y);
-			inputJump = false;
-			inputVelocity = 0f;
+//			inputJump = false;
+//			inputVelocity = 0f;
 			isBouncing = false;
 		}
 		else
@@ -246,13 +254,13 @@ public class PlatformCharacter : MonoBehaviour {
 
 	public void Simulate()
 	{
-		if(inputJump)
+		if(inputScript.inputJump)
 		{
-			transform.Translate( new Vector3( inputVelocity, 1f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+			transform.Translate( new Vector3( inputScript.inputHorizontal, 1f, 0f ) * maxSpeed * Time.fixedDeltaTime );
 		}
 		else
 		{
-			transform.Translate( new Vector3( inputVelocity, 0f, 0f ) * maxSpeed * Time.fixedDeltaTime );
+			transform.Translate( new Vector3( inputScript.inputHorizontal, 0f, 0f ) * maxSpeed * Time.fixedDeltaTime );
 		}
 	}
 

@@ -9,7 +9,7 @@ public class RealOwner : MonoBehaviour {
 	void Awake()
 	{
 		this.enabled = false;
-		characterControls = GetComponent<PlatformUserControlAnalogStickAndButton>();
+		characterControls = GetComponent<PlatformUserControl>();
 	}
 
 	[RPC]

@@ -1,41 +1,69 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlatformUserControl : Photon.MonoBehaviour {
+/**
+ *  Ein GameObject (Tag: UserControls) mit diesem UserControlScript in JEDER Scene
+ *  
+ *  Vorteil:
+ *  Mehrere GameObjects benötigen nur ein AnalogStick  
+ *  BackButton funktioniert überall und muss nur einmal geschrieben werden
+ *  GUI elemente müssen nicht destroyed werden, nur deaktiviert wenn Character wechsel/entfernt  
+ *   
+ *  Nachteil:
+ *  FindGameObjectWithTag aufruf in Awake()    
+ *  Brotgrümel erzeugen
+ *  oder Scenenamen abhängige funktion 
+ *
+ **/    
 
-	private PlatformCharacter character;
+public class PlatformUserControl : Photon.MonoBehaviour {
+	
+	// check who is the owner of the current character
+	// allow input if local photonnetwork.player == realOwner.owner
 	private RealOwner realOwner;
 	
-	/**
-	 * Debugging GUI Element
-	 **/
-	public GUIText debugging;
-	private string debugmsg="";
-
-	/**
-	 * Mobile: Android / iOs
+	/** 
+	 * Combined Input
 	 **/
 	
-		/**
-		 * Input Flags (Jump Button)
-		 **/
-//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
+	//	[System.NonSerialized]
+	public float inputHorizontal = 0f;
+	
+	//	[System.NonSerialized]
+	public float inputVertical = 0f;
+	
+	//	[System.NonSerialized]
+	public bool inputJump = false;
+
+	public bool keyPressed = true;
+	
+	/**
+	* Input Touch
+	**/    
+	
+	private float inputTouchHorizontal = 0f;
+	private float inputTouchVertical = 0f;
+	private bool inputTouchJump = false;
+	
+	/**
+	 * Input Flags (Jump Button)
+	 **/
+	//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
 	int buttonTapCount=0;			// tap count current jump touch (right screen)
 	bool buttonIsPressed = false;	// flag if player presses jump 		
 	bool buttonIsTapped = false;	// flag if player presses jump again		
 	
-		/**
-		 * Input Flags (Analog Stick)
-		 **/
-//	Touch analogStick;
+	/**
+	 * Input Flags (Analog Stick)
+	 **/
+	//	Touch analogStick;
 	int analogStickTouchID=-1;
 	bool analogStickTouchBegan = false;
 	bool analogStickIsStillPressed = false;
 	
 	float touchBeganPositionX;
 	float touchBeganPositionY;
-	float deltaX=0;
-	float deltaY=0;
+	
 	
 	public GUITexture prefabAnalogStickTexture;
 	public GUITexture prefabStickTexture;
@@ -48,17 +76,22 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 	
 	float textureSizeWithSaveZoneX;
 	float textureSizeWithSaveZoneY;
-
+	
+	/**
+	* Input Keyboard
+	**/
+	private float inputKeyboardHorizontal = 0f;
+	private float inputKeyboardVertical = 0f;
+	private bool inputKeyboardJump = false;                    
+	
 	void Awake()
 	{
-		ApplicationPlatformCheck();		// Touchfunction only on mobile devices
+		realOwner = GetComponent<RealOwner>();
 	}
-
+	
 	// Use this for initialization
 	void Start() {
-		character = GetComponent<PlatformCharacter>();
-		realOwner = GetComponent<RealOwner>();
-
+		
 		analogStickTexture = (GUITexture) Instantiate(prefabAnalogStickTexture);		// needed? pre-instantiete in hierachie?!
 		stickTexture = (GUITexture) Instantiate(prefabStickTexture);					// needed? pre-instantiete in hierachie?!
 		analogStickTextureWidth = analogStickTexture.pixelInset.width;
@@ -75,140 +108,114 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 		                                   0,
 		                                   0);
 	}
-
-	void ApplicationPlatformCheck()
+	
+	void ApplicationPlatformInputCheck()
 	{
 		/**
-		 * Android
+		 * not on Mobile Devices (Android / IOs)
 		 **/
-		if (Application.platform == RuntimePlatform.Android)
+		if (Application.platform == RuntimePlatform.WindowsEditor)
 		{
-			
-		}
-		else if (Application.platform == RuntimePlatform.WindowsEditor)
-		{
-			
+			Keyboard();
+			Touch();
 		}
 		else if (Application.platform == RuntimePlatform.OSXEditor)
 		{
-			
+			Keyboard();
+			Touch();
 		}
-		else if (Application.platform == RuntimePlatform.WindowsEditor)
+		else if (Application.platform == RuntimePlatform.WindowsPlayer)
 		{
-			
+			Keyboard();
+			Touch();			
+		}
+		else if (Application.platform == RuntimePlatform.WindowsWebPlayer)
+		{
+			Keyboard();	
+			Touch();		
+		}
+		else if (Application.platform == RuntimePlatform.Android)
+		{
+			//Keyboard();   // nur bei angeschlossesner USB/Bluetooth Tastatur
+			Touch();			
+		}
+		else if (Application.platform == RuntimePlatform.IPhonePlayer)
+		{
+			Touch();			
 		}
 		else
 		{
+			Keyboard();
+			Touch();
 			Debug.LogWarning(this.name + ": disabled!!!");
-			this.enabled = false;		// disable this script
 		}
 	}
-
+	
 	// Update is called once per frame
 	void Update() {
+		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
 		if(PhotonNetwork.player == realOwner.owner)
 		{
-			AnalogStickAndButton();
-			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character			<---- BUG, runs more often than fixed update!
+			ApplicationPlatformInputCheck();		//
+			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)
+			// dannach stehen die Eingabedaten in inputHorizontal und inputJump
+		}
+		else
+		{
+			// Update darf input Variablen nicht überschreiben, da NetworkedPlayer diese ebenfals verwendet
+			this.enabled = false;
 		}
 	}
-
-//	void FixedUpdate()
-//	{
-//		if(PhotonNetwork.player == realOwner.owner)
-//		{
-//			//photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed);
-//
-////			// clients movement simulieren, sollte sich direkter anfühlen
-////			// movement nicht doppelt aufrufen
-////			if(!PhotonNetwork.isMasterClient)
-////			{
-//			character.MoveTouch(deltaX, buttonIsPressed);		// Transfer Input to Character
-//			Debug.LogWarning("Old Position: " + transform.position);
-//			character.FixedMove();	// problem... (new position?)
-//			Debug.LogWarning("New Position: " + transform.position);
-//			//
-//
-//			photonView.RPC("ProcessInput", PhotonTargets.MasterClient, deltaX, buttonIsPressed, transform.position);
-////			}
-//		}
-//	}
-
-//	[RPC]
-//	void SendMovementInput(float inputX, bool inputJump)
-//	{
-//		//Called on the server
-//		character.MoveTouch(inputX, inputJump);
-//	}
-//
-//	[RPC]
-//	void ProcessInput(float recvedInputX, bool recvedInputJump, Vector3 recvedPosition, PhotonMessageInfo info)
-//	{
-//
-////		// momentan gehören alle PhotonViews dem MasterClient!
-////		if(photonView.isMine)
-////		{
-////			return;
-////		}
-//
-//		if(PhotonNetwork.isMasterClient)
-//		{
-//			// auf Master Client darf es nicht ausgeführt werden (doppelte Bewegung!)
-//			return;
-//		}
-//
-//		// execute input
-//		character.MoveTouch(recvedInputX, recvedInputJump);
-//		// move
-//		character.FixedMove();
-//		//compaire new position with recved position
-//
-//		if(Vector3.Distance(transform.position, recvedPosition) > 0.1f)
-//		{
-//			photonView.RPC("CorrectState", info.sender, transform.position);
-//		}
-//	}
-
-
-	// In Game Scene jetzt!
-//	void BackButton()
-//	{
-//		/**
-//		 * Android Softbutton: Back
-//		 **/
-//		if (Application.platform == RuntimePlatform.Android)
-//		{
-//			if (Input.GetKey(KeyCode.Escape))
-//			{
-//				if(Network.isServer)
-//				{
-//					MasterServer.UnregisterHost();
-//					for(int i=0;i<Network.connections.Length;i++)
-//					{
-//						Network.CloseConnection(Network.connections[i],true);
-//					}
-//				}
-//				Network.Disconnect();
-//				Application.LoadLevel("mp_Multiplayer");
-//				return;
-//			}
-//		}
-//	}
-
+	
+	void CombineInput()
+	{
+		if(buttonIsPressed || inputKeyboardJump)
+		{
+			inputJump = true;
+		}
+		else
+		{
+			inputJump = false;
+		}
+		
+		// combine the horizontal input
+		inputHorizontal = inputTouchHorizontal + inputKeyboardHorizontal;
+		
+		// limit combination to [-1,1]
+		Mathf.Clamp(inputHorizontal, -1, +1);    // kein cheaten möglich mit touch+keyboard steuerung
+	}
+	
+	void Keyboard() {
+		inputKeyboardHorizontal = Input.GetAxis ("Horizontal");
+		inputKeyboardVertical = Input.GetAxis ("Vertical");
+		if(keyPressed)
+		{
+			inputKeyboardJump = Input.GetKey (KeyCode.Space);
+		}
+		else
+		{
+			inputKeyboardJump = Input.GetKeyDown (KeyCode.Space);
+		}
+	}
+	
+	void Touch()
+	{
+		AnalogStickAndButton();
+	}
+	
 	void AnalogStickAndButton() {
-		debugmsg = "";
+		// muss auf false gesetzt werden, da schleife beendet wird wenn touch gefunden
 		buttonIsPressed = false;
 		buttonIsTapped = false;
 		analogStickIsStillPressed = false;
-		debugmsg = "Loop starting\n";
 		foreach (Touch touch in Input.touches)
 		{
 			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
 			{
 				if(touch.position.x > (Screen.width * 0.5f))
 				{
-					debugmsg += "Jump found\n";
-//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
+					//debugmsg += "Jump found\n";
+					//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
 					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
 						buttonTapCount = touch.tapCount;	
 						buttonIsTapped = true;				
@@ -242,9 +249,9 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 					//				}
 					if(touch.position.x < (Screen.width * 0.5f))
 					{
-						debugmsg += "AnalogStick began()\n";
+						//debugmsg += "AnalogStick began()\n";
 						// Analog Stick gefunden (Touch auf linker Bildschirmhälfte)
-//						analogStick = touch;
+						//						analogStick = touch;
 						analogStickTouchID = touch.fingerId;
 						analogStickTouchBegan = true;
 						analogStickIsStillPressed = true;
@@ -317,26 +324,26 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 				case TouchPhase.Moved:
 					if(touch.fingerId == analogStickTouchID) 			/// needed??, for now yes! switch case geht über ganzen bildschirm
 					{
-						debugmsg += "AnalogStick moved()\n";
+						//debugmsg += "AnalogStick moved()\n";
 						analogStickIsStillPressed = true;
 						float stickPosX=0;
 						float stickPosY=0;
 						
 						// Analogstick um TouchBeganPosition (Mittelpunkt) zeichnen
 						if(touch.position.x > touchBeganPositionX + analogStickTextureWidth*0.5f)
-							stickPosX=touchBeganPositionX + analogStickTextureWidth*0.5f;				// touch x-pos außerhalb des analogsticks (rechts)
+							stickPosX = touchBeganPositionX + analogStickTextureWidth*0.5f;				// touch x-pos außerhalb des analogsticks (rechts)
 						
 						else if(touch.position.x < touchBeganPositionX - analogStickTextureWidth*0.5f)
-							stickPosX=touchBeganPositionX - analogStickTextureWidth*0.5f;				// touch x-pos außerhalb des analogsticks (links)
+							stickPosX = touchBeganPositionX - analogStickTextureWidth*0.5f;				// touch x-pos außerhalb des analogsticks (links)
 						
 						else
 							stickPosX = touch.position.x;												// touch x-pos innerhalb des analogsticks
 						
 						if(touch.position.y > touchBeganPositionY + analogStickTextureHeight*0.5f)
-							stickPosY=touchBeganPositionY + analogStickTextureHeight*0.5f;				// touch y-pos außerhalb des analogsticks (oben)
+							stickPosY = touchBeganPositionY + analogStickTextureHeight*0.5f;				// touch y-pos außerhalb des analogsticks (oben)
 						
 						else if(touch.position.y < touchBeganPositionY - analogStickTextureHeight*0.5f)
-							stickPosY=touchBeganPositionY - analogStickTextureHeight*0.5f;				// touch y-pos außerhalb des analogsticks (unten)
+							stickPosY = touchBeganPositionY - analogStickTextureHeight*0.5f;				// touch y-pos außerhalb des analogsticks (unten)
 						
 						else
 							stickPosY = touch.position.y;												// touch y-pos innerhalb des analogsticks
@@ -348,18 +355,18 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 						                                   stickTextureHeight);								// height
 						
 						// Entfernung zum Analogstick Mittelpunkt berechnen (x-Ache)
-						deltaX = (touch.position.x - touchBeganPositionX)/(analogStickTextureWidth*0.5f);
-						if(deltaX > 1.0f)
-							deltaX = 1.0f;
-						else if(deltaX < -1.0f)
-							deltaX = -1.0f;
+						inputTouchHorizontal = (touch.position.x - touchBeganPositionX)/(analogStickTextureWidth*0.5f);
+						if(inputTouchHorizontal > 1.0f)
+							inputTouchHorizontal = 1.0f;
+						else if(inputTouchHorizontal < -1.0f)
+							inputTouchHorizontal = -1.0f;
 						
 						// Entfernung zum Analogstick Mittelpunkt berechnen (y-Ache)
-						deltaY = (touch.position.y - touchBeganPositionY)/(analogStickTextureHeight*0.5f);
-						if(deltaY > 1.0f)
-							deltaY = 1.0f;
-						else if(deltaY < -1.0f)
-							deltaY = -1.0f;
+						inputTouchVertical = (touch.position.y - touchBeganPositionY)/(analogStickTextureHeight*0.5f);
+						if(inputTouchVertical > 1.0f)
+							inputTouchVertical = 1.0f;
+						else if(inputTouchVertical < -1.0f)
+							inputTouchVertical = -1.0f;
 						
 					}
 					break;
@@ -368,7 +375,7 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 				case TouchPhase.Stationary:
 					if(touch.fingerId == analogStickTouchID) 
 					{
-						debugmsg += "AnalogStick stationary()\n";
+						//debugmsg += "AnalogStick stationary()\n";
 						analogStickIsStillPressed = true;
 					}
 					break;
@@ -377,7 +384,7 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 				case TouchPhase.Ended:
 					if(touch.fingerId == analogStickTouchID) 
 					{
-						debugmsg += "AnalogStick ended()\n";
+						//debugmsg += "AnalogStick ended()\n";
 						// Analog Stick ausblenden (aus sichtfeld verschieben)
 						analogStickTexture.pixelInset = new Rect(0,
 						                                         0,
@@ -397,41 +404,46 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 				}
 			}
 		}
-
+		
 		if(!buttonIsPressed)
 		{
-			debugmsg += "kein Button gefunden\n";
+			//debugmsg += "kein Button gefunden\n";
 			//kein Button in der Schleife oben gefunden, zurücksetzen
-//			buttonTouchID = -1;
+			//			buttonTouchID = -1;
 			buttonTapCount = 0;
 		}
-
+		
 		if(!analogStickTouchBegan)
 		{
-			debugmsg += "kein AnalogStick gefunden (analogStickTouchBegan)\n";
+			//debugmsg += "kein AnalogStick gefunden (analogStickTouchBegan)\n";
 			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
-			deltaX = 0f;
-			deltaY = 0f;
-		}
-
-		if(!analogStickIsStillPressed)
-		{
-			debugmsg += "kein AnalogStick gefunden (analogStickIsStillPressed)\n";
-			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
-			deltaX = 0f;
-			deltaY = 0f;
+			inputTouchHorizontal = 0f;
+			inputTouchVertical = 0f;
 		}
 		
-		if(debugging != null)
-			debugging.text = debugmsg;
-
+		if(!analogStickIsStillPressed)
+		{
+			//debugmsg += "kein AnalogStick gefunden (analogStickIsStillPressed)\n";
+			//kein AnalogStick in der Schleife oben gefunden, zurücksetzen
+			inputTouchHorizontal = 0f;
+			inputTouchVertical = 0f;
+		}
+		
+		//		if(debugging != null)
+		//			debugging.text = debugmsg;
+		
 	}
-
+	
+	// Wenn jeder Character ein UserControlScript hat müssen die benutzten AnalogSticks dieses Script 
+	// beim entfernen mitzerstört werden
+	// GUITexture sind nicht dem CharacterGameObject untergeordnet (Child), da sich dessen Position ändert und 
+	// im child die position immer auf Vector3.zero gesetzt werden müsste um die GUITexture korrekt auf dem Display
+	// anzeigen zu lassen.
 	void OnDestroy()
 	{
 		if(analogStickTexture != null)
 			Destroy(analogStickTexture);
-
+		
 		if(stickTexture != null)
 			Destroy(stickTexture);
 	}

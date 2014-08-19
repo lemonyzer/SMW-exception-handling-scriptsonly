@@ -42,21 +42,30 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	// a history of move commands sent from the client to the server
 	List<move> moveHistory = new List<move>();
 	
-	PlatformCharacter playerScript;
-	RealOwner realOwnerScript;
+	PlatformUserControl inputScript;
+	PlatformCharacter characterScript;
+	RealOwner ownerScript;
+
+	void Awake()
+	{
+		ownerScript = GetComponent<RealOwner> ();
+		characterScript = GetComponent<PlatformCharacter> ();
+		inputScript = GetComponent<PlatformUserControl> ();
+	}
 
 	void Start()
 	{
-		realOwnerScript = GetComponent<RealOwner>();
-		playerScript = GetComponent<PlatformCharacter>();
+
 	}
-	
+
+	// simulate movement local
+	// send input and calculated position to server / masterclient
 	void FixedUpdate()
 	{
-		if( networkView.isMine )
+		if( ownerScript.owner == PhotonNetwork.player )
 		{
 			// get current move state
-			move moveState = new move( playerScript.inputVelocity, playerScript.inputJump, PhotonNetwork.time );
+			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, PhotonNetwork.time );
 			
 			// buffer move state
 			moveHistory.Insert( 0, moveState );
@@ -68,7 +77,7 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 			}
 			
 			// simulate
-			playerScript.Simulate();
+			characterScript.Simulate();
 			
 			// send state to server
 			photonView.RPC( "ProcessInput", PhotonTargets.MasterClient, moveState.HorizontalAxis, moveState.jump, transform.position );
@@ -79,33 +88,39 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, PhotonMessageInfo info )
 	{
 		// aktuell gehören photonviews dem masterclient
-//		if( photonView.isMine )
-//			return;
+		//		if( photonView.isMine )
+		//			return;
+		if (ownerScript.owner == PhotonNetwork.player)
+		{
+			// this character is owned by local player... don't run simulation
+			// master client muss sich selbst nicht kontrollieren
+			return;
+		}
 		
 		if( !PhotonNetwork.isMasterClient )
 		{
-			// masterclient kann sich nicht selbst kontrollieren (würde doppelte bewegung resultieren)
+			// nur master client bekommt input und kontrolliert andere spieler
 			return;
 		}
 		
 		// execute input
-		playerScript.inputVelocity = recvedInputHorizontal;
-		playerScript.inputJump = recvedInputJump;
-		playerScript.Simulate();
+		inputScript.inputHorizontal = recvedInputHorizontal;
+		inputScript.inputJump = recvedInputJump;
+		characterScript.Simulate();
 		
 		// compare results
 		if( Vector3.Distance( transform.position, recvedPosition ) > 0.1f )
 		{
 			// error is too big, tell client to rewind and replay
-			networkView.RPC( "CorrectState", info.sender, transform.position );
+			photonView.RPC( "CorrectState", info.sender, transform.position );
 		}
 	}
 	
 	[RPC]
-	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
+	void CorrectState( Vector3 correctPosition, PhotonMessageInfo info )
 	{
 		// find past state based on timestamp
-		int pastState = 0;
+		int pastState = -1;											// FIX?
 		for( int i = 0; i < moveHistory.Count; i++ )
 		{
 			if( moveHistory[ i ].Timestamp <= info.timestamp )
@@ -117,13 +132,16 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		
 		// rewind
 		transform.position = correctPosition;
-		
+
+		Debug.Log("pastState: " + pastState);
+
 		// replay
+		// because the movement commands are already sent to server!
 		for( int i = 0; i <= pastState; i++ )
 		{
-			playerScript.inputVelocity = moveHistory[ i ].HorizontalAxis;
-			playerScript.inputJump = moveHistory[ i ].jump;
-			playerScript.Simulate();
+			inputScript.inputHorizontal = moveHistory[ i ].HorizontalAxis;
+			inputScript.inputJump = moveHistory[ i ].jump;
+			characterScript.Simulate();
 		}
 		
 		// clear
@@ -134,17 +152,18 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	void Update()
 	{
 		// is this the server? send out position updates every 1/10 second
-		if( PhotonNetwork.isMasterClient )
-		{
-			updateTimer += Time.deltaTime;
-			if( updateTimer >= 0.1f )
-			{
-				updateTimer = 0f;
-				photonView.RPC( "netUpdate", PhotonTargets.Others, transform.position );
-			}
-		}
+//		if( PhotonNetwork.isMasterClient )
+//		{
+//			updateTimer += Time.deltaTime;
+//			if( updateTimer >= 0.1f )
+//			{
+//				updateTimer = 0f;
+//				photonView.RPC( "netUpdate", PhotonTargets.Others, transform.position );
+//			}
+//		}
 		
-		if( networkView.isMine ) return; // don't run interpolation on the local object
+		//if( photonView.isMine ) return; 						// don't run interpolation on the local object
+		if (ownerScript.owner == PhotonNetwork.player)	return;  // don't run interpolation on the local object
 		if( stateCount == 0 ) return; // no states to interpolate
 		
 		double currentTime = PhotonNetwork.time;
@@ -178,12 +197,13 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 			}
 		}
 	}
-	
+
+	// Authorative & unreliable!!! [RPC] is book method
 	[RPC]
 	void netUpdate( Vector3 position, PhotonMessageInfo info )
 	{
 		//Problem: aktuell gehören photonViews dem MasterClient
-		if( realOwnerScript.owner != PhotonNetwork.player )
+		if( ownerScript.owner != PhotonNetwork.player )
 		{
 			// dieser Character gehört nicht lokalem Spieler
 			bufferState( new networkState( position, info.timestamp ) );
@@ -204,5 +224,23 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		
 		// increment state count (up to buffer size)
 		stateCount = Mathf.Min( stateCount + 1, stateBuffer.Length );
+	}
+
+
+	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
+		
+		// Send data to server
+		if (stream.isWriting)
+		{
+			Vector3 pos = transform.position;
+			stream.Serialize(ref pos);
+		}
+		// Read data from remote client
+		else
+		{
+			Vector3 pos = Vector3.zero;
+			stream.Serialize(ref pos);
+			netUpdate(pos, info);
+		}
 	}
 }
