@@ -164,6 +164,10 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		
 		//if( photonView.isMine ) return; 						// don't run interpolation on the local object
 		if (ownerScript.owner == PhotonNetwork.player)	return;  // don't run interpolation on the local object
+
+		// dieser Character gehört nicht lokalem Spieler
+		// zwischen empfangenen positionen wird interpoliert um bewegung zu glätten
+
 		if( stateCount == 0 ) return; // no states to interpolate
 		
 		double currentTime = PhotonNetwork.time;
@@ -207,6 +211,14 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		{
 			// dieser Character gehört nicht lokalem Spieler
 			bufferState( new networkState( position, info.timestamp ) );
+			Debug.Log("----------------------------------------------");
+			Debug.Log("current Time = " + Time.time);
+			Debug.Log("current Network Time = " + PhotonNetwork.time);
+			Debug.Log("RPC Time = " + info.timestamp);
+			Debug.Log("rtt = " + (PhotonNetwork.time - info.timestamp));
+			Debug.Log("prtt = " + PhotonNetwork.networkingPeer.RoundTripTime);
+			Debug.Log("prttS = " + PhotonNetwork.networkingPeer.RoundTripTimeVariance);
+			Debug.Log("----------------------------------------------");
 		}
 	}
 	
@@ -232,14 +244,21 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		// Send data to server
 		if (stream.isWriting)
 		{
+			float time = Time.time;
 			Vector3 pos = transform.position;
 			stream.Serialize(ref pos);
+			stream.Serialize(ref time);
 		}
 		// Read data from remote client
 		else
 		{
+			float time = 0;
 			Vector3 pos = Vector3.zero;
 			stream.Serialize(ref pos);
+			stream.Serialize(ref time);
+			Debug.Log("recved Time = " + time);
+			Debug.Log("Time.time = " + Time.time);
+			Debug.Log("differenz = " + (Time.time-time));
 			netUpdate(pos, info);
 		}
 	}
