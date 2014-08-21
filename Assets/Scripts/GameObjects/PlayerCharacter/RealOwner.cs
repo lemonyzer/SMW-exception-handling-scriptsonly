@@ -13,7 +13,7 @@ public class RealOwner : MonoBehaviour {
 	}
 
 	[RPC]
-	void SetCharacterControlsOwner(PhotonPlayer player)
+	void SetCharacterControlsOwner(NetworkPlayer player)
 	{
 		owner = player;
 		if (player == Network.player)

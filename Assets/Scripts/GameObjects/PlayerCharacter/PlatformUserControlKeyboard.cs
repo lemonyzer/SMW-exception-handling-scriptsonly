@@ -58,7 +58,7 @@ public class PlatformUserControlKeyboard : Photon.MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update() {
-		if(PhotonNetwork.player == realOwner.owner)
+		if(Network.player == realOwner.owner)
 		{
 			Keyboard();
 //			character.MoveKeyboard(inputVelocity, inputJump);		// Transfer Input to Character
@@ -67,7 +67,7 @@ public class PlatformUserControlKeyboard : Photon.MonoBehaviour {
 
 	void FixedUpdate()
 	{
-		if(PhotonNetwork.player == realOwner.owner)
+		if(Network.player == realOwner.owner)
 		{
 			photonView.RPC("SendMovementInput", PhotonTargets.MasterClient, inputVelocity, inputJump);
 		}

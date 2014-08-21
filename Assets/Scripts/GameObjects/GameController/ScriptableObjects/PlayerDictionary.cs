@@ -208,10 +208,10 @@ public class PlayerDictionary : ScriptableObject {
 			currentPlayer.setCharacter(setCharacter);
 			if(currentCharacter.getGameObject() != null)
 			{
-				Debug.LogWarning(currentCharacter.getGameObject().guid + " replaced");
+				Debug.LogWarning(currentCharacter.getGameObject().name + " replaced");
 				if(setCharacter.getGameObject() != null)
 				{
-					Debug.LogWarning(currentCharacter.getGameObject().guid + " replaced by " + setCharacter.getGameObject().guid);
+					Debug.LogWarning(currentCharacter.getGameObject().name + " replaced by " + setCharacter.getGameObject().name);
 				}
  			}
 		}

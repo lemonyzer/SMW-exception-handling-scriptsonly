@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 
-public class NetworkedPlayer : Photon.MonoBehaviour
+public class NetworkedPlayer : MonoBehaviour
 {
 	// how far back to rewind interpolation?
 	public float InterpolationBackTime = 0.1f;
@@ -45,12 +45,14 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	PlatformUserControl inputScript;
 	PlatformCharacter characterScript;
 	RealOwner ownerScript;
+	NetworkView myNetworkView;
 
 	void Awake()
 	{
 		ownerScript = GetComponent<RealOwner> ();
 		characterScript = GetComponent<PlatformCharacter> ();
 		inputScript = GetComponent<PlatformUserControl> ();
+		myNetworkView = GetComponent<NetworkView>();
 	}
 
 	void Start()
@@ -62,10 +64,10 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	// send input and calculated position to server / masterclient
 	void FixedUpdate()
 	{
-		if( ownerScript.owner == PhotonNetwork.player )
+		if( ownerScript.owner == Network.player )
 		{
 			// get current move state
-			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, PhotonNetwork.time );
+			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, Network.time );
 			
 			// buffer move state
 			moveHistory.Insert( 0, moveState );
@@ -80,24 +82,24 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 			characterScript.Simulate();
 			
 			// send state to server
-			photonView.RPC( "ProcessInput", PhotonTargets.MasterClient, moveState.HorizontalAxis, moveState.jump, transform.position );
+			myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, transform.position );
 		}
 	}
 	
 	[RPC]
-	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, PhotonMessageInfo info )
+	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, NetworkMessageInfo info )
 	{
 		// aktuell gehören photonviews dem masterclient
 		//		if( photonView.isMine )
 		//			return;
-		if (ownerScript.owner == PhotonNetwork.player)
+		if (ownerScript.owner == Network.player)
 		{
 			// this character is owned by local player... don't run simulation
 			// master client muss sich selbst nicht kontrollieren
 			return;
 		}
 		
-		if( !PhotonNetwork.isMasterClient )
+		if( !Network.isServer )
 		{
 			// nur master client bekommt input und kontrolliert andere spieler
 			return;
@@ -112,12 +114,12 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 		if( Vector3.Distance( transform.position, recvedPosition ) > 0.1f )
 		{
 			// error is too big, tell client to rewind and replay
-			photonView.RPC( "CorrectState", info.sender, transform.position );
+			myNetworkView.RPC( "CorrectState", info.sender, transform.position );
 		}
 	}
 	
 	[RPC]
-	void CorrectState( Vector3 correctPosition, PhotonMessageInfo info )
+	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
 	{
 		// find past state based on timestamp
 		int pastState = -1;											// FIX?
@@ -151,6 +153,8 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	private float updateTimer = 0f;
 	void Update()
 	{
+		// in OnSerializeView() --- unreliable/reliable posibility! ... Server owns all Character GameObjects therefore he knows the correct authorative position
+
 		// is this the server? send out position updates every 1/10 second
 //		if( PhotonNetwork.isMasterClient )
 //		{
@@ -163,10 +167,10 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 //		}
 		
 		//if( photonView.isMine ) return; 						// don't run interpolation on the local object
-		if (ownerScript.owner == PhotonNetwork.player)	return;  // don't run interpolation on the local object
+		if (ownerScript.owner == Network.player)	return;  // don't run interpolation on the local object
 		if( stateCount == 0 ) return; // no states to interpolate
 		
-		double currentTime = PhotonNetwork.time;
+		double currentTime = Network.time;
 		double interpolationTime = currentTime - InterpolationBackTime;
 		
 		// the latest packet is newer than interpolation time - we have enough packets to interpolate
@@ -200,10 +204,10 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 
 	// Authorative & unreliable!!! [RPC] is book method
 	[RPC]
-	void netUpdate( Vector3 position, PhotonMessageInfo info )
+	void netUpdate( Vector3 position, NetworkMessageInfo info )
 	{
 		//Problem: aktuell gehören photonViews dem MasterClient
-		if( ownerScript.owner != PhotonNetwork.player )
+		if( ownerScript.owner != Network.player )
 		{
 			// dieser Character gehört nicht lokalem Spieler
 			bufferState( new networkState( position, info.timestamp ) );
@@ -227,7 +231,7 @@ public class NetworkedPlayer : Photon.MonoBehaviour
 	}
 
 
-	void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
+	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
 		
 		// Send data to server
 		if (stream.isWriting)

@@ -40,6 +40,8 @@ public class StatsManager : MonoBehaviour {
 
 	PlayerDictionary playerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
 
+	NetworkView myNetworkView;
+
 	void Awake()
 	{
 		sortingLayer = GetComponent<SortingLayer>();
@@ -54,6 +56,8 @@ public class StatsManager : MonoBehaviour {
 
 		gameHasWinner = false;
 		gameRunning = true;
+
+		myNetworkView = GetComponent<NetworkView>();
 	}
 
 	// Use this for initialization
@@ -132,20 +136,21 @@ public class StatsManager : MonoBehaviour {
 
 	public void HeadJump(GameObject attacker, GameObject victim)
 	{
-		if(photonView != null)
+		if(myNetworkView != null)
 		{
-			if(!PhotonNetwork.isMasterClient)
+			if(!Network.isServer)
 			{
 				return;
 			}
 		}
 		// wird nur von PhotonMasterClient ausgeführt....
+
 		if(GameState.currentState == GameState.States.Running)
 		{
-			PhotonPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
-			PhotonPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
+			NetworkPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
+			NetworkPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
 
-			photonView.RPC("SyncHeadJump", PhotonTargets.AllBuffered, attackersRealOwner, victimsRealOwner);
+			myNetworkView.RPC("SyncHeadJump", RPCMode.AllBuffered, attackersRealOwner, victimsRealOwner);
 		}
 		else
 		{
@@ -154,7 +159,7 @@ public class StatsManager : MonoBehaviour {
 	}
 
 	[RPC]
-	public void SyncHeadJump(PhotonPlayer attackersRealOwner, PhotonPlayer victimsRealOwner)
+	public void SyncHeadJump(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
 	{
 		if(GameState.currentState == GameState.States.Running)
         {
@@ -180,9 +185,9 @@ public class StatsManager : MonoBehaviour {
 
 	public void InvincibleAttack(GameObject attacker, GameObject victim)
 	{
-		if(photonView != null)
+		if(myNetworkView != null)
 		{
-			if(!PhotonNetwork.isMasterClient)
+			if(!Network.isServer)
 			{
 				return;
 			}
@@ -190,16 +195,16 @@ public class StatsManager : MonoBehaviour {
 		// wird nur von PhotonMasterClient ausgeführt....
 		if(GameState.currentState == GameState.States.Running)
 		{
-			PhotonPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
-			PhotonPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
+			NetworkPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
+			NetworkPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
 			
-			photonView.RPC("SyncInvincibleAttack", PhotonTargets.AllBuffered, attackersRealOwner, victimsRealOwner);
+			myNetworkView.RPC("SyncInvincibleAttack", RPCMode.AllBuffered, attackersRealOwner, victimsRealOwner);
         }
 	}
 
 
 	[RPC]
-	public void SyncInvincibleAttack(PhotonPlayer attackersRealOwner, PhotonPlayer victimsRealOwner)
+	public void SyncInvincibleAttack(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
 	{
 		if(GameState.currentState == GameState.States.Running)
 		{

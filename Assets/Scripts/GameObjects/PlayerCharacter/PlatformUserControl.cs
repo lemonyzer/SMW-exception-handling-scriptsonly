@@ -154,7 +154,7 @@ public class PlatformUserControl : MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
-		if(Network. || Network.player == realOwner.owner)
+		if(Network.peerType == NetworkPeerType.Disconnected || Network.player == realOwner.owner)
 		{
 			ApplicationPlatformInputCheck();		//
 			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)

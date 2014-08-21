@@ -29,7 +29,9 @@ public class PlayerDictionaryManager : MonoBehaviour {
 			{
 				Debug.Log(this.ToString() +": " + player.getName() + " in PlayerDictionary gefunden!");
             }
-			if(Application.loadedLevelName == Scenes.photonLobby)
+			if(Application.loadedLevelName == Scenes.photonLobby ||
+			   Application.loadedLevelName == Scenes.mainmenu ||
+			   Application.loadedLevelName == Scenes.unityNetworkLobby)
 			{
 				// wenn aktuelles Level PhotonLobby ist, lösche alle Einträge aus PlayerDictionary
 				syncedLocalPersistentPlayerDictionary.RemoveAll();

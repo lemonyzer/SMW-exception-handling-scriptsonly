@@ -196,7 +196,7 @@ public class PlatformCharacter : MonoBehaviour {
 			SetAnim();
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
-			if(!NetworkPeerType.Disconnected)
+			if(Network.peerType == NetworkPeerType.Disconnected)
 			{
 				// offline movement
 				Simulate();
