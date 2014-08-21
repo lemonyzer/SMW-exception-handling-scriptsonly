@@ -16,7 +16,7 @@ using System.Collections;
  *
  **/    
 
-public class PlatformUserControl : Photon.MonoBehaviour {
+public class PlatformUserControl : MonoBehaviour {
 	
 	// check who is the owner of the current character
 	// allow input if local photonnetwork.player == realOwner.owner
@@ -154,7 +154,7 @@ public class PlatformUserControl : Photon.MonoBehaviour {
 	// Update is called once per frame
 	void Update() {
 		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
-		if(!PhotonNetwork.connected || PhotonNetwork.player == realOwner.owner)
+		if(Network. || Network.player == realOwner.owner)
 		{
 			ApplicationPlatformInputCheck();		//
 			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)

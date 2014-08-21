@@ -12,6 +12,18 @@ public class Scenes : MonoBehaviour {
 //	public const string spSumo = "sp";
 //	public const string spTagging = "level2_tagging";
 
+
+	/**
+	 * Unity Network Scenes
+	 **/
+
+	public const string unityNetworkLobby = "UnityNetworkLobby";
+	public const string unityNetworkGameRoom = "UnityNetworkGameRoom";
+
+	/**
+	 * Photon Scenes
+	 **/
+
 	public const string photonLobby = "PhotonLobbyMenu";
 	public const string photonRoomNonAuthorative = "PhotonRoomNonAuthorative";
 	public const string photonRoomAuthorative = "PhotonRoomAuthorative";

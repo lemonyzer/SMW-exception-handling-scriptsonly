@@ -32,16 +32,18 @@ public class MainMenu : MonoBehaviour {
 
 
 		// links unten
-		if(GUI.Button(new Rect(0,halfScreenHeight,halfScreenWidth,halfScreenHeight),"Online\n(Photon Network)"))
+		GUI.enabled = false;
+		if(GUI.Button(new Rect(0,halfScreenHeight,halfScreenWidth,halfScreenHeight),"Online\n(Photon Unity Network)"))
 		{
 			nextLevel = Scenes.photonLobby;
 		}
+		GUI.enabled = false;
 
 		// rechts oben
-		GUI.enabled = false;
-		if(GUI.Button(new Rect(halfScreenWidth,0,halfScreenWidth,halfScreenHeight),"LAN/WLAN"))
+		GUI.enabled = true;
+		if(GUI.Button(new Rect(halfScreenWidth,0,halfScreenWidth,halfScreenHeight),"LAN/WLAN (Unity Network, p2p)"))
 		{
-			nextLevel = "mp_Multiplayer";
+			nextLevel = Scenes.unityNetworkLobby;
 
 		}
 		GUI.enabled = true;

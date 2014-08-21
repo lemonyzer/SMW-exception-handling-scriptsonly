@@ -3,7 +3,7 @@ using System.Collections;
 
 public class RealOwner : MonoBehaviour {
 
-	public PhotonPlayer owner;
+	public NetworkPlayer owner;
 	public Behaviour characterControls;
 
 	void Awake()
@@ -16,7 +16,7 @@ public class RealOwner : MonoBehaviour {
 	void SetCharacterControlsOwner(PhotonPlayer player)
 	{
 		owner = player;
-		if (player == PhotonNetwork.player)
+		if (player == Network.player)
 		{
 			//Hey thats us! We can control this player: enable this script (this enables Update());
 			characterControls.enabled = true;

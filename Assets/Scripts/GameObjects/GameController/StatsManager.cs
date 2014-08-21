@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class StatsManager : Photon.MonoBehaviour {
+public class StatsManager : MonoBehaviour {
 
 	public bool gameRunning = false;
 	public bool gameHasWinner = false;

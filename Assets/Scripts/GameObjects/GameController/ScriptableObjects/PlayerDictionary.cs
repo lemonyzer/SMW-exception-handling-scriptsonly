@@ -15,7 +15,7 @@ public class PlayerDictionary : ScriptableObject {
 	// Key = instanz of PlayerCharacter GameObject
 	// Value = Player
 
-	Dictionary<PhotonPlayer, Player> playerDictionary = new Dictionary<PhotonPlayer, Player>();
+	Dictionary<NetworkPlayer, Player> playerDictionary = new Dictionary<NetworkPlayer, Player>();
 
 //	public void SetCharacterSelector(GameObject characterSelector, Player player)
 //	{
@@ -31,30 +31,30 @@ public class PlayerDictionary : ScriptableObject {
 
 	public void RemoveAllPlayerCharacerGameObjects()
 	{
-		List<PhotonPlayer> buffer = new List<PhotonPlayer>(playerDictionary.Keys);
-		foreach(PhotonPlayer photonPlayer in buffer)								// iterator will result in generic method ???
+		List<NetworkPlayer> buffer = new List<NetworkPlayer>(playerDictionary.Keys);
+		foreach(NetworkPlayer networkPlayer in buffer)								// iterator will result in generic method ???
 		{
 			Player currPlayer = null;
-			if(playerDictionary.TryGetValue(photonPlayer, out currPlayer))
+			if(playerDictionary.TryGetValue(networkPlayer, out currPlayer))
 		 	{
-				// Key PhotonPlayer has Value in Dictionary (Player exists in Dictionary)
+				// Key NetworkPlayer has Value in Dictionary (Player exists in Dictionary)
 				currPlayer.getCharacter().RemoveCharacterGameObject();
-				Debug.Log("removed GameObject referenz (" + currPlayer.getCharacter().getPrefabFilename() + ") from Player: " + photonPlayer.name );
+				Debug.Log("removed GameObject referenz (" + currPlayer.getCharacter().getPrefabFilename() + ") from Player: " + networkPlayer.guid );
 			}
 			else
 			{
-				Debug.Log("Player: " + photonPlayer.name + " is not in Dictionary! WTF, how is that possible?!!");
+				Debug.Log("Player: " + networkPlayer.guid + " is not in Dictionary! WTF, how is that possible?!!");
 			}
 		}
 	}
 
-	public string TryGetCharacterPrefabFilename ( PhotonPlayer photonPlayer )
+	public string TryGetCharacterPrefabFilename ( NetworkPlayer networkPlayer )
 	{
 		Player player = null;
 		
-		if( playerDictionary.TryGetValue(photonPlayer, out player) )
+		if( playerDictionary.TryGetValue(networkPlayer, out player) )
 		{
-			// Key PhotonPlayer has Value in Dictionary
+			// Key NetworkPlayer has Value in Dictionary
 			
 			if(player.getCharacter() != null)
 			{
@@ -68,29 +68,29 @@ public class PlayerDictionary : ScriptableObject {
 				else
 				{
 					// Character but no GameObject
-					Debug.LogError(photonPlayer.name + " has Player and Character but no PrefabFilename!!!");
+					Debug.LogError(networkPlayer.guid + " has Player and Character but no PrefabFilename!!!");
 				}
 			}
 			else
 			{
 				// no Character
-				Debug.LogError(photonPlayer.name + " has Player but no Character set in Dictionary!!!");
+				Debug.LogError(networkPlayer.guid + " has Player but no Character set in Dictionary!!!");
 			}
 		}
 		else
 		{
-//			Debug.LogError(photonPlayer.name + " has no Player set in Dictionary!!!");
+//			Debug.LogError(networkPlayer.guid + " has no Player set in Dictionary!!!");
 		}
 		return null;
 	}
 
-	public GameObject TryGetCharacterGameObject( PhotonPlayer photonPlayer )
+	public GameObject TryGetCharacterGameObject( NetworkPlayer networkPlayer )
 	{
 		Player player = null;
 		
-		if( playerDictionary.TryGetValue(photonPlayer, out player) )
+		if( playerDictionary.TryGetValue(networkPlayer, out player) )
 		{
-			// Key PhotonPlayer has Value in Dictionary
+			// Key NetworkPlayer has Value in Dictionary
 			
 			if(player.getCharacter() != null)
 			{
@@ -104,28 +104,28 @@ public class PlayerDictionary : ScriptableObject {
 				else
 				{
 					// Character but no GameObject
-					Debug.LogError(photonPlayer.name + " has Player and Character but no GameObject!!!");
+					Debug.LogError(networkPlayer.guid + " has Player and Character but no GameObject!!!");
 				}
 			}
 			else
 			{
 				// no Character
-				Debug.LogError(photonPlayer.name + " has Player but no Character set in Dictionary!!!");
+				Debug.LogError(networkPlayer.guid + " has Player but no Character set in Dictionary!!!");
 			}
 		}
 		{
-			Debug.LogError(photonPlayer.name + " has no Player set in Dictionary!!!");
+			Debug.LogError(networkPlayer.guid + " has no Player set in Dictionary!!!");
 		}
 		return null;
 	}
 
-	public GameObject TryGetCharacterSelectorGameObject( PhotonPlayer photonPlayer )
+	public GameObject TryGetCharacterSelectorGameObject( NetworkPlayer networkPlayer )
 	{
 		Player player = null;
 		
-		if( playerDictionary.TryGetValue(photonPlayer, out player) )
+		if( playerDictionary.TryGetValue(networkPlayer, out player) )
 		{
-			// Key PhotonPlayer has Value in Dictionary
+			// Key NetworkPlayer has Value in Dictionary
 			
 			if(player.getCharacterSelector() != null)
 			{
@@ -136,11 +136,11 @@ public class PlayerDictionary : ScriptableObject {
 			else
 			{
 				// no CharacterSelector
-				Debug.LogError(photonPlayer.name + " has Player but no CharacterSelector set in Dictionary!!!");
+				Debug.LogError(networkPlayer.guid + " has Player but no CharacterSelector set in Dictionary!!!");
 			}
 		}
 		{
-			Debug.LogError(photonPlayer.name + " has no Player set in Dictionary!!!");
+			Debug.LogError(networkPlayer.guid + " has no Player set in Dictionary!!!");
 		}
 		return null;
 	}
@@ -155,7 +155,7 @@ public class PlayerDictionary : ScriptableObject {
 				if(currPlayer.getCharacter().getPrefabFilename() == prefabFileName)
 				{
 					// already in use
-					Debug.LogWarning(currPlayer.getPhotonPlayer().name + " verwendet " + prefabFileName + " schon.");
+					Debug.LogWarning(currPlayer.getNetworkPlayer().guid + " verwendet " + prefabFileName + " schon.");
 					return true;
 				}
 			}
@@ -164,40 +164,40 @@ public class PlayerDictionary : ScriptableObject {
 
 	}
 
-	public void AddPlayer(PhotonPlayer photonPlayer, Player player)
+	public void AddPlayer(NetworkPlayer networkPlayer, Player player)
 	{
 		Player currentPlayer = null;
 		
-		if(playerDictionary.TryGetValue(photonPlayer, out currentPlayer))
+		if(playerDictionary.TryGetValue(networkPlayer, out currentPlayer))
 		{
 			// alten Wert überschreiben
-			playerDictionary[photonPlayer] = player;
-			Debug.LogError(photonPlayer.name + " was already in Dictionary. overwritten!");
+			playerDictionary[networkPlayer] = player;
+			Debug.LogError(networkPlayer.guid + " was already in Dictionary. overwritten!");
 		}
 		else
 		{
 			// noch nicht vorhanden, item eintragen
-			playerDictionary.Add(photonPlayer, player);
-			Debug.Log(photonPlayer.name + " added to Dictionary.");
+			playerDictionary.Add(networkPlayer, player);
+			Debug.Log(networkPlayer.guid + " added to Dictionary.");
 		}
 	}
 	
-	public void RemovePlayer( PhotonPlayer photonPlayer )
+	public void RemovePlayer( NetworkPlayer networkPlayer )
 	{
 		Player removedPlayer = null;
 		
-		if(playerDictionary.TryGetValue(photonPlayer, out removedPlayer))
+		if(playerDictionary.TryGetValue(networkPlayer, out removedPlayer))
 		{
-			playerDictionary.Remove(photonPlayer);
-			Debug.Log(photonPlayer.name + " removed from Dictionary.");
+			playerDictionary.Remove(networkPlayer);
+			Debug.Log(networkPlayer.guid + " removed from Dictionary.");
 		}
 		else
 		{
-			Debug.LogWarning(photonPlayer.name + " was not added to Dictionary.");
+			Debug.LogWarning(networkPlayer.guid + " was not added to Dictionary.");
 		}
 	}
 
-	public void SetCharacter(PhotonPlayer key, Character setCharacter)
+	public void SetCharacter(NetworkPlayer key, Character setCharacter)
 	{
 		Player currentPlayer = null;
 		Character currentCharacter = null;
@@ -208,27 +208,27 @@ public class PlayerDictionary : ScriptableObject {
 			currentPlayer.setCharacter(setCharacter);
 			if(currentCharacter.getGameObject() != null)
 			{
-				Debug.LogWarning(currentCharacter.getGameObject().name + " replaced");
+				Debug.LogWarning(currentCharacter.getGameObject().guid + " replaced");
 				if(setCharacter.getGameObject() != null)
 				{
-					Debug.LogWarning(currentCharacter.getGameObject().name + " replaced by " + setCharacter.getGameObject().name);
+					Debug.LogWarning(currentCharacter.getGameObject().guid + " replaced by " + setCharacter.getGameObject().guid);
 				}
  			}
 		}
 		else
 		{
-			Debug.LogError(key.name + " has no Player in Dictionary, to set Character!");
+			Debug.LogError(key.guid + " has no Player in Dictionary, to set Character!");
 		}
 	}
 
-	public void SetPlayer(PhotonPlayer key, Player value)
+	public void SetPlayer(NetworkPlayer key, Player value)
 	{
 		Player currentPlayer = null;
 		
 		if(playerDictionary.TryGetValue(key, out currentPlayer))
 		{
 			playerDictionary[key] = value;
-			Debug.Log(key.name + " was already in Dictionary, value " + currentPlayer.getName() + " replaced by " + value.getName());
+			Debug.Log(key.guid + " was already in Dictionary, value " + currentPlayer.getName() + " replaced by " + value.getName());
 		}
 		else
 		{
@@ -237,12 +237,12 @@ public class PlayerDictionary : ScriptableObject {
 		}
 	}
 	
-	public Player GetPlayer(PhotonPlayer photonPlayer)
+	public Player GetPlayer(NetworkPlayer networkPlayer)
 	{
 		Player currentValue = null;
 		Player result = null;
 
-		if(playerDictionary.TryGetValue(photonPlayer, out currentValue))
+		if(playerDictionary.TryGetValue(networkPlayer, out currentValue))
 		{
 			result = currentValue;
 		}
@@ -250,12 +250,12 @@ public class PlayerDictionary : ScriptableObject {
 		return result;
 	}
 
-	public Dictionary<PhotonPlayer, Player>.KeyCollection Keys()
+	public Dictionary<NetworkPlayer, Player>.KeyCollection Keys()
 	{
 		return playerDictionary.Keys;
 	}
 
-	public Dictionary<PhotonPlayer, Player>.ValueCollection Values()
+	public Dictionary<NetworkPlayer, Player>.ValueCollection Values()
 	{
 		return playerDictionary.Values;
 	}

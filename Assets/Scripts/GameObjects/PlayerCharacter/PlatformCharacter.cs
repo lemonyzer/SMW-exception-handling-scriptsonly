@@ -11,7 +11,7 @@ public class PlatformCharacter : MonoBehaviour {
 	public RealOwner ownerScript;
 //	public float gravity=10;
 
-	public PhotonView myPhotonView;
+	public NetworkView myNetworkView;
 
 	/**
 	 * Debugging GUI Element
@@ -121,7 +121,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Awake()
 	{
-		myPhotonView = GetComponent<PhotonView>();
+		myNetworkView = GetComponent<NetworkView>();
 
 		inputScript = GetComponent<PlatformUserControl>();
 
@@ -196,8 +196,9 @@ public class PlatformCharacter : MonoBehaviour {
 			SetAnim();
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
-			if(!PhotonNetwork.connected)
+			if(!NetworkPeerType.Disconnected)
 			{
+				// offline movement
 				Simulate();
 			}
 		}
@@ -319,7 +320,7 @@ public class PlatformCharacter : MonoBehaviour {
 			changedRunDirection = false;
 		}
 
-		if(!PhotonNetwork.isMasterClient)
+		if(!Network.isServer)
 			return;
 
 		if(controlsEnabled)
@@ -443,12 +444,12 @@ public class PlatformCharacter : MonoBehaviour {
 
 		// wird nur lokal und auf masterclient ausgeführt (wegen input abfrage)
 		if(grounded && inputJump) {
-			myPhotonView.RPC("SyncJump", PhotonTargets.All);
+			myNetworkView.RPC("SyncJump", RPCMode.All);
 			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpSpeed.y);		//<--- besser für JumpAblePlatforms	
 			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
 		}
 		else if(!grounded && walled && inputJump) {
-			myPhotonView.RPC("SyncWallJump", PhotonTargets.All);
+			myNetworkView.RPC("SyncWallJump", RPCMode.All);
 			rigidbody2D.velocity = new Vector2(0,0);												//alte Geschwindigkeit entfernen
 			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpSpeed.x, jumpSpeed.y);	//<--- besser für JumpAblePlatforms
 		}
@@ -550,7 +551,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(PhotonNetwork.isMasterClient)
+		if(Network.isServer)
 		{
 			if(other.gameObject.layer == layer.powerUp)
 			{
@@ -565,7 +566,7 @@ public class PlatformCharacter : MonoBehaviour {
 					if(currentPowerUp.powerUpName == "Star")
 					{
 						//GetComponent<RageModus>().StartRageModus();
-						myPhotonView.RPC("StartRageModus", PhotonTargets.All);
+						networkView.RPC("StartRageModus", RPCMode.All);
 					}
 					else if(currentPowerUp.powerUpName == "FireFlower")
 					{
@@ -595,9 +596,10 @@ public class PlatformCharacter : MonoBehaviour {
 					{
 						Debug.LogWarning("unknown PowerUp found! " + currentPowerUp.powerUpName);
 					}
-					if(PhotonNetwork.isMasterClient)
+					if(Network.isServer)
 					{
-						PhotonNetwork.Destroy(other.gameObject);
+						// Destroy PowerUp
+						Network.Destroy(other.gameObject);
 					}
 				}
 			}
