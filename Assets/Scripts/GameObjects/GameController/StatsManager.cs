@@ -38,8 +38,6 @@ public class StatsManager : MonoBehaviour {
 
 	private SortingLayer sortingLayer;
 
-	PlayerDictionary playerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
-
 	NetworkView myNetworkView;
 
 	void Awake()
@@ -166,8 +164,8 @@ public class StatsManager : MonoBehaviour {
 			if(attackersRealOwner != null &&
 			   victimsRealOwner != null)
 			{
-				Player playerAttacker = playerDictionary.GetPlayer(attackersRealOwner);
-				Player playerVictim = playerDictionary.GetPlayer(victimsRealOwner);
+				Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
+				Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
 				AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
 			
@@ -208,8 +206,8 @@ public class StatsManager : MonoBehaviour {
 	{
 		if(GameState.currentState == GameState.States.Running)
 		{
-			Player playerAttacker = playerDictionary.GetPlayer(attackersRealOwner);
-			Player playerVictim = playerDictionary.GetPlayer(victimsRealOwner);
+			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
+			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
 			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
 			

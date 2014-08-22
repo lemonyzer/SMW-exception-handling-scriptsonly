@@ -82,13 +82,21 @@ public class NetworkedPlayer : MonoBehaviour
 			characterScript.Simulate();
 			
 			// send state to server
-			myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, transform.position );
+			if(Network.isClient)
+			{
+				myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, transform.position );
+			}
+			else if(Network.isServer)
+			{
+				// cant send from server to server!
+			}
 		}
 	}
 	
 	[RPC]
 	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, NetworkMessageInfo info )
 	{
+//		Debug.Log(this.ToString() + ": ProcessInput");
 		// aktuell gehören photonviews dem masterclient
 		//		if( photonView.isMine )
 		//			return;
@@ -122,7 +130,7 @@ public class NetworkedPlayer : MonoBehaviour
 	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
 	{
 		// find past state based on timestamp
-		int pastState = -1;											// FIX?
+		int pastState = 0;											// FIX? -1
 		for( int i = 0; i < moveHistory.Count; i++ )
 		{
 			if( moveHistory[ i ].Timestamp <= info.timestamp )
@@ -201,8 +209,8 @@ public class NetworkedPlayer : MonoBehaviour
 			}
 		}
 	}
-
-	// Authorative & unreliable!!! [RPC] is book method
+	bool oneTimeInfo = true;
+	// Authorative & unreliable replaced - Bookmethod [RPC]
 	[RPC]
 	void netUpdate( Vector3 position, NetworkMessageInfo info )
 	{
@@ -211,6 +219,15 @@ public class NetworkedPlayer : MonoBehaviour
 		{
 			// dieser Character gehört nicht lokalem Spieler
 			bufferState( new networkState( position, info.timestamp ) );
+		}
+		else
+		{
+			// Dieser Character gehört lokalem Spieler
+			if(oneTimeInfo)
+			{
+				oneTimeInfo=false;
+				Debug.Log(this.ToString() + ": my Character");
+			}
 		}
 	}
 	

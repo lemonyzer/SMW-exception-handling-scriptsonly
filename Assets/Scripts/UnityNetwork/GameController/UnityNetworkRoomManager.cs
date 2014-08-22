@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class UnityNetworkRoomManager : MonoBehaviour {
 
 
-	public static string resourcesPath = "PlayerCharacter/Photon/";
+	public static string resourcesSubPath = "PlayerCharacter/UnityNetwork/";
 	public static string gameSlotsCountPlayerPrefsString = "gameSlotsCount";
 	public static string noCharacter = "noCharacter";
 	
@@ -24,7 +24,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	/**
 	 *  CharacterPrefab GameObjects in  GameScene
 	 **/
-	PlayerDictionary syncedLocalPersistentPlayerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
+	PlayerDictionary syncedLocalPersistentPlayerDictionary;// = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
 	
 	
 	// nicht mehr static ?!
@@ -41,10 +41,15 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	public AudioClip roomBackgroundMusic;
 	private Animator anim;
 	private HashID hash;
+
+	// Start Animation
 	public AudioClip beepAudioClip;
 	public AudioClip goAudioClip;
+	// Room Background Musik
 	public AudioClip gameBackgroundMusic;
-
+	// Character Selection
+	public AudioClip characterInUseAudioClip;
+	public AudioClip characterSelectedSuccessfulyAudioClip;
 
 	NetworkView myNetworkView;
 	
@@ -220,8 +225,9 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		else
 			Debug.LogWarning("room Background Music in roomManager not set in the Inspector");
 
+		syncedLocalPersistentPlayerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
 		Player server = new Player(Network.player, null);
-		PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.AddPlayer(Network.player,server);
+		syncedLocalPersistentPlayerDictionary.AddPlayer(Network.player,server);
 	}
 	
 	/**
@@ -362,7 +368,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 			return;
 		}
 		// Instantiate a new object for this player, remember; the server is therefore the owner.
-		GameObject playerCharacterSelectorGameObject = PhotonNetwork.Instantiate(photonCharacterSelectorPrefab.name, transform.position, transform.rotation, 0) as GameObject;
+		GameObject playerCharacterSelectorGameObject = Network.Instantiate(photonCharacterSelectorPrefab, transform.position, transform.rotation, 0) as GameObject;
 		
 		// Get the networkview of this new transform
 		NetworkView newObjectsview = playerCharacterSelectorGameObject.GetComponent<NetworkView>();
@@ -423,7 +429,8 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 
 		if(!string.IsNullOrEmpty(characterPrefabName))
 		{
-			characterPrefab = (GameObject) Resources.LoadAssetAtPath("Assets/Prefabs/PlayerCharacter/UnityNetwork/"+characterPrefabName+".prefab", typeof(GameObject));
+			// Resources.LoadAssetAtPath(resourcesPath+characterPrefabName+".prefab" <--- Editor ONLY!
+			characterPrefab = (GameObject) Resources.Load(resourcesSubPath+characterPrefabName, typeof(GameObject));
 		}
 
 		if(characterPrefab != null)
@@ -488,7 +495,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		} catch (System.Exception e)
 		{
 			characterGameObject = null;
-			Debug.LogError("PhotonView.Find( " + characterGameObjectViewID + " ) returns NULL!");
+			Debug.LogError("NetworkView.Find( " + characterGameObjectViewID + " ) returns NULL!");
 			Debug.LogException(e);
 		}
 		Character character = null;
@@ -655,7 +662,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 				
 				// Check if player aready have a Character
 				Debug.Log(this.ToString() + ": " + player.ipAddress);
-				GameObject currentCharacter = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(player);
+				GameObject currentCharacter = syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(player);
 				if(currentCharacter != null)
 				{
 					RemoveCurrentCharacterGameObject(currentCharacter);
@@ -694,7 +701,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	
 	void RemoveCurrentCharacterGameObject(GameObject go)
 	{
-		PhotonNetwork.Destroy(go);
+		Network.Destroy(go);
 	}
 	
 	[RPC]
@@ -720,6 +727,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	{
 		Debug.LogWarning("RPC AllowSelectedCharacter");
 		// animation
+		AudioSource.PlayClipAtPoint(characterSelectedSuccessfulyAudioClip,transform.position);
 	}
 	
 	[RPC]
@@ -727,6 +735,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	{
 		Debug.LogWarning("RPC SelectedCharacterInUse");
 		// play Sound
+		AudioSource.PlayClipAtPoint(characterInUseAudioClip,transform.position);
 	}
 	
 	/**
@@ -870,7 +879,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 			return;
 		}
 		List<Player> buffer = new List<Player> ( syncedLocalPersistentPlayerDictionary.Values() );
-		if (!PhotonNetwork.inRoom)
+		if (Network.peerType == NetworkPeerType.Disconnected)
 			return;
 		if (buffer == null)
 			return;
@@ -974,8 +983,8 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		 * Connection Info
 		 **/
 		GUILayout.BeginVertical ();
-		GUILayout.Label ("Connected clients: " + PhotonNetwork.room.playerCount + " / " + PhotonNetwork.room.maxPlayers, guiStyle);
-		GUILayout.Label ("Selected characters: " + buffer.Count + " / " + PhotonNetwork.room.playerCount, guiStyle);
+		GUILayout.Label ("Connected clients: " + Network.connections.Length + " / " + Network.maxConnections, guiStyle);
+		GUILayout.Label ("Selected characters: " + buffer.Count + " / " + Network.connections.Length, guiStyle);
 		//		if(Network.isServer)
 		//			GUILayout.Label ("isMasterClient! "+ PhotonNetwork.player.name, guiStyle);
 		//		else

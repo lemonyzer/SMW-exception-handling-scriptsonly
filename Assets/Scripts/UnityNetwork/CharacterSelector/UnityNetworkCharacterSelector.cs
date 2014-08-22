@@ -15,7 +15,7 @@ public class UnityNetworkCharacterSelector : MonoBehaviour {
 	
 	void Awake()
 	{
-		gameController = GameObject.FindGameObjectWithTag (Tags.gameController);
+		gameController = this.gameObject;
 		gameManager = gameController.GetComponent<UnityNetworkRoomManager> ();
 		networkViewGameManager = gameController.GetComponent<NetworkView> ();
 	}

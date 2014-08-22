@@ -58,7 +58,7 @@ public class SendDamageTrigger : MonoBehaviour {
 //				return;
 //			}
 //		}
-		if(!PhotonNetwork.isMasterClient)
+		if(!Network.isServer)
 		{
 			return;
 		}
@@ -72,22 +72,26 @@ public class SendDamageTrigger : MonoBehaviour {
 				{
 					//Angriff zählt nur wenn anderer Collider sich in der Layer (Ebene) "Head" befindet
 
-					if(myCharacterGameObject.rigidbody2D.velocity.y < 0)
+
+					if(myPlatformCharacterScript.moveDirection.y <0)
+					//if(myCharacterGameObject.rigidbody2D.velocity.y < 0)
 					{
 						//Angriff zählt nur bei Fallbewegung
 
 						targetHead = other.gameObject;
 //						Debug.Log(targetHead.name);
 //						Debug.Log(other.transform.name);
-						Debug.Log(this.ToString() + ": " + this.transform.parent.name + " ---HeadJump---> " + other.transform.parent.name);
+
 
 						targetCharacterGameObject = targetHead.transform.parent.gameObject;
 
 						if(!targetCharacterGameObject.GetComponent<PlatformCharacter>().isInRageModus)
 						{
-							if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
+							//if(myCharacterGameObject.rigidbody2D.velocity.y < targetCharacterGameObject.rigidbody2D.velocity.y)
+							if(myPlatformCharacterScript.moveDirection.y < targetCharacterGameObject.GetComponent<PlatformCharacter>().moveDirection.y)
 							{
 								// Angriff zählt nur wenn Gegenspieler nicht durch mich durchspringt
+								Debug.Log(this.ToString() + ": " + this.transform.parent.name + " ---HeadJump---> " + other.transform.parent.name);
 								statsManager.HeadJump(myCharacterGameObject,targetCharacterGameObject);			// Alternative: statsManager oder HealthController können auch SpawnProtection abfragen!
 							}
 							else
@@ -117,7 +121,10 @@ public class SendDamageTrigger : MonoBehaviour {
 					
 					// Angreifenden Player nach oben schleudern
 					//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
-					myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
+
+					// es existiert keine unity gravity die die velocity beeinflusst!
+					// 
+					//myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
 				}
 			}
 		}
@@ -133,7 +140,8 @@ public class SendDamageTrigger : MonoBehaviour {
 		if(other.gameObject.layer == layer.head)
 		{
 			//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
-			myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
+			Debug.Log(this.ToString() +": OnTriggerStay2D");
+			//myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
 		}
 	}
 }

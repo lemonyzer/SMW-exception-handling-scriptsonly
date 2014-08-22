@@ -62,10 +62,11 @@ public class ConnectToGame : MonoBehaviour
 		GUILayout.Label( "IP Address" );
 		ip = GUILayout.TextField( ip, GUILayout.Width( 200f ), GUILayout.MinHeight(minButtonHeight) );
 
+		GUILayout.BeginHorizontal();
 		// let the user enter port number
 		// port is an integer, so only numbers are allowed
 		GUILayout.Label( "Port" );
-		string port_str = GUILayout.TextField( port.ToString(), GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) );
+		string port_str = GUILayout.TextField( port.ToString(), GUILayout.Width( 70f ), GUILayout.MinHeight(minButtonHeight) );
 		int port_num = port;
 		if( int.TryParse( port_str, out port_num ) )
 			port = port_num;
@@ -75,20 +76,25 @@ public class ConnectToGame : MonoBehaviour
 		{
 			Network.Connect( ip, port );
 		}
-
-		foreach(Host host in hostList)
-		{
-			if( GUILayout.Button( host.name, GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
-			{
-				Network.Connect( host.ip, port );
-			}
-		}
+		GUILayout.EndHorizontal();
 
 		// host a server on the given port, only allow 3 incoming connection (3 other players)
 		if( GUILayout.Button( "Host", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
 			Network.InitializeServer( 3, port, true );
 		}
+
+		GUILayout.BeginArea(new Rect(Screen.width * 0.5f, 0, Screen.width * 0.5f, Screen.height));
+		GUILayout.Label("Servers");
+		foreach(Host host in hostList)
+		{
+			if( GUILayout.Button( host.ip + " " + host.name,  GUILayout.MinHeight(minButtonHeight) ) )
+			{
+				Network.Connect( host.ip, port );
+			}
+		}
+		GUILayout.EndArea();
+
 	}
 
 	void OnConnectedToServer()

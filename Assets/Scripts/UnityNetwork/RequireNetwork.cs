@@ -6,6 +6,6 @@ public class RequireNetwork : MonoBehaviour
 	void Awake()
 	{
 		if( Network.peerType == NetworkPeerType.Disconnected )
-			Network.InitializeServer( 1, 25005, true );
+			Network.InitializeServer( 20, 25005, true );
 	}
 }

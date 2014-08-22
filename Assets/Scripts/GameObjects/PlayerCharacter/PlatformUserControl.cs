@@ -156,6 +156,7 @@ public class PlatformUserControl : MonoBehaviour {
 		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
 		if(Network.peerType == NetworkPeerType.Disconnected || Network.player == realOwner.owner)
 		{
+//			Debug.LogWarning(this.ToString() +": is reading local controls input!!!");
 			ApplicationPlatformInputCheck();		//
 			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)
 			// dannach stehen die Eingabedaten in inputHorizontal und inputJump

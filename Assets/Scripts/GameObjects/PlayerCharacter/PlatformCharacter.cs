@@ -174,8 +174,10 @@ public class PlatformCharacter : MonoBehaviour {
 		this.inputTouchJump = jump;
 	}
 
+	public Vector3 rigidBody2DVelocity = Vector3.zero;
 	void Update()
 	{
+		rigidBody2DVelocity = rigidbody2D.velocity;
 	}
 
 
@@ -193,7 +195,7 @@ public class PlatformCharacter : MonoBehaviour {
 		else
 		{
 			CheckPosition();
-			SetAnim();
+			//SetAnim();							// FUCK FIX!!
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
 			if(Network.peerType == NetworkPeerType.Disconnected)
@@ -260,6 +262,7 @@ public class PlatformCharacter : MonoBehaviour {
 	float gravity = 8;
 	public Vector3 moveDirection = Vector3.zero;
 	float jumpPower = 6;
+
 	public void Simulate()
 	{
 		CheckPosition();
@@ -285,25 +288,55 @@ public class PlatformCharacter : MonoBehaviour {
 
 		transform.Translate( moveDirection * Time.fixedDeltaTime );
 	}
+	bool hasHorizontalInputShown = false;
+	bool hasNoHorizontalInputShown = false;
 	void SimulateAnimation()
 	{
-		if(inputScript.inputHorizontal != 0f)
+		anim.SetBool(hash.groundedBool, grounded);
+		anim.SetBool(hash.walledBool, walled);
+
+		//if(inputScript.inputHorizontal != 0f)
+		if(moveDirection.x != 0f)							// nochmal kontrollieren warum ich diese abfrage mache... (umständlich zweimal anim.SetFloat(hSpeed...)
 		{
-			anim.SetFloat(hash.hSpeedFloat, inputScript.inputHorizontal);
-			if(facingRight && inputScript.inputHorizontal < 0)
+//			if(Network.isServer)
+//			{
+//				if(ownerScript.owner != Network.player)
+//				{
+//					Debug.Log(moveDirection.x);
+//				}
+//			}
+//			if(!hasHorizontalInputShown)
+//			{
+//				hasHorizontalInputShown = true;
+//				Debug.Log(moveDirection.x);							//switched from inputHorizontal (between -1 and 1) to moveDirection.x
+//			}
+			hasNoHorizontalInputShown = false;	
+			anim.SetFloat(hash.hSpeedFloat, moveDirection.x);
+			if(facingRight && moveDirection.x < 0)
 			{
 				Flip ();
 			}
-			else if( !facingRight  && inputScript.inputHorizontal > 0)
+			else if( !facingRight  && moveDirection.x > 0)
 			{
 				Flip ();
+			}
+		}
+		else
+		{
+			anim.SetFloat(hash.hSpeedFloat,moveDirection.x);
+
+			hasHorizontalInputShown = false;
+			if(!hasNoHorizontalInputShown)
+			{
+				hasNoHorizontalInputShown = true;
+				Debug.Log(this.ToString() + ": no Input");
 			}
 		}
 	}
 
 	public void FixedMove()
 	{
-
+		return;
 		/**
 		 * Check Direction Change
 		 **/
