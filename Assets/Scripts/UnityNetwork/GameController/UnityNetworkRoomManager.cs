@@ -600,13 +600,16 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		Debug.LogWarning("RemovePlayer " + networkPlayer.ipAddress);
 		if (Network.isServer)
 		{
-			GameObject NetworkPlayerCharacter = syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(networkPlayer);
+			GameObject networkPlayerCharacter = syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(networkPlayer);
 			GameObject characterSelector = syncedLocalPersistentPlayerDictionary.TryGetCharacterSelectorGameObject(networkPlayer);
 			
-			if(NetworkPlayerCharacter != null)
+			if(networkPlayerCharacter != null)
 			{
-				Network.Destroy(NetworkPlayerCharacter);
-				Debug.Log("MasterClient: " + NetworkPlayerCharacter.name + " destroyed!");
+				Network.RemoveRPCs(networkPlayerCharacter.networkView.viewID);
+				Network.RemoveRPCs(networkPlayer);
+				Network.DestroyPlayerObjects(networkPlayer);
+				Network.Destroy(networkPlayerCharacter);
+				Debug.Log("MasterClient: " + networkPlayerCharacter.name + " destroyed!");
 			}
 			else
 			{
@@ -665,7 +668,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 				GameObject currentCharacter = syncedLocalPersistentPlayerDictionary.TryGetCharacterGameObject(player);
 				if(currentCharacter != null)
 				{
-					RemoveCurrentCharacterGameObject(currentCharacter);
+					RemoveCurrentCharacterGameObject(currentCharacter);	// only on server
 					myNetworkView.RPC( "RemoveCurrentCharacterFromDictionary", RPCMode.AllBuffered, player );
 				}
 				
@@ -701,7 +704,12 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	
 	void RemoveCurrentCharacterGameObject(GameObject go)
 	{
-		Network.Destroy(go);
+		// Server Only!
+		if(Network.isServer)
+		{
+			Network.RemoveRPCs(go.networkView.viewID);
+			Network.Destroy(go);
+		}
 	}
 	
 	[RPC]
@@ -800,13 +808,13 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	float minButtonHeight;
 	GUIStyle guiStyle;
 	
-	GUIStyle masterStyle;
-	GUIStyle masterSmallStyle;
+	GUIStyle ownPlayerStyle;
+	GUIStyle ownPlayerStyleSmall;
 	
-	GUIStyle clientStyle;
-	GUIStyle clientSmallStyle;
+	GUIStyle otherPlayerStyle;
+	GUIStyle otherPlayerStyleSmall;
 	
-	GUIStyle myStyle;
+	GUIStyle currentPlayerStyle;
 	
 	GUIStyle avatarStyle;
 	
@@ -822,26 +830,26 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 			minButtonHeight = 20f;
 		}
 		
-		myStyle = new GUIStyle ();
-		myStyle.fontStyle = FontStyle.Bold;
+		currentPlayerStyle = new GUIStyle ();
+		currentPlayerStyle.fontStyle = FontStyle.Bold;
 		
 		guiStyle = new GUIStyle ();
 		guiStyle.normal.textColor = Color.black;
 		guiStyle.fontSize = 16;
 		
-		masterStyle = new GUIStyle();
-		masterStyle.normal.textColor = Color.green;
-		masterStyle.fontSize = 16;
+		ownPlayerStyle = new GUIStyle();
+		ownPlayerStyle.normal.textColor = Color.green;
+		ownPlayerStyle.fontSize = 16;
 		
-		masterSmallStyle = new GUIStyle();
-		masterSmallStyle.normal.textColor = masterStyle.normal.textColor;
+		ownPlayerStyleSmall = new GUIStyle();
+		ownPlayerStyleSmall.normal.textColor = ownPlayerStyle.normal.textColor;
 		
-		clientStyle = new GUIStyle();
-		clientStyle.normal.textColor = Color.red;
-		clientStyle.fontSize = 16;
+		otherPlayerStyle = new GUIStyle();
+		otherPlayerStyle.normal.textColor = Color.red;
+		otherPlayerStyle.fontSize = 16;
 		
-		clientSmallStyle = new GUIStyle();
-		clientSmallStyle.normal.textColor = masterStyle.normal.textColor;
+		otherPlayerStyleSmall = new GUIStyle();
+		otherPlayerStyleSmall.normal.textColor = otherPlayerStyle.normal.textColor;
 		
 		avatarStyle = new GUIStyle ();
 		avatarStyle.fixedWidth = 64f;
@@ -870,7 +878,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	public bool debugEnabled = false;
 	
 	private Rect windowPlayerDictionaryRect = new Rect(20, 25, Screen.width-40, 200);
-	private Rect windowPlayerInfoGUIRect = new Rect(10,Screen.height-100f,Screen.width-20,90);
+	private Rect windowPlayerInfoGUIRect = new Rect(10f,10f,Screen.width-20,90);
 	
 	void OnGUI()
 	{
@@ -918,22 +926,17 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		// Schleife über Spielerliste
 		foreach(Player player in buffer)
 		{
+
 			GUILayout.BeginHorizontal (GUILayout.Width(200));
 			if(player.getNetworkPlayer() == Network.player)
 			{
 				// Eigener Spieler
-				masterStyle.fontStyle = FontStyle.Bold;
-				clientStyle.fontStyle = FontStyle.Bold;
-				clientSmallStyle.fontStyle = FontStyle.Bold;
-				masterSmallStyle.fontStyle = FontStyle.Bold;
+				currentPlayerStyle = ownPlayerStyle;
 			}
 			else
 			{
 				// anderer Spieler
-				masterStyle.fontStyle = FontStyle.Normal;
-				clientStyle.fontStyle = FontStyle.Normal;
-				clientSmallStyle.fontStyle = FontStyle.Normal;
-				masterSmallStyle.fontStyle = FontStyle.Normal;
+				currentPlayerStyle = otherPlayerStyle;
 			}
 			
 			// Character Bild
@@ -953,8 +956,8 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 //			}
 //			else
 //			{
-				GUILayout.Label(player.getName());	// um Text anzuzeigen
-				GUILayout.Label(player.getPoints().ToString());
+			GUILayout.Label("P.ID: " + player.getName(), currentPlayerStyle);	// um Text anzuzeigen
+			GUILayout.Label("Kills: " + player.getPoints().ToString(), currentPlayerStyle);
 //			}
 			// Character Name
 			if(player.getCharacter() != null)
@@ -965,7 +968,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 //				}
 //				else
 //				{
-					GUILayout.Label(player.getCharacter().getName());	// um Text anzuzeigen
+					GUILayout.Label(player.getCharacter().getName(), currentPlayerStyle);	// um Text anzuzeigen
 //				}
 			}
 			GUILayout.EndVertical ();
@@ -1003,18 +1006,10 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 				{
 
 				}
-				masterStyle.fontStyle = FontStyle.Bold;
-				clientStyle.fontStyle = FontStyle.Bold;
-				clientSmallStyle.fontStyle = FontStyle.Bold;
-				masterSmallStyle.fontStyle = FontStyle.Bold;
 			}
 			else
 			{
 				// anderer Spieler
-				masterStyle.fontStyle = FontStyle.Normal;
-				clientStyle.fontStyle = FontStyle.Normal;
-				clientSmallStyle.fontStyle = FontStyle.Normal;
-				masterSmallStyle.fontStyle = FontStyle.Normal;
 			}
 //			if(player.getNetworkPlayer().isMasterClient)
 //			{
@@ -1023,26 +1018,27 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 //			}
 //			else
 //			{
-				GUILayout.Label (player.getNetworkPlayer().ipAddress + " Client", clientStyle);
+				GUILayout.Label (player.getNetworkPlayer().ipAddress + " Client", otherPlayerStyle);
 //			}
 			GUILayout.Space(20);
-			if(player.getCharacterSelector() != null)
-				GUILayout.Label( "charSelector: Yes", masterStyle);
-			else
-				GUILayout.Label( "charSelector: NO", clientStyle);
+			// gibt kein spawnenden character selector mehr
+//			if(player.getCharacterSelector() != null)
+//				GUILayout.Label( "charSelector: Yes", otherPlayerStyle);
+//			else
+//				GUILayout.Label( "charSelector: NO", clientStyle);
 			
 			GUILayout.Space(20);
 			if(player.getCharacter() != null)
 			{
-				GUILayout.Label( "Character: " + player.getCharacter().getPrefabFilename(), masterStyle);
+				GUILayout.Label( "Character: " + player.getCharacter().getPrefabFilename(), ownPlayerStyle);
 				GUILayout.Space(20);
 				if(player.getCharacter().getGameObject() != null)
-					GUILayout.Label( "GO: Yes", masterStyle);
+					GUILayout.Label( "GO: Yes", ownPlayerStyle);
 				else
-					GUILayout.Label( "GO: NO", clientStyle);
+					GUILayout.Label( "GO: NO", otherPlayerStyle);
 			}
 			else
-				GUILayout.Label( "Character: NO", clientStyle);
+				GUILayout.Label( "Character: NO", otherPlayerStyle);
 			
 			
 			

@@ -62,6 +62,9 @@ public class PushSkript : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision) 
 	{
+		if(Network.peerType != NetworkPeerType.Disconnected)
+			return;
+
 		if(!myPlatformCharacter.isInRageModus)
 		{
 			/***

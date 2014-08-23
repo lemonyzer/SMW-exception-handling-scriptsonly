@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public class ConnectToGame : MonoBehaviour
 {
-	private string ip = "192.168.0.129";
+	private string ip = "tofast.ddns.net";
 	private int port = 25005;
 
 	private string ipPC = "192.168.0.129";
