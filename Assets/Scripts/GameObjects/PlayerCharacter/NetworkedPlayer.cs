@@ -5,7 +5,8 @@ using System.Collections;
 public class NetworkedPlayer : MonoBehaviour
 {
 	// how far back to rewind interpolation?
-	public float InterpolationBackTime = 0.1f;
+	public double InterpolationBackTime = 0.1f;				// double trouble fix (was previously float!)
+	public double ExtrapolationLimit = 0.5f;				// double trouble fix (was previously float!)
 	
 	// a snapshot of values received over the network
 	private struct networkState
@@ -261,7 +262,7 @@ public class NetworkedPlayer : MonoBehaviour
 
 			if(stateCount > 0)
 			{
-				Vector3 predictedPosition = new Vector3(transform.position.x,transform.position.y,transform.position.z);
+//				Vector3 predictedPosition = new Vector3(transform.position.x,transform.position.y,transform.position.z);
 				Vector3 moveDirectionPredicted = new Vector3(stateBuffer[0].InputHorizontal * characterScript.getMaxSpeed() * Time.fixedDeltaTime,0f,0f);
 				int steps = (int) (InterpolationBackTime/Time.fixedDeltaTime);
 				//Debug.Log("Steps =" + steps);
@@ -275,10 +276,11 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 	}
 
-
+	bool extrapolation = false;
 	// Server and other clients characters
 	void Update()
 	{
+		extrapolation = false;
 		// in OnSerializeView() --- unreliable/reliable posibility! ...
 		// Server owns all Character GameObjects therefore he knows the correct authorative position ( with pingdelay behind controlling client ) 
 
@@ -332,6 +334,23 @@ public class NetworkedPlayer : MonoBehaviour
 					transform.position = Vector3.Lerp( lhs.Position, rhs.Position, t );
 					break;
 				}
+			}
+		}
+		else
+		{
+			// Extrapolation (since 100 ms no update received!)
+			Debug.Log("Extrapolation");
+			extrapolation = true;
+			networkState latest = stateBuffer[0];
+			float extrapolationLength = (float)(interpolationTime - latest.Timestamp);		// (Network.time-100ms) - (lastest.time), mit latest.time < network.time-100ms
+																							// ergebnis immer positiv, größer 0
+																							// extrapolationLenght > 0
+
+			// Don't extrapolation for more than 500 ms, you would need to do that carefully
+			if (extrapolationLength < ExtrapolationLimit)
+			{
+				Vector3 moveDirection = new Vector3(latest.InputHorizontal * characterScript.getMaxSpeed() * Time.fixedDeltaTime,0f,0f);
+				transform.position = latest.Position + moveDirection * extrapolationLength;
 			}
 		}
 	}
@@ -409,11 +428,11 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 	}
 
-//	void OnGUI()
-//	{
-//		if(stateCount > 0)
-//		{
-//			GUI.Box()
-//		}
-//	}
+	void OnGUI()
+	{
+		if(extrapolation)
+		{
+			GUI.Box(new Rect(Screen.width*0.25f,Screen.height*0.25f,Screen.width*0.5f,Screen.height*0.5f), "Extrapation");
+		}
+	}
 }

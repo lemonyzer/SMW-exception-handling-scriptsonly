@@ -181,7 +181,15 @@ public class PlatformUserControl : MonoBehaviour {
 		
 		// combine the horizontal input
 		inputHorizontal = inputTouchHorizontal + inputKeyboardHorizontal;
-		
+
+		// 3 stateMovement	(prediction will be more precis)
+		if(inputHorizontal < 0f)
+			inputHorizontal = -1f;
+		else if(inputHorizontal > 0f)
+			inputHorizontal = 1f;
+		else
+			inputHorizontal = 0f;
+
 		// limit combination to [-1,1]
 		Mathf.Clamp(inputHorizontal, -1, +1);    // kein cheaten möglich mit touch+keyboard steuerung
 	}
