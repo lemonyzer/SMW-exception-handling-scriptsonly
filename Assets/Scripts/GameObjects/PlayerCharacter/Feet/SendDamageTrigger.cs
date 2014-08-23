@@ -135,13 +135,13 @@ public class SendDamageTrigger : MonoBehaviour {
 	}
 
 
-	void OnTriggerStay2D(Collider2D other)
-	{
-		if(other.gameObject.layer == layer.head)
-		{
-			//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
-			Debug.Log(this.ToString() +": OnTriggerStay2D");
-			//myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
-		}
-	}
+//	void OnTriggerStay2D(Collider2D other)
+//	{
+//		if(other.gameObject.layer == layer.head)
+//		{
+//			//myCharacterGameObject.rigidbody2D.AddForce(new Vector2(0f,10f));
+//			Debug.Log(this.ToString() +": OnTriggerStay2D");
+//			//myCharacterGameObject.rigidbody2D.velocity = new Vector2(myCharacterGameObject.rigidbody2D.velocity.x, myPlatformCharacterScript.getMaxSpeed());
+//		}
+//	}
 }

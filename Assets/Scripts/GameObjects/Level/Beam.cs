@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Beam : MonoBehaviour {
 
-	bool beamableObject;
+//	bool beamableObject;
 
 	SpriteRenderer backgroundSpriteRenderer;
 
@@ -70,21 +70,21 @@ public class Beam : MonoBehaviour {
 //		Debug.Log(backgroundSpriteRenderer.bounds);
 //		Debug.Log(leftBeamZoneX);
 //		Debug.Log(rightBeamZoneX);
-		beamableObject=false;
 	}
 
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
 //		GameObject original;
-		beamableObject = false;
+		bool beamableObject = false;
+		bool beamableParentObject = false;
 
 		//Simple Debug
 //		Debug.Log(this.ToString() + ": OnTriggerEnter2D() " + other.name);
 
-		if(other.gameObject.layer == layer.player)
+		if(other.gameObject.layer == layer.groundStopper)		// cant use player ... colliders are disabled during spawnprotection!
 		{
-			beamableObject = true;
+			beamableParentObject = true;
 		}
 //		else if(other.gameObject.layer == layer.player1)
 //		{
@@ -105,6 +105,20 @@ public class Beam : MonoBehaviour {
 		else if(other.gameObject.layer == layer.powerUp)
 		{
 			beamableObject = true;
+		}
+
+		if(beamableParentObject)
+		{
+			float oldY = other.transform.parent.position.y;
+			float oldX = other.transform.parent.position.x;
+			if(oldX < backgroundCenterPositionX)
+			{
+				other.transform.parent.position = new Vector2(rightBeamZoneX,oldY);
+			}
+			else
+			{
+				other.transform.parent.position = new Vector2(leftBeamZoneX,oldY);
+			}
 		}
 
 		if(beamableObject)

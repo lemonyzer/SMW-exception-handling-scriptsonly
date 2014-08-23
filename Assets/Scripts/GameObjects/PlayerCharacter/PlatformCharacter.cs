@@ -198,6 +198,11 @@ public class PlatformCharacter : MonoBehaviour {
 			//SetAnim();							// FUCK FIX!!
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
+
+			// net mode:
+			// simulate is called by networkedplayer
+
+			// offline
 			if(Network.peerType == NetworkPeerType.Disconnected)
 			{
 				// offline movement
