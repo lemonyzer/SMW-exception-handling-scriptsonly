@@ -174,11 +174,10 @@ public class PlatformCharacter : MonoBehaviour {
 		this.inputTouchVelocity = moveHorizontal;
 		this.inputTouchJump = jump;
 	}
-
-	public Vector3 rigidBody2DVelocity = Vector3.zero;
+	
 	void Update()
 	{
-		rigidBody2DVelocity = rigidbody2D.velocity;
+
 	}
 
 
@@ -195,7 +194,7 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		else
 		{
-			CheckPosition();
+
 			//SetAnim();							// FUCK FIX!!
 			// wird manuel aufgerufen!
 //			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
@@ -242,20 +241,6 @@ public class PlatformCharacter : MonoBehaviour {
 		ground |= 1 << layer.ground;
 		ground |= 1 << layer.jumpAblePlatform;
 
-//		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, layer.whatIsWall);
-		
-
-		if(!platformJump)
-		{
-
-		}
-		else
-		{
-
-			//grounded = true;
-			//walled = false;
-		}
-
 		ground = 0;
 		ground |= 1 << layer.jumpAblePlatform;
 		Collider2D foundCollider = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
@@ -265,9 +250,11 @@ public class PlatformCharacter : MonoBehaviour {
 			// check ob die collision aktiviert ist
 			if(Physics2D.GetIgnoreCollision(foundCollider, myGroundStopperCollider))
 			{
+				// true => Kollision mit gefundener JumpOnPlatform ist deaktiviert
 				// yellow zone collids with jumpOnPlatform
 
-				Debug.Log(foundCollider.name + " GetIgnoreCollision() == true");
+				Debug.Log("Kollision mit " + foundCollider.name + " ist DEAKTIVIERT");
+
 				grounded = false;
 //				ground = 0;
 //				ground |= 1 << layer.ground;
@@ -276,17 +263,23 @@ public class PlatformCharacter : MonoBehaviour {
 			}
 			else
 			{
-				Debug.Log(foundCollider.name + " GetIgnoreCollision() == false");
+				// false => Kollision mit gefundener JumpOnPlatform ist AKTIV!!!
+				Debug.Log("Kollision mit " + foundCollider.name + " ist AKTIV");
+				if(moveDirection.y <= 0)
+				{
+					grounded = true;
+				}
+
 	//			Debug.Log(ground.value);
 	//			int max = int.MaxValue;
 	//			max &= 0 << layer.jumpAblePlatform;
 	//			//ground &= 0 << max;
 	//			ground &= 0 << layer.jumpAblePlatform;
 	//			Debug.Log(ground.value);
-				ground = 0;
-				ground |= 1 << layer.ground;
-				ground |= 1 << layer.block;
-				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+//				ground = 0;
+//				ground |= 1 << layer.ground;
+//				ground |= 1 << layer.block;
+//				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
 			}
 		}
 		else
@@ -296,7 +289,14 @@ public class PlatformCharacter : MonoBehaviour {
 			ground |= 1 << layer.block;
 			grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
 		}
-		Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
+
+
+		/**
+		 * Walled
+		 **/
+
+		//		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, layer.whatIsWall);
+		//Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
 	}
 
 	void SetAnim() 

@@ -24,36 +24,8 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 	SpriteRenderer spriteRenderer;
 
-
-	Transform myColliderFinder;
-	Transform side1Finder;				// switches if Flipped()
-	Transform side2Finder;				// switches if Flipped()
-	Transform topFinder;
-	Transform bottomFinder;
-
-	BoxCollider2D side1Collider;
-	BoxCollider2D side2Collider;
-	BoxCollider2D topCollider;
-	BoxCollider2D bottomCollider;
-
 	void Awake()
 	{
-		// Collider Finder initialisieren
-
-		// Transforms
-		myColliderFinder = transform.Find(Tags.colliderFinder);
-		topFinder = myColliderFinder.transform.Find(Tags.colliderFinderTop);
-		side1Finder = myColliderFinder.transform.Find(Tags.colliderFinderSide1);
-		side2Finder = myColliderFinder.transform.Find(Tags.colliderFinderSide2);
-		bottomFinder = myColliderFinder.transform.Find(Tags.colliderFinderBottom);
-
-		// BoxCollider2D
-		side1Collider = side1Finder.GetComponent<BoxCollider2D>();
-		side2Collider = side2Finder.GetComponent<BoxCollider2D>();
-		topCollider = topFinder.GetComponent<BoxCollider2D>();
-		bottomCollider = bottomFinder.GetComponent<BoxCollider2D>();
-
-
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		layer = gameController.GetComponent<Layer>();
@@ -76,7 +48,11 @@ public class PlatformJumperV2 : MonoBehaviour {
 			}
 		}
 
-		groundStopper = transform.FindChild(Tags.groundStopper).GetComponent<BoxCollider2D>();
+		// same
+//		groundStopper = transform.FindChild(Tags.groundStopper).GetComponent<BoxCollider2D>();
+//		Debug.Log(groundStopper.name);
+		groundStopper = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
+//		Debug.Log(groundStopper.name);
 	}
 
 	// Use this for initialization
@@ -130,36 +106,26 @@ public class PlatformJumperV2 : MonoBehaviour {
 		//Physics2D.OverlapCircle
 		//Physics2D.OverlapPoint
 		//Physics2D.Raycast
+		//Physics2D.BoxCast
+		//Physics2D.CircleCast
 
 		//Physics.Raycast
 		//Physics.OverlapSphere
 		//Physics.CheckCapsule
 		//Physics.CheckSphere
 
-		// Top
-		//platformColliderFinderTopLeftPos = topFinder.position + new Vector3();
-		//foundCollider = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
-
-		// Left/Right
-
-		// Right/Left
-
-		//Bottom (activation!)
-
+		/**
+		 * find Platform to deactivate
+		 **/
 
 		Collider2D platformColliderIgnoring;
-		Collider2D platformColliderConsidering;
 		platformColliderFinderTopLeftPos = transform.position + new Vector3(-1f,+1f,0f);
 		platformColliderFinderBottomRightPos  = transform.position + new Vector3(+1f,-1f,0f);
 		platformColliderIgnoring = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
 		if(platformColliderIgnoring != null)
 		{
-//			Debug.Log("collision off");
 			Physics2D.IgnoreCollision(bodyCollider, platformColliderIgnoring, true);
 			Physics2D.IgnoreCollision(groundStopper, platformColliderIgnoring, true);
-			//			Debug.LogWarning(platformColliderAbove.name + " found");
-			myPlatformCharacter.platformJump = true;
-//			Debug.Log(platformColliderIgnoring.name + " true");
 		}
 
 		Color color = Color.red;
@@ -168,36 +134,45 @@ public class PlatformJumperV2 : MonoBehaviour {
 		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(0f,+2f),color);
 		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(-2f,0f),color);
 
-		platformColliderFinderTopLeftPos = transform.position + new Vector3(-bodyCollider.size.x*0.5f,-0.5f,0f);
-		platformColliderFinderBottomRightPos  = transform.position + new Vector3(+bodyCollider.size.x*0.5f,-1.5f,0f);
+		/**
+		 * find Platform to activate
+		 **/
+
+		Collider2D platformColliderConsidering;
+		platformColliderFinderTopLeftPos = transform.position + new Vector3(-bodyCollider.size.x*0.5f,-0.4f,0f);
+		platformColliderFinderBottomRightPos  = transform.position + new Vector3(+bodyCollider.size.x*0.5f,-2f,0f);
 		platformColliderConsidering = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
 		if(platformColliderConsidering != null)
 		{
-//			Debug.Log("collision on");
 			Physics2D.IgnoreCollision(bodyCollider, platformColliderConsidering, false);
 			Physics2D.IgnoreCollision(groundStopper, platformColliderConsidering, false);
-			//			Debug.LogWarning(platformColliderAbove.name + " found");
-			myPlatformCharacter.platformJump = false;
-//			Debug.Log(platformColliderConsidering.name + " false");
 		}
 		color = Color.green;
-		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(0f,-1f),color);
+		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(0f,-1.75f),color);
 		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(bodyCollider.size.x,0f),color);
-		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(0f,+1f),color);
+		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(0f,+1.75f),color);
 		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(-bodyCollider.size.x,0f),color);
 
-		if(platformColliderIgnoring != null &&
-		   platformColliderIgnoring == platformColliderConsidering)
-		{
-			Debug.Log(platformColliderConsidering.name + " wurde deaktiviert und sofort wieder aktiviert");
-		}
-		else
-		{
-			if(platformColliderIgnoring != null)
-				Debug.Log(platformColliderIgnoring.name + " wird ignoriert");
-			if(platformColliderConsidering != null)
-				Debug.Log(platformColliderConsidering.name + " wird als ground ebene verwendet");
-		}
+		// DebugCode
+//		if(platformColliderIgnoring != null &&
+//		   platformColliderIgnoring == platformColliderConsidering)
+//		{
+//			Debug.Log(platformColliderConsidering.name + " wurde deaktiviert und sofort wieder aktiviert");
+//			Debug.Log("Physics2D.GetIgnoreCollision() = " + Physics2D.GetIgnoreCollision(groundStopper,platformColliderIgnoring));
+//		}
+//		else
+//		{
+//			if(platformColliderIgnoring != null)
+//			{
+//				Debug.Log(platformColliderIgnoring.name + " wird ignoriert");
+//				Debug.Log("Physics2D.GetIgnoreCollision() = " + Physics2D.GetIgnoreCollision(groundStopper,platformColliderIgnoring));
+//			}
+//			if(platformColliderConsidering != null)
+//			{
+//				Debug.Log(platformColliderConsidering.name + " wird als ground ebene verwendet");
+//				Debug.Log("Physics2D.GetIgnoreCollision() = " + Physics2D.GetIgnoreCollision(groundStopper,platformColliderIgnoring));
+//			}
+//		}
 	}
 
 	void JumpAblePlatformV2()
