@@ -253,7 +253,7 @@ public class PlatformCharacter : MonoBehaviour {
 				// true => Kollision mit gefundener JumpOnPlatform ist deaktiviert
 				// yellow zone collids with jumpOnPlatform
 
-				Debug.Log("Kollision mit " + foundCollider.name + " ist DEAKTIVIERT");
+//				Debug.Log("Kollision mit " + foundCollider.name + " ist DEAKTIVIERT");
 
 				grounded = false;
 //				ground = 0;
@@ -264,7 +264,7 @@ public class PlatformCharacter : MonoBehaviour {
 			else
 			{
 				// false => Kollision mit gefundener JumpOnPlatform ist AKTIV!!!
-				Debug.Log("Kollision mit " + foundCollider.name + " ist AKTIV");
+//				Debug.Log("Kollision mit " + foundCollider.name + " ist AKTIV");
 				if(moveDirection.y <= 0)
 				{
 					grounded = true;

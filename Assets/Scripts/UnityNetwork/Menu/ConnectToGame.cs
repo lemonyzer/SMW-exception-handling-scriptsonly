@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class ConnectToGame : MonoBehaviour
 {
+	public int clientSlots = 10;
+
 	private string ip = "tofast.ddns.net";
 	private int port = 25005;
 
@@ -81,7 +83,7 @@ public class ConnectToGame : MonoBehaviour
 		// host a server on the given port, only allow 3 incoming connection (3 other players)
 		if( GUILayout.Button( "Host", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
-			Network.InitializeServer( 3, port, true );
+			Network.InitializeServer( clientSlots, port, true );
 		}
 
 		GUILayout.BeginArea(new Rect(Screen.width * 0.5f, 0, Screen.width * 0.5f, Screen.height));

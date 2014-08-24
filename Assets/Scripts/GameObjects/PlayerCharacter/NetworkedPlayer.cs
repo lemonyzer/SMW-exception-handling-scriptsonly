@@ -133,6 +133,10 @@ public class NetworkedPlayer : MonoBehaviour
 	}
 
 	// server
+	public uint serverCorrectsClientPositionCount;
+	public List<Vector3> deltaPositions = new List<Vector3>();
+	public Vector3 lastPositionDifference = Vector3.zero;
+	public Vector3 avgPositionDifference = Vector3.zero;
 	[RPC]
 	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, NetworkMessageInfo info )
 	{
@@ -158,17 +162,42 @@ public class NetworkedPlayer : MonoBehaviour
 		inputScript.inputJump = recvedInputJump;
 		characterScript.Simulate();
 
-		// compare results
+																								// berücksichtigt alle
+
 		if( Vector3.Distance( transform.position, recvedPosition ) > 0.1f )
 		{
-			// error is too big, tell client to rewind and replay
+			// error is too big, tell client to rewind and replay								// berücksichtigt die, die zu stark abweichen
+			serverCorrectsClientPositionCount++;
 			myNetworkView.RPC( "CorrectState", info.sender, transform.position );
+			// compare results
+			deltaPositions.Insert(0, (transform.position - recvedPosition));						
+
+			avgPositionDifference = Vector3.zero;
+			for(int i=0;i<deltaPositions.Count;i++)
+			{
+				avgPositionDifference += deltaPositions[i];
+			}
+			avgPositionDifference = (1.0f/deltaPositions.Count) * avgPositionDifference;
+			lastPositionDifference = deltaPositions[0];
+
+			// cap history at 200
+			if( deltaPositions.Count > 200 )
+			{
+				deltaPositions.RemoveAt( deltaPositions.Count - 1 );
+			}
 		}
+
+//		if(timestamp > lastCorrectionSend.Timstamp &&
+//		   timestamp < lastcorrectionsend.timestamp + 1sec)
+//		{
+//																							// brücksichtigt die, die auf eine korrigierung zu stark abweichen
+//		}
 	}
 
-	double timeDiff = 0;
+//	double timeDiff = 0;
 
 	// local client character only
+	public uint correctPositionCount = 0;
 	[RPC]
 	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
 	{
@@ -210,7 +239,7 @@ public class NetworkedPlayer : MonoBehaviour
 		moveHistory.Clear();
 	}
 	
-	private float updateTimer = 0f;
+
 
 	int GetPastState(double timeStamp)
 	{
@@ -284,6 +313,11 @@ public class NetworkedPlayer : MonoBehaviour
 	}
 	
 	// Server and other clients characters
+	public uint extrapolationCount = 0;
+	// private float updateTimer = 0f;		// server send position updates every x seconds
+											// time based sending, not framerate based - more precise on various machines!
+											// NetworkView RPC's are always reliable
+											// not used because i'm now using OnSerilizeNetworkView (send 15 times per second) and is unreliable
 	void Update()
 	{
 		// in OnSerializeView() --- unreliable/reliable posibility! ...
@@ -365,6 +399,8 @@ public class NetworkedPlayer : MonoBehaviour
 	bool oneTimeInfo = true;
 	// Authorative & unreliable replaced - Bookmethod [RPC]
 	// buffers only on Clients, on Characters not owned by local player
+	public uint olderPackageReceivedCount =0;
+//	public bool unreliableConnection = true;
 	[RPC]
 	void netUpdate( Vector3 position, float inputHorizontal, bool inputJump, NetworkMessageInfo info )
 	{
@@ -380,7 +416,32 @@ public class NetworkedPlayer : MonoBehaviour
 		if( ownerScript.owner != Network.player )
 		{
 			// dieser Character gehört nicht lokalem Spieler
-			bufferState( new networkState( position, info.timestamp, inputHorizontal, inputJump ) );
+			if(myNetworkView.stateSynchronization == NetworkStateSynchronization.Unreliable)
+			{
+				if((info.timestamp > stateBuffer[0].Timestamp))
+				{
+					// this package has new information and will be buffered
+					bufferState( new networkState( position, info.timestamp, inputHorizontal, inputJump ) );
+				}
+				else
+				{
+					// this package is older than the latest buffered package
+					// dont buffer (drop it)
+					Debug.LogWarning("unreliable Connection, older UDP package received and dropped.");
+					olderPackageReceivedCount++;
+				}
+			}
+			else if(networkView.stateSynchronization == NetworkStateSynchronization.ReliableDeltaCompressed)
+			{
+				// reliable Connection - receiving in correct Order (always latest package is received)
+				bufferState( new networkState( position, info.timestamp, inputHorizontal, inputJump ) );
+			}
+			else if(networkView.stateSynchronization == NetworkStateSynchronization.Off)
+			{
+				// this is an RPC (always reliable in Unity 4.5 NetworkViews)
+				bufferState( new networkState( position, info.timestamp, inputHorizontal, inputJump ) );
+			}
+
 		}
 		else
 		{
@@ -436,7 +497,7 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 	}
 
-	public uint extrapolationCount = 0;
-	public uint correctPositionCount = 0;
+
+
 
 }
