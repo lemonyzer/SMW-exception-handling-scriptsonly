@@ -172,6 +172,7 @@ public class NetworkedPlayer : MonoBehaviour
 	[RPC]
 	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
 	{
+		correctPositionCount++;
 		// find past state based on timestamp
 		int pastState = -1;											// FIX?: -1	//replay begins with 0<=pastState, if array is empty can't access element 0!!!
 		for( int i = 0; i < moveHistory.Count; i++ )
@@ -436,6 +437,6 @@ public class NetworkedPlayer : MonoBehaviour
 	}
 
 	public uint extrapolationCount = 0;
-
+	public uint correctPositionCount = 0;
 
 }

@@ -60,7 +60,7 @@ public class PlatformCharacter : MonoBehaviour {
 	 * Character Movement 
 	 **/
 	private float maxSpeed = 8.0f;							// max horizontal Speed
-	private Vector2 jumpSpeed = new Vector2(8.0F, 8.0F);	// jump Force : wall jump, jump
+	private Vector2 jumpSpeed = new Vector2(8.0F, 10.0F);	// jump Force : wall jump, jump
 
 
 	/**
@@ -320,7 +320,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	float gravity = 8;
 	public Vector3 moveDirection = Vector3.zero;
-	float jumpPower = 6;
+	float jumpPower = 7;
 
 	public void Simulate()
 	{

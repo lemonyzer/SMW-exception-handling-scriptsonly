@@ -83,6 +83,19 @@ public class ConnectionStats : MonoBehaviour {
 					
 					GUILayout.EndVertical();
 				}
+				else
+				{
+					// character gehört local player
+					GUILayout.BeginVertical();
+					
+					NetworkedPlayer netScript = go.GetComponent<NetworkedPlayer>();
+					if(true)	// netScript.correctPosition ... has to be true	(authorative movement), client would be unsync!
+					{
+						GUILayout.Box(currentOwnerScript.owner.ipAddress + " correction cnt: " + netScript.correctPositionCount);
+					}
+
+					GUILayout.EndVertical();
+				}
 			}
 			
 		}
