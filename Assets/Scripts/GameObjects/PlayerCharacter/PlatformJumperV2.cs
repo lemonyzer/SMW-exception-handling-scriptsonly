@@ -18,22 +18,46 @@ public class PlatformJumperV2 : MonoBehaviour {
 	BoxCollider2D groundStopper;
 
 	GameObject gameController;
-//	PlatformCharacter myPlatformCharacter;
+	PlatformCharacter myPlatformCharacter;
 	Layer layer;
 	LayerMask jumpOnPlatform;
 
 	SpriteRenderer spriteRenderer;
 
 
+	Transform myColliderFinder;
+	Transform side1Finder;				// switches if Flipped()
+	Transform side2Finder;				// switches if Flipped()
+	Transform topFinder;
+	Transform bottomFinder;
 
-
+	BoxCollider2D side1Collider;
+	BoxCollider2D side2Collider;
+	BoxCollider2D topCollider;
+	BoxCollider2D bottomCollider;
 
 	void Awake()
 	{
+		// Collider Finder initialisieren
+
+		// Transforms
+		myColliderFinder = transform.Find(Tags.colliderFinder);
+		topFinder = myColliderFinder.transform.Find(Tags.colliderFinderTop);
+		side1Finder = myColliderFinder.transform.Find(Tags.colliderFinderSide1);
+		side2Finder = myColliderFinder.transform.Find(Tags.colliderFinderSide2);
+		bottomFinder = myColliderFinder.transform.Find(Tags.colliderFinderBottom);
+
+		// BoxCollider2D
+		side1Collider = side1Finder.GetComponent<BoxCollider2D>();
+		side2Collider = side2Finder.GetComponent<BoxCollider2D>();
+		topCollider = topFinder.GetComponent<BoxCollider2D>();
+		bottomCollider = bottomFinder.GetComponent<BoxCollider2D>();
+
+
 		spriteRenderer = GetComponent<SpriteRenderer>();
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		layer = gameController.GetComponent<Layer>();
-//		myPlatformCharacter = GetComponent<PlatformCharacter>();
+		myPlatformCharacter = GetComponent<PlatformCharacter>();
 
 //		bodyCollider = GetComponent<BoxCollider2D>();
 
@@ -95,20 +119,105 @@ public class PlatformJumperV2 : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		JumpAblePlatformV3();
+		JumpAblePlatformV4();
+	}
+
+	void JumpAblePlatformV4()
+	{
+		// Child ColliderFinder with 4 Childs and 2D BoxCollider's... no point calculation, just use 2d boxcollider position +- center.x/.y
+
+		//Physics2D.OverlapArea
+		//Physics2D.OverlapCircle
+		//Physics2D.OverlapPoint
+		//Physics2D.Raycast
+
+		//Physics.Raycast
+		//Physics.OverlapSphere
+		//Physics.CheckCapsule
+		//Physics.CheckSphere
+
+		// Top
+		//platformColliderFinderTopLeftPos = topFinder.position + new Vector3();
+		//foundCollider = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
+
+		// Left/Right
+
+		// Right/Left
+
+		//Bottom (activation!)
+
+
+		Collider2D platformColliderIgnoring;
+		Collider2D platformColliderConsidering;
+		platformColliderFinderTopLeftPos = transform.position + new Vector3(-1f,+1f,0f);
+		platformColliderFinderBottomRightPos  = transform.position + new Vector3(+1f,-1f,0f);
+		platformColliderIgnoring = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
+		if(platformColliderIgnoring != null)
+		{
+//			Debug.Log("collision off");
+			Physics2D.IgnoreCollision(bodyCollider, platformColliderIgnoring, true);
+			Physics2D.IgnoreCollision(groundStopper, platformColliderIgnoring, true);
+			//			Debug.LogWarning(platformColliderAbove.name + " found");
+			myPlatformCharacter.platformJump = true;
+//			Debug.Log(platformColliderIgnoring.name + " true");
+		}
+
+		Color color = Color.red;
+		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(0f,-2f),color);
+		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(2f,0f),color);
+		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(0f,+2f),color);
+		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(-2f,0f),color);
+
+		platformColliderFinderTopLeftPos = transform.position + new Vector3(-bodyCollider.size.x*0.5f,-0.5f,0f);
+		platformColliderFinderBottomRightPos  = transform.position + new Vector3(+bodyCollider.size.x*0.5f,-1.5f,0f);
+		platformColliderConsidering = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
+		if(platformColliderConsidering != null)
+		{
+//			Debug.Log("collision on");
+			Physics2D.IgnoreCollision(bodyCollider, platformColliderConsidering, false);
+			Physics2D.IgnoreCollision(groundStopper, platformColliderConsidering, false);
+			//			Debug.LogWarning(platformColliderAbove.name + " found");
+			myPlatformCharacter.platformJump = false;
+//			Debug.Log(platformColliderConsidering.name + " false");
+		}
+		color = Color.green;
+		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(0f,-1f),color);
+		Debug.DrawLine(platformColliderFinderTopLeftPos,platformColliderFinderTopLeftPos + new Vector2(bodyCollider.size.x,0f),color);
+		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(0f,+1f),color);
+		Debug.DrawLine(platformColliderFinderBottomRightPos,platformColliderFinderBottomRightPos + new Vector2(-bodyCollider.size.x,0f),color);
+
+		if(platformColliderIgnoring != null &&
+		   platformColliderIgnoring == platformColliderConsidering)
+		{
+			Debug.Log(platformColliderConsidering.name + " wurde deaktiviert und sofort wieder aktiviert");
+		}
+		else
+		{
+			if(platformColliderIgnoring != null)
+				Debug.Log(platformColliderIgnoring.name + " wird ignoriert");
+			if(platformColliderConsidering != null)
+				Debug.Log(platformColliderConsidering.name + " wird als ground ebene verwendet");
+		}
 	}
 
 	void JumpAblePlatformV2()
 	{
 		/**
 		 * OverlapArea
-		 * __________
-		 * |		|
-		 * |		|
-		 * | *....*	|		<-- Character Collider Top
-		 * | |	  |	|
-		 * |_|____|_|
-		 *   *....*			<-- Character Collider Bottom
+		 * ___________
+		 * |		  |	<-- JumpOnPlatform Collider Finder (collision wird deactiviert)
+		 * |		  |
+		 * |  *....*  |		<-- Character Collider Top
+		 * |  |	   |  |
+		 * |__|____|__|
+		 *    *....*			<-- Character Collider Bottom
+		 * 				
+		 * 				<-- Y-Histerese ( sollte vorhanden, aber nicht zu groß sein!!!)	4-8 Pixel (falls Spieler ganz knapp auf platform landet)
+		 * ___________
+		 * |	      |
+		 * |	      |	<-- JumpOnPlatform Collider Finder (collision wird aktiviert)
+		 * |__________|
+		 * 
 		 **/
 
 		// Overlap Area in Collision with JumpOnPlatform, disable in Unity
@@ -139,6 +248,8 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 	void JumpAblePlatformV3()
 	{
+		// Netzwerk problem, gibt keine velocity mehr!
+
 		/**
 		 * OverlapArea
 		 * __________
@@ -152,7 +263,7 @@ public class PlatformJumperV2 : MonoBehaviour {
 		 * |________|
 		 * 
 		 * Sprungbewegung:
-		 * rigidbody.velocity.y > 0 	--> ignore collision
+		 * rigidbody.velocity.y > 0 	--> ignore collision				
 		 *
 		 * Fallbewegung:
 		 * rigidbody.velocity.y <= 0	--> collision on!
@@ -168,6 +279,7 @@ public class PlatformJumperV2 : MonoBehaviour {
 		Collider2D platformCollider = Physics2D.OverlapArea(platformColliderFinderTopLeftPos, platformColliderFinderBottomRightPos, jumpOnPlatform);
 
 		bool ignore = false;
+
 		if(rigidbody2D.velocity.y > 0)
 			ignore = true;
 		else

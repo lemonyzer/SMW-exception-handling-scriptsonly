@@ -121,6 +121,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	void Awake()
 	{
+		myGroundStopperCollider = transform.Find(Tags.groundStopper).GetComponent<BoxCollider2D>();
 		myNetworkView = GetComponent<NetworkView>();
 
 		inputScript = GetComponent<PlatformUserControl>();
@@ -211,10 +212,12 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+	public bool platformJump = false;
+	BoxCollider2D myGroundStopperCollider;
 	void CheckPosition()
 	{
 		//playerPos spriterenderer boundaries
-		Vector2 playerPos = new Vector2(rigidbody2D.transform.position.x, rigidbody2D.transform.position.y);
+		Vector2 playerPos = new Vector2(transform.position.x, transform.position.y);
 
 		Vector2 groundedOffset = new Vector2(0f,0.5f);
 
@@ -230,18 +233,69 @@ public class PlatformCharacter : MonoBehaviour {
 		Vector2 playerColliderBottomLeftPos = new Vector2(transform.position.x - bodyCollider2D.size.x*0.5f + bodyCollider2D.center.x,
 		                                                   transform.position.y - spriteRenderer.bounds.extents.y*1.2f);	// Collider Bottom Left
 
-		Debug.DrawLine(playerColliderTopLeftPos, playerColliderBottomRightPos, Color.yellow);
-		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderTopRightPos, Color.yellow);
+//		Debug.DrawLine(playerColliderTopLeftPos, playerColliderBottomRightPos, Color.yellow);
+//		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderTopRightPos, Color.yellow);
 		Debug.DrawLine(playerColliderTopLeftPos, playerColliderTopRightPos, Color.yellow);
 		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderBottomRightPos, Color.yellow);
 
-		grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, layer.whatIsGround);
-//		if(gameObject.layer == layer.player1)
-//			Debug.Log(gameObject.name + " grounded: " + grounded);
-		//grounded = Physics2D.OverlapCircle(playerPos+groundCheckPosition, groundRadius, layer.whatIsGround);
-//		Debug.DrawLine(playerPos, playerPos + groundCheckPosition + new Vector2(0,-groundRadius), Color.green);
+		LayerMask ground = 1 << layer.block;
+		ground |= 1 << layer.ground;
+		ground |= 1 << layer.jumpAblePlatform;
 
-		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, layer.whatIsWall);
+//		walled = Physics2D.OverlapCircle(playerPos+wallCheckPosition, wallRadius, layer.whatIsWall);
+		
+
+		if(!platformJump)
+		{
+
+		}
+		else
+		{
+
+			//grounded = true;
+			//walled = false;
+		}
+
+		ground = 0;
+		ground |= 1 << layer.jumpAblePlatform;
+		Collider2D foundCollider = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+		if(foundCollider != null)
+		{
+			// hat jumpOnPlatformCollider gefunden
+			// check ob die collision aktiviert ist
+			if(Physics2D.GetIgnoreCollision(foundCollider, myGroundStopperCollider))
+			{
+				// yellow zone collids with jumpOnPlatform
+
+				Debug.Log(foundCollider.name + " GetIgnoreCollision() == true");
+				grounded = false;
+//				ground = 0;
+//				ground |= 1 << layer.ground;
+//				ground |= 1 << layer.block;
+//				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+			}
+			else
+			{
+				Debug.Log(foundCollider.name + " GetIgnoreCollision() == false");
+	//			Debug.Log(ground.value);
+	//			int max = int.MaxValue;
+	//			max &= 0 << layer.jumpAblePlatform;
+	//			//ground &= 0 << max;
+	//			ground &= 0 << layer.jumpAblePlatform;
+	//			Debug.Log(ground.value);
+				ground = 0;
+				ground |= 1 << layer.ground;
+				ground |= 1 << layer.block;
+				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+			}
+		}
+		else
+		{
+			ground = 0;
+			ground |= 1 << layer.ground;
+			ground |= 1 << layer.block;
+			grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+		}
 		Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
 	}
 
@@ -279,9 +333,10 @@ public class PlatformCharacter : MonoBehaviour {
 		if(grounded)
 		{
 			moveDirection.y = 0;
-			if(inputScript.inputJump)
+			if(inputScript.inputJump)				//  && moveDirection.y <= 0
 			{
-				SyncJump();
+				if(moveDirection.y <= 0f)			// verhindern das sound öfter abgespielt wird!! .... achtung sprung wird trotzdem öfter asugeführt kann  
+					SyncJump();
 				moveDirection.y = jumpPower;
 			}
 		}
