@@ -106,6 +106,11 @@ public class NetworkedPlayer : MonoBehaviour
 			// send state to server
 			if(Network.isClient)
 			{
+//				if(clientNeedsToSendNewInput)
+//				{
+//					myNetworkView.RPC( "ClientACKPositionCorrection", RPCMode.Server );
+//					clientNeedsToSendNewInput = false;
+//				}
 				myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, transform.position );
 			}
 			else if(Network.isServer)
@@ -137,6 +142,14 @@ public class NetworkedPlayer : MonoBehaviour
 	public List<Vector3> deltaPositions = new List<Vector3>();
 	public Vector3 lastPositionDifference = Vector3.zero;
 	public Vector3 avgPositionDifference = Vector3.zero;
+	public bool waitingForNewClientInput = false;
+
+//	[RPC]
+//	void ClientACKPositionCorrection()
+//	{
+//		waitingForNewClientInput = false;		// wenn diese RPC ausgeführt wurde ließt und wertet Server wieder ProcessInput RPC's aus
+//	}
+
 	[RPC]
 	void ProcessInput( float recvedInputHorizontal, bool recvedInputJump, Vector3 recvedPosition, NetworkMessageInfo info )
 	{
@@ -156,7 +169,16 @@ public class NetworkedPlayer : MonoBehaviour
 			// nur master client bekommt input und kontrolliert andere spieler
 			return;
 		}
-		
+
+		// was no bug... server accepted and applied input only position was wrong so server sents correctposition, till client is sync
+//		if(waitingForNewClientInput)
+//		{
+//			// client position prediction was wrong, drop all packages newInput == false
+//			// waiting for newInput after client recvs correctposition rpc and replys with input
+//
+//			return;
+//		}
+
 		// execute input
 		inputScript.inputHorizontal = recvedInputHorizontal;
 		inputScript.inputJump = recvedInputJump;
@@ -169,6 +191,7 @@ public class NetworkedPlayer : MonoBehaviour
 			// error is too big, tell client to rewind and replay								// berücksichtigt die, die zu stark abweichen
 			serverCorrectsClientPositionCount++;
 			myNetworkView.RPC( "CorrectState", info.sender, transform.position );
+//			waitingForNewClientInput = true;															// drop already send ProcessInput RPC's from Client
 			// compare results
 			deltaPositions.Insert(0, (transform.position - recvedPosition));						
 
@@ -181,7 +204,7 @@ public class NetworkedPlayer : MonoBehaviour
 			lastPositionDifference = deltaPositions[0];
 
 			// cap history at 200
-			if( deltaPositions.Count > 200 )
+			if( deltaPositions.Count > 1000 )
 			{
 				deltaPositions.RemoveAt( deltaPositions.Count - 1 );
 			}
@@ -198,10 +221,12 @@ public class NetworkedPlayer : MonoBehaviour
 
 	// local client character only
 	public uint correctPositionCount = 0;
+//	public bool clientNeedsToSendNewInput = false;
 	[RPC]
 	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
 	{
 		correctPositionCount++;
+//		clientNeedsToSendNewInput = true;
 		// find past state based on timestamp
 		int pastState = -1;											// FIX?: -1	//replay begins with 0<=pastState, if array is empty can't access element 0!!!
 		for( int i = 0; i < moveHistory.Count; i++ )
@@ -226,13 +251,17 @@ public class NetworkedPlayer : MonoBehaviour
 
 		Debug.Log("pastState ID: " + pastState);
 
-		// replay already sent controlInput
-		// because the movement commands are already sent to server!
-		for( int i = 0; i <= pastState; i++ )
+		// replay
+		if(true)
 		{
-			inputScript.inputHorizontal = moveHistory[ i ].HorizontalAxis;
-			inputScript.inputJump = moveHistory[ i ].jump;
-			characterScript.Simulate();
+			// replay already sent controlInput (was with wrong predicted position, but server accepted input!!!!)
+			// because the movement commands are already sent to server!		// BUG: with wrong predicted position!! ->> server ACCEPTS Input Sends correct position!
+			for( int i = 0; i <= pastState; i++ )
+			{
+				inputScript.inputHorizontal = moveHistory[ i ].HorizontalAxis;
+				inputScript.inputJump = moveHistory[ i ].jump;
+				characterScript.Simulate();
+			}
 		}
 		
 		// clear

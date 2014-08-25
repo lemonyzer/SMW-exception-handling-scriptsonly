@@ -72,9 +72,32 @@ public class Beam : MonoBehaviour {
 //		Debug.Log(rightBeamZoneX);
 	}
 
+//	void OnCollisionEnter2D ( Collision2D collision )
+//	{
+//		bool beamableParentObject = false;
+//		if(collision.gameObject.layer == layer.groundStopper)		// cant use player ... colliders are disabled during spawnprotection!
+//		{
+//			beamableParentObject = true;
+//		}
+//		if(beamableParentObject)
+//		{
+//			float oldY = collision.transform.parent.position.y;
+//			float oldX = collision.transform.parent.position.x;
+//			if(oldX < backgroundCenterPositionX)
+//			{
+//				collision.transform.parent.position = new Vector2(rightBeamZoneX,oldY);
+//			}
+//			else
+//			{
+//				collision.transform.parent.position = new Vector2(leftBeamZoneX,oldY);
+//			}
+//		}
+//	}
+
 	// Update is called once per frame
 	void OnTriggerEnter2D (Collider2D other)
 	{
+
 //		GameObject original;
 		bool beamableObject = false;
 		bool beamableParentObject = false;
