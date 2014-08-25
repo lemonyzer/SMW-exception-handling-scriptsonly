@@ -176,6 +176,10 @@ public class NetworkedPlayer : MonoBehaviour
 //			// client position prediction was wrong, drop all packages newInput == false
 //			// waiting for newInput after client recvs correctposition rpc and replys with input
 //
+//			// gameplay FIX
+//			inputScript.inputHorizontal = 0;
+//			inputScript.inputJump = false;
+//			characterScript.Simulate();
 //			return;
 //		}
 
@@ -258,6 +262,14 @@ public class NetworkedPlayer : MonoBehaviour
 			// because the movement commands are already sent to server!		// BUG: with wrong predicted position!! ->> server ACCEPTS Input Sends correct position!
 			for( int i = 0; i <= pastState; i++ )
 			{
+				// gameplay FIX
+//				if(replayMode==false)	// replay = false
+//				{
+//					// gameplay FIX
+//					inputScript.inputHorizontal = 0f;
+//					inputScript.inputJump = false;
+//					characterScript.Simulate();
+//				}
 				inputScript.inputHorizontal = moveHistory[ i ].HorizontalAxis;
 				inputScript.inputJump = moveHistory[ i ].jump;
 				characterScript.Simulate();
