@@ -150,12 +150,16 @@ public class PlatformUserControl : MonoBehaviour {
 			Debug.LogWarning(this.name + ": disabled!!!");
 		}
 	}
-	
+
+	public bool simulate = false;
+
 	// Update is called once per frame
 	void Update() {
 		// Wenn jeder Character ein UserControl script hat muss abgefragt werden ob der Character dem lokalen Spieler gehört
 		if(Network.peerType == NetworkPeerType.Disconnected || Network.player == realOwner.owner)
 		{
+			if(simulate)
+				return;
 //			Debug.LogWarning(this.ToString() +": is reading local controls input!!!");
 			ApplicationPlatformInputCheck();		//
 			CombineInput(); 						// kombiniert alle abgefragten Eingabemöglichkeiten (Keyboard, Touchpad, Mouse...)

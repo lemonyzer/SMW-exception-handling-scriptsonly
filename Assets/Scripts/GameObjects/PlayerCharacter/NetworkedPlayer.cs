@@ -11,11 +11,12 @@ public class NetworkedPlayer : MonoBehaviour
 	public bool interpolation = true;
 	public bool extrapolation = true;
 	
-	// a snapshot of values received over the network
+	// a snapshot of values received by server from character owner client over the network
 	private struct networkState
 	{
 		public Vector3 Position;
 		public double Timestamp;
+		public double tripTime;
 
 		public float InputHorizontal;
 		public bool InputJump;
@@ -25,7 +26,8 @@ public class NetworkedPlayer : MonoBehaviour
 			this.InputHorizontal = inputHorizontal;
 			this.InputJump = inputJump;
 			this.Position = pos;
-			this.Timestamp = time;
+			this.Timestamp = time;		// time when client sent the State
+			this.tripTime = Network.time - this.Timestamp;	// Network.time == time when Server received State, tripTime is the duration
 		}
 	}
 	
@@ -58,7 +60,8 @@ public class NetworkedPlayer : MonoBehaviour
 	RealOwner ownerScript;
 	NetworkView myNetworkView;
 
-	Transform characterBoxCollider;
+	Transform characterPredictionBoxCollider;
+	Transform characterLastRecvedPos;
 
 	void Awake()
 	{
@@ -66,8 +69,10 @@ public class NetworkedPlayer : MonoBehaviour
 		characterScript = GetComponent<PlatformCharacter> ();
 		inputScript = GetComponent<PlatformUserControl> ();
 		myNetworkView = GetComponent<NetworkView>();
-		characterBoxCollider = transform.Find("BoxCollider");		// looks in transform childs
-																	// GameObject.Find looks in compete Scene!
+		characterPredictionBoxCollider = transform.Find("BoxCollider");		// looks in transform childs
+										//transform.FindChild
+																		// GameObject.Find looks in compete Scene!
+		characterLastRecvedPos = transform.Find("LastRecvedPos");
 	}
 
 	void Start()
@@ -207,7 +212,7 @@ public class NetworkedPlayer : MonoBehaviour
 			avgPositionDifference = (1.0f/deltaPositions.Count) * avgPositionDifference;
 			lastPositionDifference = deltaPositions[0];
 
-			// cap history at 200
+			// cap history at 1000
 			if( deltaPositions.Count > 1000 )
 			{
 				deltaPositions.RemoveAt( deltaPositions.Count - 1 );
@@ -318,12 +323,12 @@ public class NetworkedPlayer : MonoBehaviour
 				//				{
 				//					SimulationBack();
 				//				}
-				characterBoxCollider.transform.position = Vector3.zero + moveHistory[pastState].Position;
+				characterPredictionBoxCollider.transform.position = Vector3.zero + moveHistory[pastState].Position;
 				Debug.DrawLine(this.transform.position, moveHistory[pastState].Position, Color.red, 5f);
 			}
 			else
 			{
-				characterBoxCollider.transform.position = this.transform.position;
+				characterPredictionBoxCollider.transform.position = this.transform.position;
 				//				characterBoxCollider.SetActive(false);
 			}
 		}
@@ -344,10 +349,10 @@ public class NetworkedPlayer : MonoBehaviour
 				int steps = (int) (InterpolationBackTime/Time.fixedDeltaTime);
 				//Debug.Log("Steps =" + steps);
 				// vorher position wieder auf character position setzen, dann kann vorrausberechnet werden
-				characterBoxCollider.position = transform.position;
+				characterPredictionBoxCollider.position = transform.position;
 				for(int i=0; i < steps; i++)
 				{
-					characterBoxCollider.Translate( moveDirectionPredicted );
+					characterPredictionBoxCollider.Translate( moveDirectionPredicted );
 				}
 			}
 		}
@@ -388,7 +393,9 @@ public class NetworkedPlayer : MonoBehaviour
 		
 		double currentTime = Network.time;
 		double interpolationTime = currentTime - InterpolationBackTime;
-		
+
+		characterLastRecvedPos.position = stateBuffer[0].Position;
+
 		// the latest packet is newer than interpolation time - we have enough packets to interpolate
 		if( stateBuffer[ 0 ].Timestamp > interpolationTime )
 		{
@@ -401,17 +408,34 @@ public class NetworkedPlayer : MonoBehaviour
 					networkState lhs = stateBuffer[ i ];
 					
 					// the state one slot newer
-					networkState rhs = stateBuffer[ Mathf.Max( i - 1, 0 ) ];
+					//networkState rhs = stateBuffer[ Mathf.Max( i - 1, 0 ) ];
+					networkState rhs = stateBuffer[ 0 ];								// position should be more precise
 					
 					// use time between lhs and rhs to interpolate
 					double length = rhs.Timestamp - lhs.Timestamp;
 					float t = 0f;
 					if( length > 0.0001 )
 					{
-						t = (float)( ( interpolationTime - lhs.Timestamp ) / length );
+						t = (float)( ( interpolationTime - lhs.Timestamp ) / length );		// needs fix
 					}
-					
-					transform.position = Vector3.Lerp( lhs.Position, rhs.Position, t );
+
+					if(Vector3.Distance(lhs.Position,rhs.Position) > 5)
+					{
+						// position changed dramatically (beam)
+						transform.position = rhs.Position;
+					}
+					else
+					{
+                        // Vector3.Lerp ( from, to, fraction )
+                        //Linearly interpolates between two vectors.
+                        //Interpolates between from and to by the fraction t.
+                        //This is most commonly used to find a point some fraction
+                        //of the way along a line between two endpoints (eg, to move
+                        //an object gradually between those points). This fraction is
+                        //clamped to the range [0...1]. When t = 0 returns FROM.
+                        //When t = 1 returns TO. When t = 0.5 returns the point midway between from and to.
+						transform.position = Vector3.Lerp( lhs.Position, rhs.Position, t );
+					}
 					break;
 				}
 			}
