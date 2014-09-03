@@ -60,8 +60,9 @@ public class NetworkedPlayer : MonoBehaviour
 	RealOwner ownerScript;
 	NetworkView myNetworkView;
 
-	Transform characterPredictionBoxCollider;
+	Transform characterLastRecvedPosBoxCollider;
 	Transform characterLastRecvedPos;
+	Transform characterPredictedPosBoxCollider;
 
 	void Awake()
 	{
@@ -69,10 +70,11 @@ public class NetworkedPlayer : MonoBehaviour
 		characterScript = GetComponent<PlatformCharacter> ();
 		inputScript = GetComponent<PlatformUserControl> ();
 		myNetworkView = GetComponent<NetworkView>();
-		characterPredictionBoxCollider = transform.Find("BoxCollider");		// looks in transform childs
+		characterLastRecvedPosBoxCollider = transform.Find("BoxCollider");		// looks in transform childs
 										//transform.FindChild
 																		// GameObject.Find looks in compete Scene!
 		characterLastRecvedPos = transform.Find("LastRecvedPos");
+		characterPredictedPosBoxCollider = transform.Find("PredictedBoxCollider");
 	}
 
 	void Start()
@@ -117,7 +119,6 @@ public class NetworkedPlayer : MonoBehaviour
 //					clientNeedsToSendNewInput = false;
 //				}
 				myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, transform.position );
-				LastPosAndPrediction();
 			}
 			else if(Network.isServer)
 			{
@@ -126,21 +127,37 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 		else
 		{
-			LastPosAndPrediction();
+
+			// TODO: move to Update!!!
 			/**
 			 * 
-			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!
+			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!	
 			 * 
 			 **/
 			// this character is from other player
-//			if(stateCount > 0)
-//			{
+			if(stateCount > 0)
+			{
 //				// wir haben mindestens ein paket
-//				networkState last = stateBuffer[0];
-//				inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
-//				//inputScript.inputJump = last.InputJump;
-//				characterScript.Simulate();
-//			}
+				networkState last = stateBuffer[0];
+				Vector3 tempPosition = transform.position;
+
+				inputScript.inputHorizontal = last.InputHorizontal;	// show animation
+				//inputScript.inputJump = last.InputJump;
+				characterScript.Simulate();
+
+				transform.position = tempPosition;	// reset position
+
+				for(int i=0; i< ((int)((avgTripTime)/Time.fixedDeltaTime)); i++)
+				{
+					inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
+					//inputScript.inputJump = last.InputJump;
+					characterScript.Simulate();
+				}
+				Vector3 predictedPosition = characterLastRecvedPosBoxCollider.position;		// stateBuffer[0].pos + predictiontime*stateBuffer[0].inputH could be wrong?
+				transform.position = tempPosition;
+				characterPredictedPosBoxCollider.position = predictedPosition;
+				Debug.DrawLine(tempPosition, predictedPosition);
+			}
 		}
 	}
 
@@ -312,6 +329,17 @@ public class NetworkedPlayer : MonoBehaviour
 
 	void LastPosAndPrediction()
 	{
+		avgTripTime = 0;
+		for(int i=0; i< stateCount; i++)
+		{
+			if(stateBuffer[i].tripTime > maxTripTime)
+			{
+				maxTripTime = stateBuffer[i].tripTime;
+			}
+			avgTripTime += stateBuffer[i].tripTime;
+		}
+		avgTripTime = (double)(avgTripTime/stateCount);
+
 		if(ownerScript.owner == Network.player)
 		{
 			// shows my characterposition 100ms in the past (Network Time - 100 ms)... is almost equal to the authorativ position from server
@@ -319,10 +347,16 @@ public class NetworkedPlayer : MonoBehaviour
 			// its not 100ms !!!
 			// it is Network.time - lastTripTime		( client sends input and predicted position to server, server answers only if position is bad)
 			//double serverTime = Network.time - InterpolationBackTime;
-			double serverTime = Network.time - (2*Network.GetAveragePing(Network.connections[0]))/1000.0;
+			//double serverTime = Network.time - (2*Network.GetAveragePing(Network.connections[0]))/1000.0;
 
 			// NetworkAveragePing cant belive this value...
 			// need continously pakageflow to read ping(rtt)/triptime
+
+			//T O D O avgTripTime has to be calculated in this method, not in OnGUI!
+			//DONE
+			//TODO avgTripTime in paketreceivemethod
+			
+			double serverTime = Network.time - (2*avgTripTime);
 
 //			Debug.Log(Network.time - InterpolationBackTime);
 //			Debug.Log(Network.time - (2*Network.GetAveragePing(Network.connections[0]))/1000.0);
@@ -336,12 +370,15 @@ public class NetworkedPlayer : MonoBehaviour
 				//				{
 				//					SimulationBack();
 				//				}
-				characterPredictionBoxCollider.transform.position = Vector3.zero + moveHistory[pastState].Position;
+				characterLastRecvedPosBoxCollider.transform.position = Vector3.zero + moveHistory[pastState].Position;
+				characterLastRecvedPos.position = moveHistory[pastState].Position;
 				Debug.DrawLine(this.transform.position, moveHistory[pastState].Position, Color.red, 5f);
 			}
 			else
 			{
-				characterPredictionBoxCollider.transform.position = this.transform.position;
+				// TODO: calculate triptime of correctPosition message and check if player is grounded if not -> collider is moved triptime toward ground
+				characterLastRecvedPosBoxCollider.transform.position = this.transform.position;
+				characterLastRecvedPos.position = transform.position;
 				//				characterBoxCollider.SetActive(false);
 			}
 		}
@@ -355,6 +392,14 @@ public class NetworkedPlayer : MonoBehaviour
 			 **/
 			// predicts characterposition (Network Time + 100ms) 
 
+			if(stateCount >= 2)
+			{
+				//characterLastRecvedPos.position = Vector3.Lerp(stateBuffer[1].Position,stateBuffer[0].Position, (float)((Network.time-stateBuffer[0].Timestamp)/(2*stateBuffer[0].tripTime)));
+				characterLastRecvedPos.position = Vector3.Lerp(stateBuffer[1].Position,stateBuffer[0].Position, (float)((Network.time-stateBuffer[0].Timestamp)/(stateBuffer[0].Timestamp-stateBuffer[1].Timestamp)));
+			}
+			else if(stateCount == 1)
+				characterLastRecvedPos.position = stateBuffer[0].Position;
+
 			if(stateCount > 0)
 			{
 //				Vector3 predictedPosition = new Vector3(transform.position.x,transform.position.y,transform.position.z);
@@ -366,10 +411,10 @@ public class NetworkedPlayer : MonoBehaviour
 //				Debug.Log("Each Step takes Time.fixedDeltaTime: " + Time.fixedDeltaTime + " ms)");
 
 				// vorher position wieder auf character position setzen, dann kann vorrausberechnet werden
-				characterPredictionBoxCollider.position = characterLastRecvedPos.position;
+				characterLastRecvedPosBoxCollider.position = characterLastRecvedPos.position;
 				for(int i=0; i < steps; i++)
 				{
-					characterPredictionBoxCollider.Translate( moveDirectionPredicted );
+					characterLastRecvedPosBoxCollider.Translate( moveDirectionPredicted );
 				}
 			}
 		}
@@ -383,6 +428,8 @@ public class NetworkedPlayer : MonoBehaviour
 											// not used because i'm now using OnSerilizeNetworkView (send 15 times per second) and is unreliable
 	void Update()
 	{
+		LastPosAndPrediction();
+
 		// in OnSerializeView() --- unreliable/reliable posibility! ...
 		// Server owns all Character GameObjects therefore he knows the correct authorative position ( with pingdelay behind controlling client ) 
 
@@ -410,14 +457,6 @@ public class NetworkedPlayer : MonoBehaviour
 		
 		double currentTime = Network.time;
 		double interpolationTime = currentTime - InterpolationBackTime;
-
-		if(stateCount >= 2)
-		{
-			//characterLastRecvedPos.position = Vector3.Lerp(stateBuffer[1].Position,stateBuffer[0].Position, (float)((Network.time-stateBuffer[0].Timestamp)/(2*stateBuffer[0].tripTime)));
-			characterLastRecvedPos.position = Vector3.Lerp(stateBuffer[1].Position,stateBuffer[0].Position, (float)((Network.time-stateBuffer[0].Timestamp)/(stateBuffer[0].Timestamp-stateBuffer[1].Timestamp)));
-		}
-		else
-			characterLastRecvedPos.position = stateBuffer[0].Position;
 
 		// the latest packet is newer than interpolation time - we have enough packets to interpolate
 		if( stateBuffer[ 0 ].Timestamp > interpolationTime )
@@ -483,7 +522,45 @@ public class NetworkedPlayer : MonoBehaviour
 				}
 			}
 		}
+
+//		Prediction()
 	}
+
+
+//	void Prediction()
+//	{
+//		// TODO: move to Update!!!
+//		/**
+//			 * 
+//			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!	
+//			 * 
+//			 **/
+//		// this character is from other player
+//		if(stateCount > 0)
+//		{
+//			//				// wir haben mindestens ein paket
+//			networkState last = stateBuffer[0];
+//			Vector3 tempPosition = transform.position;
+//			
+//			inputScript.inputHorizontal = last.InputHorizontal;	// show animation
+//			//inputScript.inputJump = last.InputJump;
+//			characterScript.Simulate();
+//			
+//			transform.position = tempPosition;	// reset position
+//			
+//			for(int i=0; i< ((int)((avgTripTime)/Time.fixedDeltaTime)); i++)
+//			{
+//				inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
+//				//inputScript.inputJump = last.InputJump;
+//				characterScript.Simulate();
+//			}
+//			Vector3 predictedPosition = characterLastRecvedPosBoxCollider.position;		// stateBuffer[0].pos + predictiontime*stateBuffer[0].inputH could be wrong?
+//			transform.position = tempPosition;
+//			characterPredictedPosBoxCollider.position = predictedPosition;
+//			Debug.DrawLine(tempPosition, predictedPosition);
+//		}
+//	}
+
 	bool oneTimeInfo = true;
 	// Authorative & unreliable replaced - Bookmethod [RPC]
 	// buffers only on Clients, on Characters not owned by local player
@@ -533,6 +610,7 @@ public class NetworkedPlayer : MonoBehaviour
 		}
 		else
 		{
+			bufferState( new networkState( position, info.timestamp, inputHorizontal, inputJump ) );					// buffers local players character (to use TripTime to show boxcollider position on server) 
 			// Dieser Character gehört lokalem Spieler
 			if(oneTimeInfo)
 			{
@@ -580,6 +658,9 @@ public class NetworkedPlayer : MonoBehaviour
 			stream.Serialize(ref authorativePos);
 			stream.Serialize(ref receivedHorizontal);
 			stream.Serialize(ref receivedInputJump);
+
+			// Update: netUpdates buffers now also on local player character to get current TripTime
+
 			//netUpdate(pos, info);			// will buffer state only on characters not controlled by local player
 			netUpdate(authorativePos, receivedHorizontal, receivedInputJump, info);			// will buffer state only on characters not controlled by local player
 		}
@@ -594,24 +675,21 @@ public class NetworkedPlayer : MonoBehaviour
 
 		// beste wär wenn server tripTime von anderem Client ebenfalls sendet: otherClient -> server -> this client
 		// aktuell nur server -> this client
-		GUILayout.Space(100);
-		GUILayout.FlexibleSpace();
-		GUILayout.Box("LastTripTime = " + ((double)(stateBuffer[0].tripTime)*1000).ToString("#### ms") + "\nresulting prediction Steps =" + ((double)(stateBuffer[0].tripTime/Time.fixedDeltaTime)).ToString("#"));
-		double avgTripTime = 0;
-		for(int i=0; i< stateCount; i++)
+		if( Network.isServer)
+			return;
+		if( ownerScript.owner == Network.player)
 		{
-			if(stateBuffer[i].tripTime > maxTripTime)
-			{
-				maxTripTime = stateBuffer[i].tripTime;
-			}
-			avgTripTime += stateBuffer[i].tripTime;
+			GUILayout.Space(100);
+			GUILayout.FlexibleSpace();
+			GUILayout.Box("LastTripTime = " + ((double)(stateBuffer[0].tripTime)*1000).ToString("#### ms") + "\nresulting prediction Steps =" + ((double)(stateBuffer[0].tripTime/Time.fixedDeltaTime)).ToString("#"));
+			// kann sein das LastTripTime nicht im avgTripTime eingerechnet wurde da der avg zum anderen zeitpunkt berechnet wird und da das neuste paket noch nicht angekommen ist. 
+			//TODO // lösung -> avg immer bei ankommendem paket berechnen!
+			GUILayout.Box("avgTripTime = " + ((double)(avgTripTime*1000)).ToString("#### ms") + "\nresulting avg prediction Steps =" + ((double)(avgTripTime/Time.fixedDeltaTime)).ToString("#"));
+			GUILayout.Box("maxTripTime = " + maxTripTime.ToString("0.###") + "\nresulting avg prediction Steps =" + ((double)(maxTripTime/Time.fixedDeltaTime)).ToString("#"));
+			GUILayout.FlexibleSpace();
 		}
-		avgTripTime = (double)(avgTripTime/stateCount);
-		GUILayout.Box("avgTripTime = " + ((double)(avgTripTime*1000)).ToString("#### ms") + "\nresulting avg prediction Steps =" + ((double)(avgTripTime/Time.fixedDeltaTime)).ToString("#"));
-		GUILayout.Box("maxTripTime = " + maxTripTime.ToString("0.###") + "\nresulting avg prediction Steps =" + ((double)(maxTripTime/Time.fixedDeltaTime)).ToString("#"));
-		GUILayout.FlexibleSpace();
 	}
-
+	double avgTripTime = 0;
 	double maxTripTime = 0;
 
 }
