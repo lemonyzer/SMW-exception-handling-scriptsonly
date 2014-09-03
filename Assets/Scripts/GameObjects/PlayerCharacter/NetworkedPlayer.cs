@@ -128,36 +128,6 @@ public class NetworkedPlayer : MonoBehaviour
 		else
 		{
 
-			// TODO: move to Update!!!
-			/**
-			 * 
-			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!	
-			 * 
-			 **/
-			// this character is from other player
-			if(stateCount > 0)
-			{
-//				// wir haben mindestens ein paket
-				networkState last = stateBuffer[0];
-				Vector3 tempPosition = transform.position;
-
-				inputScript.inputHorizontal = last.InputHorizontal;	// show animation
-				//inputScript.inputJump = last.InputJump;
-				characterScript.Simulate();
-
-				transform.position = tempPosition;	// reset position
-
-				for(int i=0; i< ((int)((avgTripTime)/Time.fixedDeltaTime)); i++)
-				{
-					inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
-					//inputScript.inputJump = last.InputJump;
-					characterScript.Simulate();
-				}
-				Vector3 predictedPosition = characterLastRecvedPosBoxCollider.position;		// stateBuffer[0].pos + predictiontime*stateBuffer[0].inputH could be wrong?
-				transform.position = tempPosition;
-				characterPredictedPosBoxCollider.position = predictedPosition;
-				Debug.DrawLine(tempPosition, predictedPosition);
-			}
 		}
 	}
 
@@ -523,43 +493,43 @@ public class NetworkedPlayer : MonoBehaviour
 			}
 		}
 
-//		Prediction()
+		Prediction2();
 	}
 
 
-//	void Prediction()
-//	{
-//		// TODO: move to Update!!!
-//		/**
-//			 * 
-//			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!	
-//			 * 
-//			 **/
-//		// this character is from other player
-//		if(stateCount > 0)
-//		{
-//			//				// wir haben mindestens ein paket
-//			networkState last = stateBuffer[0];
-//			Vector3 tempPosition = transform.position;
-//			
-//			inputScript.inputHorizontal = last.InputHorizontal;	// show animation
-//			//inputScript.inputJump = last.InputJump;
-//			characterScript.Simulate();
-//			
-//			transform.position = tempPosition;	// reset position
-//			
-//			for(int i=0; i< ((int)((avgTripTime)/Time.fixedDeltaTime)); i++)
-//			{
-//				inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
-//				//inputScript.inputJump = last.InputJump;
-//				characterScript.Simulate();
-//			}
-//			Vector3 predictedPosition = characterLastRecvedPosBoxCollider.position;		// stateBuffer[0].pos + predictiontime*stateBuffer[0].inputH could be wrong?
-//			transform.position = tempPosition;
-//			characterPredictedPosBoxCollider.position = predictedPosition;
-//			Debug.DrawLine(tempPosition, predictedPosition);
-//		}
-//	}
+	void Prediction2()
+	{
+
+		/**
+			 * 
+			 * !!!!!!!!!! 	Prediction / "Extrapolation"		!!!!!!	
+			 * 
+			 **/
+		// this character is from other player
+		if(stateCount > 0)
+		{
+			//				// wir haben mindestens ein paket
+			networkState last = stateBuffer[0];
+			Vector3 tempPosition = transform.position;
+			
+			inputScript.inputHorizontal = last.InputHorizontal;	// show animation
+			//inputScript.inputJump = last.InputJump;
+			characterScript.Simulate();
+			
+			transform.position = tempPosition;	// reset position
+			
+			for(int i=0; i< ((int)((avgTripTime)/Time.fixedDeltaTime)); i++)			// TODO calculate prediction steps with avgTripTime in receiving method!!
+			{
+				inputScript.inputHorizontal = last.InputHorizontal;	// predict that user is still moving in same direction.
+				//inputScript.inputJump = last.InputJump;
+				characterScript.Simulate();
+			}
+			Vector3 predictedPosition = characterLastRecvedPosBoxCollider.position;		// stateBuffer[0].pos + predictiontime*stateBuffer[0].inputH could be wrong?
+			transform.position = tempPosition;
+			characterPredictedPosBoxCollider.position = predictedPosition;
+			Debug.DrawLine(tempPosition, predictedPosition);
+		}
+	}
 
 	bool oneTimeInfo = true;
 	// Authorative & unreliable replaced - Bookmethod [RPC]
