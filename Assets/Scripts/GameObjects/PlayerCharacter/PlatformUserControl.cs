@@ -182,7 +182,19 @@ public class PlatformUserControl : MonoBehaviour {
 		{
 			inputJump = false;
 		}
-		
+
+//		// keyboard movement fix
+//		if(inputKeyboardHorizontal < 0 &&
+//		   inputKeyboardHorizontal > -1)
+//		{
+//			inputKeyboardHorizontal = 0f;
+//		}
+//		else if(inputKeyboardHorizontal < 1 &&
+//		        inputKeyboardHorizontal > 0)
+//		{
+//			inputKeyboardHorizontal = 0f;
+//		}
+
 		// combine the horizontal input
 		inputHorizontal = inputTouchHorizontal + inputKeyboardHorizontal;
 
