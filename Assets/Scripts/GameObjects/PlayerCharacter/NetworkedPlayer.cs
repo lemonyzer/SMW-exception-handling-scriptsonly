@@ -203,7 +203,7 @@ public class NetworkedPlayer : MonoBehaviour
 		{
 			// error is too big, tell client to rewind and replay								// berücksichtigt die, die zu stark abweichen
 			serverCorrectsClientPositionCount++;
-			myNetworkView.RPC( "CorrectState", info.sender, this.transform.position );
+			myNetworkView.RPC( "CorrectState", info.sender, this.transform.position, characterScript.moveDirection );
 //			waitingForNewClientInput = true;															// drop already send ProcessInput RPC's from Client
 			// compare results
 			deltaPositions.Insert(0, (this.transform.position - recvedPosition));						
@@ -243,7 +243,7 @@ public class NetworkedPlayer : MonoBehaviour
 	public uint correctPositionCount = 0;
 //	public bool clientNeedsToSendNewInput = false;
 	[RPC]
-	void CorrectState( Vector3 correctPosition, NetworkMessageInfo info )
+	void CorrectState( Vector3 correctPosition, Vector3 moveDirection, NetworkMessageInfo info )
 	{
 		correctPositionCount++;
 //		clientNeedsToSendNewInput = true;
@@ -269,6 +269,7 @@ public class NetworkedPlayer : MonoBehaviour
 			//a) Coroutine triggers every deltaFixedUpdateTime
 			//b) FixedUpdate
 			this.transform.position = correctPosition;
+			characterScript.moveDirection = moveDirection;				// FIX, less desync?
 
 		}
 
