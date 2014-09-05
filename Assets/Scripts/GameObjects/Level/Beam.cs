@@ -137,6 +137,10 @@ public class Beam : MonoBehaviour {
 		{
 			beamableObject = true;
 		}
+		else if(other.gameObject.layer == layer.bullet)
+		{
+			beamableObject = true;
+		}
 
 		if(beamableParentObject)
 		{

@@ -109,6 +109,12 @@ public class PlatformCharacter : MonoBehaviour {
 	private BoxCollider2D feetCollider2D;
 	private SpriteRenderer spriteRenderer;
 
+
+	/**
+	 * Pre-Instantiated GameObjects
+	 **/
+//	private GameObject bullet;			// should be public in a gameController script
+
 	public void setMaxSpeed(float newMaxSpeed)
 	{
 		maxSpeed = newMaxSpeed;
@@ -683,6 +689,7 @@ public class PlatformCharacter : MonoBehaviour {
 				else
 				{
 					Debug.Log(this.ToString() +": TriggerEnter2D with " + currentPowerUp.powerUpName + " ("+ currentPowerUp.name + ")" );
+					bool collectingItem = false;
 					if(currentPowerUp.powerUpName == "Star")
 					{
 						//GetComponent<RageModus>().StartRageModus();
@@ -690,27 +697,27 @@ public class PlatformCharacter : MonoBehaviour {
 					}
 					else if(currentPowerUp.powerUpName == "FireFlower")
 					{
-
+						collectingItem = true;
 					}
 					else if(currentPowerUp.powerUpName == "BoBomb")
 					{
-
+						collectingItem = true;
 					}
 					else if(currentPowerUp.powerUpName == "1up")
 					{
-						
+						collectingItem = true;
 					}
 					else if(currentPowerUp.powerUpName == "2up")
 					{
-						
+						collectingItem = true;
 					}
 					else if(currentPowerUp.powerUpName == "3up")
 					{
-						
+						collectingItem = true;
 					}
 					else if(currentPowerUp.powerUpName == "5up")
 					{
-						
+						collectingItem = true;
 					}
 					else
 					{
@@ -718,6 +725,8 @@ public class PlatformCharacter : MonoBehaviour {
 					}
 					if(Network.isServer)
 					{
+						if(collectingItem)
+							networkView.RPC ("CollectedItem", RPCMode.All, currentPowerUp.powerUpName);
 						// Destroy PowerUp
 						Network.Destroy(other.gameObject);
 					}
@@ -725,4 +734,50 @@ public class PlatformCharacter : MonoBehaviour {
 			}
 		}
 	}
+
+	Vector3 bulletSpawnPositionOffset = new Vector3(0.75f,0,0);
+
+	[RPC]
+	void CollectedItem(string itemName)
+	{
+		Debug.Log(this.ToString() + ": item " + itemName + " collected!");
+		if(itemName == "FireFlower")
+		{
+			if(Network.isServer)
+			{
+				StartCoroutine(SpawnBullet());
+				return;
+			}
+		}
+	}
+
+	int bulletsLeftCount = 3;
+
+	IEnumerator SpawnBullet()
+	{
+		if(Network.isServer)
+		{
+			if(bulletsLeftCount < 3)
+				yield return new WaitForSeconds (2);
+
+			bulletsLeftCount --;
+			GameObject bulletPrefab = (GameObject) Resources.Load("PowerUps/"+"FireBall", typeof(GameObject));
+			if(bulletPrefab == null)
+			{
+				Debug.Log("bulletPrefab coudn't be loaded!!!! check path / and name");
+			}
+			GameObject bulletGameObject = (GameObject) Network.Instantiate( bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity, 0);
+			
+			bulletGameObject.GetComponent<AuthoritativeBullet>().ownerCharacter = this.gameObject;// important!!!
+			
+			bulletGameObject.rigidbody2D.AddForce(new Vector3(this.transform.localScale.x * AuthoritativeBullet.moveSpeed.x,1 * AuthoritativeBullet.moveSpeed.y,1* AuthoritativeBullet.moveSpeed.z));
+
+			if(bulletsLeftCount > 0)
+				StartCoroutine(SpawnBullet());
+			else
+				bulletsLeftCount = 3;
+		}
+	}
+
+
 }

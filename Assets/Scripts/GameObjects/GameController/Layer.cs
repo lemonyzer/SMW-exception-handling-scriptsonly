@@ -28,6 +28,7 @@ public class Layer : MonoBehaviour {
 	public int jumpAblePlatformSaveZone;
 	
 	public int powerUp;
+	public int bullet;
 	
 	public int groundStopper;
 	
@@ -53,6 +54,7 @@ public class Layer : MonoBehaviour {
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
 	
 	public const string powerUpLayerName = "PowerUp";
+	public const string bulletLayerName = "Bullet";
 	public const string groundStopperLayerName = "GroundStopper";
 	
 	public const string faderLayerName = "Fader";
@@ -94,6 +96,7 @@ public class Layer : MonoBehaviour {
 		whatIsWall = whatIsGround;
 		
 		powerUp = LayerMask.NameToLayer(powerUpLayerName);
+		bullet = LayerMask.NameToLayer(bulletLayerName);
 		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
 //		fader = LayerMask.NameToLayer(faderLayerName);
 	}

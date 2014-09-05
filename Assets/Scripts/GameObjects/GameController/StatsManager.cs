@@ -216,4 +216,55 @@ public class StatsManager : MonoBehaviour {
 			AddKill(playerAttacker, playerVictim);
         }
     }
+
+
+	
+	public void BulletHit(GameObject attacker, GameObject victim)
+	{
+		if(myNetworkView != null || Network.peerType != NetworkPeerType.Disconnected)
+		{
+			if(!Network.isServer)
+			{
+				return;
+			}
+		}
+		// wird nur von PhotonMasterClient ausgeführt....
+		
+		if(GameState.currentState == GameState.States.Running)
+		{
+			NetworkPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
+			NetworkPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
+			
+			myNetworkView.RPC("SyncBulletHitAnimation", RPCMode.All, attackersRealOwner, victimsRealOwner);
+			myNetworkView.RPC("SyncBulletHit", RPCMode.AllBuffered, attackersRealOwner, victimsRealOwner);
+		}
+		else
+		{
+			Debug.LogWarning("current GameState = " + GameState.currentState.ToString() + " HeadJump zählt nicht!");
+		}
+	}
+
+	[RPC]
+	public void SyncBulletHitAnimation(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
+	{
+		if(GameState.currentState == GameState.States.Running)
+		{
+			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
+			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
+			
+			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
+			
+			victimsAnimationController.InvincibleAttackAnimation();
+			
+			//AddKill(playerAttacker, playerVictim);
+		}
+	}
+
+	[RPC]
+	public void SyncBulletHit(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
+	{
+		Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
+		Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
+		AddKill(playerAttacker, playerVictim);
+	}
 }
