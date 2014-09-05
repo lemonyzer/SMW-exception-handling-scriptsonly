@@ -98,6 +98,14 @@ public class Beam : MonoBehaviour {
 	void OnTriggerEnter2D (Collider2D other)
 	{
 
+//		if(Network.peerType != NetworkPeerType.Disconnected)
+//		{
+//			if(!Network.isServer)
+//			{
+//				return;
+//			}
+//		}
+
 //		GameObject original;
 		bool beamableObject = false;
 		bool beamableParentObject = false;
@@ -105,10 +113,10 @@ public class Beam : MonoBehaviour {
 		//Simple Debug
 //		Debug.Log(this.ToString() + ": OnTriggerEnter2D() " + other.name);
 
-		if(other.gameObject.layer == layer.groundStopper)		// cant use player ... colliders are disabled during spawnprotection!
-		{
-			beamableParentObject = true;
-		}
+//		if(other.gameObject.layer == layer.groundStopper)		// cant use player ... colliders are disabled during spawnprotection!
+//		{
+//			beamableParentObject = true;						// players are beamed in characterScript because of unity physic engine simulation lag
+//		}
 //		else if(other.gameObject.layer == layer.player1)
 //		{
 //			beamableObject = true;
@@ -125,7 +133,7 @@ public class Beam : MonoBehaviour {
 //		{
 //			beamableObject = true;
 //		}
-		else if(other.gameObject.layer == layer.powerUp)
+		if(other.gameObject.layer == layer.powerUp)
 		{
 			beamableObject = true;
 		}

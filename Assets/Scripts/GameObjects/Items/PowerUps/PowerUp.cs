@@ -14,11 +14,15 @@ public class PowerUp : MonoBehaviour {
 	IEnumerator DestroyPowerUp()
 	{
 		yield return new WaitForSeconds(powerUpStayTime);
-		if(PhotonNetwork.isMasterClient)
+		if(Network.peerType == NetworkPeerType.Disconnected)
+		{
+			Destroy(this.gameObject);
+		}
+		if(Network.isServer)
 		{
 			if(this.gameObject != null)
 			{
-				PhotonNetwork.Destroy (this.gameObject);
+				Network.Destroy (this.gameObject);
 			}
 			else
 			{
