@@ -35,7 +35,8 @@ public class PlatformUserControl : MonoBehaviour {
 	//	[System.NonSerialized]
 	public bool inputJump = false;
 
-	public bool keyPressed = true;
+	// jump needs single klick, or key pressing
+	private bool keyPressed = true;
 	
 	/**
 	* Input Touch
@@ -174,13 +175,27 @@ public class PlatformUserControl : MonoBehaviour {
 	
 	void CombineInput()
 	{
-		if(buttonIsPressed || inputKeyboardJump)
+		if(keyPressed)
 		{
-			inputJump = true;
+			if(buttonIsPressed || inputKeyboardJump)
+			{
+				inputJump = true;
+			}
+			else
+			{
+				inputJump = false;
+			}
 		}
 		else
 		{
-			inputJump = false;
+			if(buttonIsTapped || inputKeyboardJump)
+			{
+				inputJump = true;
+			}
+			else
+			{
+				inputJump = false;
+			}
 		}
 
 //		// keyboard movement fix

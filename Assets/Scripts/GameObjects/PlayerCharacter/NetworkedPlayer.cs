@@ -82,12 +82,22 @@ public class NetworkedPlayer : MonoBehaviour
 
 	}
 
+	bool correctedPosition = false;
+	int skipInputFrameCount = 3;
+	int skippedInputFrametimes = 0;
+
 	// simulate movement local
 	// send input and calculated position to server / masterclient
 	void FixedUpdate()
 	{
 		if( ownerScript.owner == Network.player )
 		{
+			if(correctedPosition)
+			{
+				Debug.Log("corrected Position, skip input for one frame");
+				correctedPosition = false;
+				return;
+			}
 			// wird nur auf anderen characteren ausgeführt!
 			extrapolation = false;
 
@@ -231,11 +241,15 @@ public class NetworkedPlayer : MonoBehaviour
 		{
 			if( moveHistory[ i ].Timestamp <= info.timestamp )
 			{
+				// wenn gebufferter eintrag älter als ankommendes correctPosition paket
+				// tritt bei zwei aufeinander folgende correctPosition RPC's nicht mehr ein, da moveHistory.clear aufgerufen wird!
 				pastState = i;
 				break;
 			}
 		}
-		
+
+		Vector3 tempPositionBeforeCorrection = transform.position;
+
 		// rewind position
 		if(true)
 		{
@@ -269,9 +283,17 @@ public class NetworkedPlayer : MonoBehaviour
 				characterScript.Simulate();
 			}
 		}
+
+		Vector3 tempPositionAfterCorrectionAndInputReplay = transform.position;
+
+		// try
+//		transform.position = Vector3.Lerp(tempPositionBeforeCorrection, tempPositionAfterCorrectionAndInputReplay, 0.5f);
 		
 		// clear
 		moveHistory.Clear();
+
+//		FixedUpdate();				// to get atleast on element in moveHistory!!! ... next correctPosition is coming, need rewind and replay states
+//		correctedPosition = true;
 	}
 	
 
@@ -649,7 +671,7 @@ public class NetworkedPlayer : MonoBehaviour
 			return;
 		if( ownerScript.owner == Network.player)
 		{
-			GUILayout.Space(100);
+			GUILayout.Space(160);
 			GUILayout.FlexibleSpace();
 			GUILayout.Box("LastTripTime = " + ((double)(stateBuffer[0].tripTime)*1000).ToString("#### ms") + "\nresulting prediction Steps =" + ((double)(stateBuffer[0].tripTime/Time.fixedDeltaTime)).ToString("#"));
 			// kann sein das LastTripTime nicht im avgTripTime eingerechnet wurde da der avg zum anderen zeitpunkt berechnet wird und da das neuste paket noch nicht angekommen ist. 

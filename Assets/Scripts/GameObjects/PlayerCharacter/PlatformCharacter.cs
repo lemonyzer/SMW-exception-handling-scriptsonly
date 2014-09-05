@@ -213,8 +213,31 @@ public class PlatformCharacter : MonoBehaviour {
 
 	public bool platformJump = false;
 	BoxCollider2D myGroundStopperCollider;
+
+	void CheckBeam()
+	{
+		//playerPos spriterenderer boundaries
+		Vector2 playerPos = new Vector2(transform.position.x, transform.position.y);
+		
+		// Beam
+		// 0.5 = half player size (pivot.x)
+		// if players pos < leftborder+0.5
+		// beam to rightborder-0.5
+		if(transform.position.x < -9.5f)
+		{
+			playerPos.x = 9.5f;
+		}
+		else if(transform.position.x > 9.5f)
+		{
+			playerPos.x = -9.5f;
+		}
+		
+		transform.position = playerPos;
+	}
+
 	void CheckPosition()
 	{
+
 		//playerPos spriterenderer boundaries
 		Vector2 playerPos = new Vector2(transform.position.x, transform.position.y);
 
@@ -318,9 +341,9 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
-	float gravity = 8;
+	float gravity = 30; // 8
 	public Vector3 moveDirection = Vector3.zero;
-	float jumpPower = 7;
+	float jumpPower = 14; // 7
 
 	public void Simulate()
 	{
@@ -332,11 +355,15 @@ public class PlatformCharacter : MonoBehaviour {
 		// Vertical Movement
 		if(grounded)
 		{
-			moveDirection.y = 0;
-			if(inputScript.inputJump)				//  && moveDirection.y <= 0
+			if(moveDirection.y <=0)			// jump fix
 			{
-				if(moveDirection.y <= 0f)			// verhindern das sound öfter abgespielt wird!! .... achtung sprung wird trotzdem öfter asugeführt kann  
-					SyncJump();
+				moveDirection.y = 0;
+			}
+
+			if(inputScript.inputJump && moveDirection.y == 0)				//  && moveDirection.y <= 0
+			{
+//				if(moveDirection.y <= 0f)			// verhindern das sound öfter abgespielt wird!! .... achtung sprung wird trotzdem öfter asugeführt kann  
+				SyncJump();
 				moveDirection.y = jumpPower;
 			}
 		}
@@ -347,6 +374,7 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 
 		transform.Translate( moveDirection * Time.fixedDeltaTime );
+		CheckBeam ();
 	}
 	bool hasHorizontalInputShown = false;
 	bool hasNoHorizontalInputShown = false;
