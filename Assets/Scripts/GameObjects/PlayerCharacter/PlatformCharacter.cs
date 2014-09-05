@@ -174,15 +174,14 @@ public class PlatformCharacter : MonoBehaviour {
 		this.inputTouchVelocity = moveHorizontal;
 		this.inputTouchJump = jump;
 	}
-	
-	void Update()
-	{
-
-	}
-
 
 	// FixedUpdate is called once per frame
 	void FixedUpdate () {
+		if(Network.isClient)
+			return;
+
+		if(Network.isServer)
+			return;
 		
 		//Actually move the player using his/her input
 		if(isDead)
