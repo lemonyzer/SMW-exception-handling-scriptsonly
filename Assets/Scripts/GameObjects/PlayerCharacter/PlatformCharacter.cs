@@ -769,8 +769,8 @@ public class PlatformCharacter : MonoBehaviour {
 			GameObject bulletGameObject = (GameObject) Network.Instantiate( bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity, 0);
 			
 			bulletGameObject.GetComponent<AuthoritativeBullet>().ownerCharacter = this.gameObject;// important!!!
-			
-			bulletGameObject.rigidbody2D.AddForce(new Vector3(this.transform.localScale.x * AuthoritativeBullet.moveSpeed.x,1 * AuthoritativeBullet.moveSpeed.y,1* AuthoritativeBullet.moveSpeed.z));
+			bulletGameObject.GetComponent<AuthoritativeBullet>().moveDirection = new Vector3(this.transform.localScale.x,0,0);
+			bulletGameObject.rigidbody2D.velocity = new Vector3(this.transform.localScale.x * AuthoritativeBullet.moveSpeed.x,1 * AuthoritativeBullet.moveSpeed.y,1* AuthoritativeBullet.moveSpeed.z);
 
 			if(bulletsLeftCount > 0)
 				StartCoroutine(SpawnBullet());
