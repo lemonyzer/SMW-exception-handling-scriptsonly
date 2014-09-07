@@ -180,12 +180,39 @@ public class StatsManager : MonoBehaviour {
 		}
     }
 
+	bool isAuthoritativeHost()
+	{
+		if(offline ())
+			return true;
+		
+		if(server ())
+			return true;
+		
+		return false;
+		
+	}
+	
+	bool offline()
+	{
+		if(Network.peerType == NetworkPeerType.Disconnected)
+			return true;
+		
+		return false;
+	}
+	
+	bool server()
+	{
+		if(Network.isServer)
+			return true;
+		
+		return false;
+	}
 
 	public void InvincibleAttack(GameObject attacker, GameObject victim)
 	{
 		if(myNetworkView != null)
 		{
-			if(!Network.isServer)
+			if(!Network.isServer && Network.peerType != NetworkPeerType.Disconnected)
 			{
 				return;
 			}
@@ -195,9 +222,21 @@ public class StatsManager : MonoBehaviour {
 		{
 			NetworkPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
 			NetworkPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
-			
-			myNetworkView.RPC("SyncInvincibleAttack", RPCMode.AllBuffered, attackersRealOwner, victimsRealOwner);
+
+			if(server())
+				myNetworkView.RPC("SyncInvincibleAttack", RPCMode.AllBuffered, attackersRealOwner, victimsRealOwner);
+
+			if(offline())
+			{
+//				AnimatorController victimsAnimationController = victim.GetComponent<AnimatorController>();
+//				victimsAnimationController.InvincibleAttackAnimation();
+//				AddKill(attacker,victim);
+			}
         }
+		else
+		{
+			Debug.LogWarning("current GameState = " + GameState.currentState.ToString() + " InvincibleAttack zählt nicht!");
+		}
 	}
 
 
@@ -240,7 +279,7 @@ public class StatsManager : MonoBehaviour {
 		}
 		else
 		{
-			Debug.LogWarning("current GameState = " + GameState.currentState.ToString() + " HeadJump zählt nicht!");
+			Debug.LogWarning("current GameState = " + GameState.currentState.ToString() + " BulletHit zählt nicht!");
 		}
 	}
 

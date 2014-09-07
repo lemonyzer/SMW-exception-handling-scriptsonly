@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PowerUp : MonoBehaviour {
+public class Item : MonoBehaviour {
 
-	public string powerUpName;
-	public float powerUpStayTime = 8f; 
+	public string itemName;
+	public float itemStayTime = 8f; 
 
 	public void StartDestroyTimer()
 	{
@@ -13,7 +13,7 @@ public class PowerUp : MonoBehaviour {
 
 	IEnumerator DestroyPowerUp()
 	{
-		yield return new WaitForSeconds(powerUpStayTime);
+		yield return new WaitForSeconds(itemStayTime);
 		if(Network.peerType == NetworkPeerType.Disconnected)
 		{
 			Destroy(this.gameObject);

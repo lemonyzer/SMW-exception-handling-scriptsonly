@@ -674,104 +674,167 @@ public class PlatformCharacter : MonoBehaviour {
 		gameObject.rigidbody2D.isKinematic = true;
 		gameObject.rigidbody2D.WakeUp();
 	}
+	
 
-	void OnTriggerEnter2D(Collider2D other)
+	public void CollectingItem(GameObject goItem)
 	{
-		if(Network.isServer)
+		if(!isAuthoritativeHost())
 		{
-			if(other.gameObject.layer == layer.powerUp)
+			return;
+		}
+		// runs on server/offline only
+
+		Item currentItem = goItem.GetComponent<Item>();
+
+		if(currentItem == null)
+		{
+			Debug.LogError(goItem.name + " has no Item Script attached!!!");
+			return;
+		}
+
+		if(!CharacterCanCollectItems())
+		{
+			Debug.LogWarning(this.ToString() + " can't collect items right now!");
+			return;
+		}
+
+		bool destroyItem = true;
+
+		//TODO Polymorphism
+		if(currentItem.itemName == "Star")
+		{
+			//GetComponent<RageModus>().StartRageModus();
+			if(offline())
+				GetComponent<RageModus>().StartRageModus();
+			if(server())
+				networkView.RPC("StartRageModus", RPCMode.All);
+
+		}
+		else if(currentItem.itemName == "FireFlower")
+		{
+			if(offline())
+				StartCoroutine(SpawnBullet());
+			if(server())
 			{
-				PowerUp currentPowerUp = other.gameObject.GetComponent<PowerUp>();
-				if(currentPowerUp == null)
-				{
-					Debug.LogError("PowerUp has no PowerUp Script Component! Identification with Tag?");
-				}
-				else
-				{
-					Debug.Log(this.ToString() +": TriggerEnter2D with " + currentPowerUp.powerUpName + " ("+ currentPowerUp.name + ")" );
-					bool collectingItem = false;
-					if(currentPowerUp.powerUpName == "Star")
-					{
-						//GetComponent<RageModus>().StartRageModus();
-						networkView.RPC("StartRageModus", RPCMode.All);
-					}
-					else if(currentPowerUp.powerUpName == "FireFlower")
-					{
-						collectingItem = true;
-					}
-					else if(currentPowerUp.powerUpName == "BoBomb")
-					{
-						collectingItem = true;
-					}
-					else if(currentPowerUp.powerUpName == "1up")
-					{
-						collectingItem = true;
-					}
-					else if(currentPowerUp.powerUpName == "2up")
-					{
-						collectingItem = true;
-					}
-					else if(currentPowerUp.powerUpName == "3up")
-					{
-						collectingItem = true;
-					}
-					else if(currentPowerUp.powerUpName == "5up")
-					{
-						collectingItem = true;
-					}
-					else
-					{
-						Debug.LogWarning("unknown PowerUp found! " + currentPowerUp.powerUpName);
-					}
-					if(Network.isServer)
-					{
-						if(collectingItem)
-							networkView.RPC ("CollectedItem", RPCMode.All, currentPowerUp.powerUpName);
-						// Destroy PowerUp
-						Network.Destroy(other.gameObject);
-					}
-				}
+				StartCoroutine(SpawnBullet());				// spezzialfall... bullets werden von server gemanaged (authoritativ )
+			//	myNetworkView.RPC ("", RPCMode.All);		// an alle?? eigentlich nur an Spieler	
 			}
 		}
+		else if(currentItem.itemName == "BoBomb")
+		{
+
+		}
+		else if(currentItem.itemName == "1up")
+		{
+
+		}
+		else if(currentItem.itemName == "2up")
+		{
+
+		}
+		else if(currentItem.itemName == "3up")
+		{
+
+		}
+		else if(currentItem.itemName == "5up")
+		{
+
+		}
+		else
+		{
+			Debug.LogWarning("unknown Item found! " + currentItem.itemName);
+		}
+
+
+		if(destroyItem)
+		{
+			if(offline())
+			{
+				Destroy(goItem);
+			}
+			if(server())
+			{
+				Network.Destroy(goItem);
+			}
+		}
+
+	}
+
+	bool CharacterCanCollectItems()
+	{
+		// TODO more Exceptions...
+		
+		//if(gameMode.collectItems == false)
+		//	return false;
+		
+		//if(myCharacterScript.inventar.isFull())
+		// return false;
+		
+		if(isDead)
+			return false;
+		
+		return true;
 	}
 
 	Vector3 bulletSpawnPositionOffset = new Vector3(0.75f,0,0);
-
-	[RPC]
-	void CollectedItem(string itemName)
-	{
-		Debug.Log(this.ToString() + ": item " + itemName + " collected!");
-		if(itemName == "FireFlower")
-		{
-			if(Network.isServer)
-			{
-				StartCoroutine(SpawnBullet());
-				return;
-			}
-		}
-	}
-
 	int bulletsLeftCount = 3;
-
-	IEnumerator SpawnBullet()
+	
+	
+	bool isAuthoritativeHost()
+	{
+		if(offline ())
+			return true;
+		
+		if(server ())
+			return true;
+		
+		return false;
+		
+	}
+	
+	bool offline()
+	{
+		if(Network.peerType == NetworkPeerType.Disconnected)
+			return true;
+		
+		return false;
+	}
+	
+	bool server()
 	{
 		if(Network.isServer)
+			return true;
+		
+		return false;
+	}
+	
+	IEnumerator SpawnBullet()
+	{
+		if(isAuthoritativeHost())
 		{
 			if(bulletsLeftCount < 3)
 				yield return new WaitForSeconds (2);
-
+			
 			bulletsLeftCount --;
 			GameObject bulletPrefab = (GameObject) Resources.Load("PowerUps/"+"FireBall", typeof(GameObject));
 			if(bulletPrefab == null)
 			{
 				Debug.Log("bulletPrefab coudn't be loaded!!!! check path / and name");
 			}
-			GameObject bulletGameObject = (GameObject) Network.Instantiate( bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity, 0);
+			GameObject bulletGameObject = null;
+			if(server())
+			{
+				bulletGameObject = (GameObject) Network.Instantiate( bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity, 0);
+			}
+			else if(offline())
+			{
+				bulletGameObject = (GameObject) Instantiate(bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity);
+			}
 			
 			bulletGameObject.GetComponent<AuthoritativeBullet>().ownerCharacter = this.gameObject;// important!!!
 			bulletGameObject.GetComponent<AuthoritativeBullet>().moveDirection = new Vector3(this.transform.localScale.x,0,0);
 			bulletGameObject.rigidbody2D.velocity = new Vector3(this.transform.localScale.x * AuthoritativeBullet.moveSpeed.x,1 * AuthoritativeBullet.moveSpeed.y,1* AuthoritativeBullet.moveSpeed.z);
-
+			
 			if(bulletsLeftCount > 0)
 				StartCoroutine(SpawnBullet());
 			else

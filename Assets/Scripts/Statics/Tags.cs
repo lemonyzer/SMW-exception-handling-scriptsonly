@@ -8,14 +8,15 @@ public class Tags : MonoBehaviour {
 	 **/
 	public const string player = "Player";
 	public const string head = "Head";
-	public const string body = "Body";
+	public const string bodyCollider = "BodyCollider";
 	public const string feet = "Feet";
+	public const string itemCollector = "ItemCollector";
+	public const string powerUpHitArea = "PowerUpHitArea";
 	public const string groundStopper = "GroundStopper";
-	public const string colliderFinder = "ColliderFinder";
-	public const string colliderFinderTop = "ColliderFinderTop";
-	public const string colliderFinderSide1 = "ColliderFinderSide1";
-	public const string colliderFinderSide2 = "ColliderFinderSide2";
-	public const string colliderFinderBottom = "ColliderFinderBottom";
+
+	public const string boxCollider = "BoxCollider";
+	public const string lastReceivedPos = "LastRecvedPos";
+	public const string predictedBoxCollider = "PredictedBoxCollider";
 
 	/**
 	 * Scene, Level Parts

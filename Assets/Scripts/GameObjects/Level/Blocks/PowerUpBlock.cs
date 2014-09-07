@@ -170,7 +170,8 @@ public class PowerUpBlock : MonoBehaviour {
 		if(Network.peerType == NetworkPeerType.Disconnected)
 		{
 			// offline movement
-			int i = Random.Range(0, powerups.Length-1);
+			//Returns a random integer number between min [inclusive] and max [exclusive]
+			int i = Random.Range(0, powerups.Length);
 			powerupClone = (GameObject)Instantiate( powerups[i], transform.position + offset, Quaternion.identity );
 			if(powerupClone.rigidbody2D != null)
 			{
@@ -182,14 +183,16 @@ public class PowerUpBlock : MonoBehaviour {
 			{
 				
 			}
-			powerupClone.GetComponent<PowerUp>().StartDestroyTimer();
+			powerupClone.GetComponent<Item>().StartDestroyTimer();
 		}
 
 		if(Network.isServer)
 		{
 			//Vector3 offset = new Vector3(.5f,.5f,0.0f);
 
-			int i = Random.Range(0, powerups.Length-1);
+			//static float Range(float min, float max); 
+			//Returns a random integer number between min [inclusive] and max [exclusive]
+			int i = Random.Range(0, powerups.Length);
 			powerupClone = (GameObject)Network.Instantiate( powerups[i], transform.position + offset, Quaternion.identity,0 );
 			//powerupClone = (GameObject)PhotonNetwork.Instantiate( powerups[i].name, transform.position + offset, Quaternion.identity,0 );
 			//GameObject powerupClone = (GameObject)Instantiate(powerups[i],transform.position + offset ,Quaternion.identity);
@@ -203,7 +206,7 @@ public class PowerUpBlock : MonoBehaviour {
 			{
 				
 			}
-			powerupClone.GetComponent<PowerUp>().StartDestroyTimer();
+			powerupClone.GetComponent<Item>().StartDestroyTimer();
 //			StartCoroutine(DestroyPowerUp());	// BAD Programming!! powerupClone loses referenz if new PowerUp Spawns...
 //			Destroy(powerupClone,powerUpStayTime);
 		}

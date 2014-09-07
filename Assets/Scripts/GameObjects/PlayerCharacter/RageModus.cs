@@ -258,37 +258,7 @@ public class RageModus : MonoBehaviour {
 //		}
 //	}
 
-	void OnTriggerEnter2D (Collider2D other)
-	{
-		if(PhotonNetwork.isMasterClient)
-		{
-			if(isInRageModus)
-			{
-				if(other.gameObject.layer == layer.player)
-				{
-					if(!other.gameObject.GetComponent<RageModus>().isInRageModus)
-					{
-						// nur wenn anderer Spieler nicht auch in RageModus ist!
-						statsManager.InvincibleAttack(this.gameObject, other.gameObject);
-					}
-				}
-				else if(other.gameObject.layer == layer.head)
-				{
-					// spieler in spawnprotection wird auch angegriffen!!!!
-					//statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
-				}
-				else if(other.gameObject.layer == layer.feet)
-				{
-					// spieler in spawnprotection wird auch angegriffen!!!!
-					//statsManager.InvincibleAttack(this.gameObject, other.transform.parent.gameObject);
-				}
-				else
-				{
-					
-				}
-			}
-		}
-	}
+
 
 //	void OnCollisionEnter2D (Collision2D collision)
 //	{

@@ -19,6 +19,8 @@ public class Layer : MonoBehaviour {
 	public int enemy;
 	public int feet;
 	public int head;
+	public int body;
+	public int item;
 
 	public int ground;
 //	public int tagAble;
@@ -43,7 +45,10 @@ public class Layer : MonoBehaviour {
 //	
 	public const string feetLayerName = "Feet";
 	public const string headLayerName = "Head";
-	
+	public const string bodyLayerName = "Body";
+	public const string itemLayerName = "Item";
+	public const string powerUpLayerName= "PowerUp";
+
 	public const string enemyLayerName = "Enemy";
 
 	public const string groundLayerName = "Ground";
@@ -52,8 +57,7 @@ public class Layer : MonoBehaviour {
 	public const string blockLayerName = "Block";
 	public const string jumpAblePlatformLayerName = "JumpOnPlatform";
 	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
-	
-	public const string powerUpLayerName = "PowerUp";
+
 	public const string bulletLayerName = "Bullet";
 	public const string groundStopperLayerName = "GroundStopper";
 	
@@ -77,6 +81,13 @@ public class Layer : MonoBehaviour {
 		
 		feet = LayerMask.NameToLayer(feetLayerName);
 		head = LayerMask.NameToLayer(headLayerName);
+		body = LayerMask.NameToLayer(bodyLayerName);
+		item = LayerMask.NameToLayer(itemLayerName);
+		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
+		powerUp = LayerMask.NameToLayer(powerUpLayerName);
+
+		bullet = LayerMask.NameToLayer(bulletLayerName);
+
 		
 //		enemy = LayerMask.NameToLayer(enemyLayerName);
 
@@ -95,9 +106,7 @@ public class Layer : MonoBehaviour {
 		
 		whatIsWall = whatIsGround;
 		
-		powerUp = LayerMask.NameToLayer(powerUpLayerName);
-		bullet = LayerMask.NameToLayer(bulletLayerName);
-		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
+
 //		fader = LayerMask.NameToLayer(faderLayerName);
 	}
 
