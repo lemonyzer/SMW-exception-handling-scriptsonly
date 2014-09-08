@@ -8,7 +8,7 @@ public class Tags : MonoBehaviour {
 	 **/
 	public const string player = "Player";
 	public const string head = "Head";
-	public const string bodyCollider = "BodyCollider";
+	public const string body = "Body";
 	public const string feet = "Feet";
 	public const string itemCollector = "ItemCollector";
 	public const string powerUpHitArea = "PowerUpHitArea";
