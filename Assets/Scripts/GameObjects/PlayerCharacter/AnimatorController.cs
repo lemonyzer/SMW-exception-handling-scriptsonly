@@ -82,23 +82,8 @@ public class AnimatorController : MonoBehaviour {
 	}
 
 	// Use this for initialization
-	void Start () {
-
-//		myCharacterCollider2D = myCharacter.GetComponent<BoxCollider2D>();
-//		if(myCharacterCollider2D == null)
-//			Debug.LogError(myCharacter.name + " has no BoxCollider2D");
-//
-//		feet = myCharacter.transform.Find(Tags.feet);
-//		feetCollider2D = feet.GetComponent<BoxCollider2D>();
-//		if(feetCollider2D == null)
-//			Debug.LogError(myCharacter.name + "'s feet has no FEET BoxCollider2D");
-//
-//
-//		head = myCharacter.transform.Find(Tags.head);
-//		headCollider2D = head.GetComponent<BoxCollider2D>();
-//		if(headCollider2D == null)
-//			Debug.LogError(myCharacter.name + "'s head has no HEAD BoxCollider2D");
-
+	void Start ()
+	{
 		anim = myCharacter.GetComponent<Animator>();
 
 		myPlatformCharacterScript = myCharacter.GetComponent<PlatformCharacter>();
@@ -116,6 +101,8 @@ public class AnimatorController : MonoBehaviour {
 		
 		// FeetCollider deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
 		myFeetTrigger.enabled = false;
+
+		// HeadCollider deaktivieren (Spieler kann nicht nochmal schaden nehmen)
 		myHeadTrigger.enabled = false;
 //		feet.gameObject.SetActive(false);
 //		head.gameObject.SetActive(false);
@@ -220,38 +207,6 @@ public class AnimatorController : MonoBehaviour {
 		myCharacter.rigidbody2D.velocity = Vector2.zero;
 	}
 
-//	void HeadJumped() 
-//	{
-////		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
-//
-//		myCharacter.renderer.enabled = false;
-//
-//		// Deathanimation positioning
-//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
-//
-//		// Show Deathanimation and Destroy after deathTime seconds
-//		if(deathPrefabRight != null)
-//			Destroy(Instantiate(HeadJumpedPrefabRight,transform.position + offset ,Quaternion.identity),deathTime);
-//	}
-//
-//	void NotHeadJumped() 
-//	{
-//		//		Debug.Log ("HeadJumped stays " + deathTime + " seconds");
-//		
-//		myCharacter.renderer.enabled = false;
-//		
-//		// Deathanimation positioning
-//		Vector3 offset = new Vector3(0.0f,-0.5f,0.0f);
-//		
-//		// Show Deathanimation and Destroy after deathTime seconds
-//		if(deathPrefabRight != null)
-//		{
-//			GameObject deathPrefab = (GameObject) Instantiate(deathPrefabRight,transform.position + offset ,Quaternion.identity);
-//			deathPrefab.rigidbody2D.velocity = new Vector2(0f, 20f);
-//			Destroy(deathPrefab,deathTime);
-//		}
-//	}
-
 	void DeadAnimationPhysics()
 	{
 		rigidbody2D.velocity = new Vector2(0f, 10f);
@@ -275,17 +230,6 @@ public class AnimatorController : MonoBehaviour {
 		myCharacter.rigidbody2D.isKinematic = true;
 		myCharacter.rigidbody2D.velocity = Vector2.zero;
 	}
-
-/*
-	IEnumerator DamageEffect()
-	{
-		anim.SetBool ("Hitted", true);
-		//yield return new WaitForSeconds(spawnDelay);
-		yield return new WaitForSeconds((deathTime+spawnTime+spawnProtectionTime));
-		anim.SetBool ("Hitted", false);
-		isHit = false;
-	}
-*/
 
 	IEnumerator SpawnAnimationTime()
 	{

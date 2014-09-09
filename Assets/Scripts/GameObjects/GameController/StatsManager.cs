@@ -167,9 +167,10 @@ public class StatsManager : MonoBehaviour {
 				Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 				Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
-				AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
-			
-				victimsAnimationController.HeadJumpAnimation();
+				//AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
+				//victimsAnimationController.HeadJumpAnimation();
+				PlatformCharacter victimCharacterScript = playerVictim.getCharacter().getGameObject().GetComponent<PlatformCharacter>();
+				victimCharacterScript.HeadJumpVictim();
 
 				AddKill(playerAttacker, playerVictim);
 			}
@@ -248,9 +249,11 @@ public class StatsManager : MonoBehaviour {
 			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
-			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
-			
-			victimsAnimationController.InvincibleAttackAnimation();
+			//AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
+			//victimsAnimationController.InvincibleAttackAnimation();
+
+			PlatformCharacter victimCharacterScript = playerVictim.getCharacter().getGameObject().GetComponent<PlatformCharacter>();
+			victimCharacterScript.InvincibleAttackVictim();
 			
 			AddKill(playerAttacker, playerVictim);
         }
@@ -291,9 +294,11 @@ public class StatsManager : MonoBehaviour {
 			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
-			AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
-			
-			victimsAnimationController.InvincibleAttackAnimation();
+			//AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();
+			//victimsAnimationController.InvincibleAttackAnimation();
+
+			PlatformCharacter victimCharacterScript = playerVictim.getCharacter().getGameObject().GetComponent<PlatformCharacter>();
+			victimCharacterScript.InvincibleAttackVictim();
 			
 			//AddKill(playerAttacker, playerVictim);
 		}

@@ -33,7 +33,7 @@ public class PlatformJumperV2 : MonoBehaviour {
 
 //		bodyCollider = GetComponent<BoxCollider2D>();
 
-		BoxCollider2D[] myBody = GetComponents<BoxCollider2D>();
+		BoxCollider2D[] myBody = transform.Find(Tags.body).GetComponents<BoxCollider2D>();
 		if(myBody == null)
 			return;
 		foreach(BoxCollider2D coll in myBody)

@@ -52,6 +52,9 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Sounds 
 	 **/
+	public AudioClip deathSound;
+	public AudioClip gameOverSound;
+	public AudioClip criticalHealthSound;
 	public AudioClip jumpSound;					// Jump Sound
 	public AudioClip changeRunDirectionSound;	// Skid Sound
 	public AudioClip wallJumpSound;				// Wall Jump Sound
@@ -141,8 +144,11 @@ public class PlatformCharacter : MonoBehaviour {
 		powerUpCollider2D = transform.FindChild(Tags.powerUpHitArea).GetComponent<BoxCollider2D>();
 
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
+		currentLevel = gameController.GetComponent<Level>();
 		hash = gameController.GetComponent<HashID>();
 		layer = gameController.GetComponent<Layer>();
+
+		InitSpawnProtectionAnimation();
 //		gameSceneManager = gameController.GetComponent<GameSceneManager>();
 
 		//LayerMasks();	// <-- wichtig in Start... Awake ist zu früh
@@ -158,31 +164,9 @@ public class PlatformCharacter : MonoBehaviour {
 	void Start() {
 		anim = GetComponent<Animator>();
 		ownerScript = GetComponent<RealOwner>();
-//		LayerMasks();
 
-		// if this is our paddle, it accepts input
-		// otherwise, if it is someone else’s paddle, it does not
-//		if(Network.peerType == NetworkPeerType.Disconnected)
-//			AcceptsInput = true;
-//		else
-//			AcceptsInput = networkView.isMine;
-	}
-	
-	// The Move function is designed to be called from a separate component
-	// based on User input, or an AI control script
-	public void MoveKeyboard(float moveHorizontal, bool jump)
-	{
-		this.inputPCVelocity = moveHorizontal;
-		this.inputPCJump = jump;
 	}
 
-	// The Move function is designed to be called from a separate component
-	// based on User input, or an AI control script
-	public void MoveTouch(float moveHorizontal, bool jump)
-	{
-		this.inputTouchVelocity = moveHorizontal;
-		this.inputTouchJump = jump;
-	}
 
 	// FixedUpdate is called once per frame
 	void FixedUpdate () {
@@ -192,30 +176,14 @@ public class PlatformCharacter : MonoBehaviour {
 		if(Network.isServer)
 			return;
 		
-		//Actually move the player using his/her input
-		if(isDead)
+
+		// net mode:
+		// simulate is called by networkedplayer
+		// offline
+		if(Network.peerType == NetworkPeerType.Disconnected)
 		{
-			rigidbody2D.velocity = new Vector2(0f,rigidbody2D.velocity.y);
-//			inputJump = false;
-//			inputVelocity = 0f;
-			isBouncing = false;
-		}
-		else
-		{
-
-			//SetAnim();							// FUCK FIX!!
-			// wird manuel aufgerufen!
-//			FixedMove();							//Jump, Wall-Jump, rechts, links Bewegung
-
-			// net mode:
-			// simulate is called by networkedplayer
-
-			// offline
-			if(Network.peerType == NetworkPeerType.Disconnected)
-			{
-				// offline movement
-				Simulate();
-			}
+			// offline movement
+			Simulate();
 		}
 	}
 
@@ -353,35 +321,55 @@ public class PlatformCharacter : MonoBehaviour {
 	public Vector3 moveDirection = Vector3.zero;
 	float jumpPower = 14; // 7
 
+	private bool kinematic = false;
+
 	public void Simulate()
 	{
 		CheckPosition();
 		SimulateAnimation();
-		// Horizontal Movement
-		moveDirection.x = inputScript.inputHorizontal * maxSpeed;
 
-		// Vertical Movement
-		if(grounded)
+		if(isDead)
 		{
-			if(moveDirection.y <=0)			// jump fix
+			moveDirection.x = 0f;
+			if(kinematic)
 			{
-				moveDirection.y = 0;
+				moveDirection.y = 0f;
 			}
-
-			if(inputScript.inputJump && moveDirection.y == 0)				//  && moveDirection.y <= 0
+			else
 			{
-//				if(moveDirection.y <= 0f)			// verhindern das sound öfter abgespielt wird!! .... achtung sprung wird trotzdem öfter asugeführt kann  
-				SyncJump();
-				moveDirection.y = jumpPower;
+				moveDirection.y -= gravity * Time.fixedDeltaTime;
 			}
+			transform.Translate( moveDirection * Time.fixedDeltaTime );
 		}
 		else
 		{
+			moveDirection.x = inputScript.inputHorizontal * maxSpeed;	// Horizontal Movement
 
-			moveDirection.y -= gravity * Time.fixedDeltaTime;
+			// Vertical Movement
+			if(grounded)
+			{
+				if(moveDirection.y <=0)			// jump fix
+				{
+					moveDirection.y = 0;
+				}
+
+				if(inputScript.inputJump && moveDirection.y == 0)				//  && moveDirection.y <= 0
+				{
+	//				if(moveDirection.y <= 0f)			// verhindern das sound öfter abgespielt wird!! .... achtung sprung wird trotzdem öfter asugeführt kann  
+					SyncJump();
+					moveDirection.y = jumpPower;
+				}
+			}
+			else
+			{
+				if(kinematic)
+					moveDirection.y = 0f;
+				else
+					moveDirection.y -= gravity * Time.fixedDeltaTime;
+			}
+
+			transform.Translate( moveDirection * Time.fixedDeltaTime );
 		}
-
-		transform.Translate( moveDirection * Time.fixedDeltaTime );
 		CheckBeam ();
 	}
 	bool hasHorizontalInputShown = false;
@@ -428,162 +416,6 @@ public class PlatformCharacter : MonoBehaviour {
 				Debug.Log(this.ToString() + ": no Input");
 			}
 		}
-	}
-
-	public void FixedMove()
-	{
-		return;
-		/**
-		 * Check Direction Change
-		 **/
-		if(rigidbody2D.velocity.x > 0f && !facingRight)						
-		{
-			Flip();
-		}
-		else if(rigidbody2D.velocity.x < 0f && facingRight)					
-		{
-			Flip();
-		}
-		else
-		{
-			changedRunDirection = false;
-		}
-
-		if(!Network.isServer)
-			return;
-
-		if(controlsEnabled)
-		{
-			inputJump = inputPCJump || inputTouchJump;
-			if(!jumpAllowed)
-				inputJump = false;
-			
-			inputVelocity = inputPCVelocity + inputTouchVelocity;
-			if(!moveAllowed)
-				inputVelocity = 0f;
-			
-			if(inputVelocity > 1f)
-				inputVelocity = 1f;
-			else if(inputVelocity < -1f)
-				inputVelocity = -1f;
-		}
-		else
-		{
-			inputJump = false;
-			inputVelocity = 0f;
-		}
-
-		if(isBouncing)
-		{
-			//Alte Kraft in X Richtung wird nicht komplett überschrieben!
-			
-			if(pushForce > 0f)
-			{
-				if(inputVelocity > 0f)
-				{
-					inputVelocity *= maxSpeed;		// wenn Spieler in die gleiche Richtung wie pushForce sich bewegt,
-					// volle Geschwindigkeit nehmen  
-				}
-				else
-					inputVelocity *= maxSpeed * 0.2f;
-			}
-			else if(pushForce < 0f)
-			{
-				if(inputVelocity < 0f)
-				{
-					inputVelocity *= maxSpeed;
-				}
-				else
-					inputVelocity *= maxSpeed * 0.2f;
-			}
-			
-			pushTime += Time.deltaTime;
-			float pushSpeed;
-			pushForce = pushForce - (pushForce * 4f * Time.deltaTime);
-			pushSpeed = pushForce;
-			//			Debug.LogError(this.gameObject.transform.name+ " pushSpeed = " + pushSpeed);
-			if(Mathf.Abs(pushSpeed) < 1)
-			{
-				//				Debug.LogError(this.gameObject.transform.name+ " pushSpeed = 0");
-				isBouncing = false;
-				pushTime = 0f;
-			}
-			else
-			{
-				inputVelocity += pushSpeed;
-				//				Debug.LogError(this.gameObject.transform.name+ " inputVelocity = " + inputVelocity);
-			}
-			
-		}
-		else // if(!isBouncing)
-		{
-			inputVelocity *= maxSpeed;
-		}
-		
-		/**
-		 * maxSpeed check
-		 **/
-		if(Mathf.Abs(inputVelocity) > maxSpeed)
-		{
-			// neue inputVelocity überschreitet maxSpeed!!!
-			if(inputVelocity < (-1.0f*maxSpeed))
-			{
-				inputVelocity = -1.0f*maxSpeed;
-				//rigidbody2D.velocity = new Vector2((-1.0f)*maxSpeed, rigidbody2D.velocity.y);
-			}
-			else if(inputVelocity > maxSpeed)
-			{
-				inputVelocity = maxSpeed;
-				//rigidbody2D.velocity = new Vector2(maxSpeed, rigidbody2D.velocity.y);
-			}
-		}
-		
-		// gedrosselte velocity übernehmen
-//		rigidbody2D.AddForce( new Vector2(inputVelocity,0));
-		rigidbody2D.velocity = new Vector2(inputVelocity, rigidbody2D.velocity.y);
-		
-//		/**
-//		 * Animator status Update
-//		 **/
-//		if(anim == null)
-//		{
-//			Debug.LogError("Animator not set");
-//		}
-//		else
-//		{
-//			anim.SetFloat(hash.hSpeedFloat, inputVelocity);					// BUG! in Mulitplayer ist input nicht von jedem Spieler gesetzt!!!!
-//		}
-			
-		/**
-		 * Check Direction Change
-		 **/
-		if(rigidbody2D.velocity.x > 0f && !facingRight)						// BUG Input!!!
-		{
-			Flip();
-		}
-		else if(rigidbody2D.velocity.x < 0f && facingRight)					// BUG Input!!!
-		{
-			Flip();
-		}
-		else
-		{
-			changedRunDirection = false;
-		}
-
-
-		// wird nur lokal und auf masterclient ausgeführt (wegen input abfrage)
-		if(grounded && inputJump) {
-			myNetworkView.RPC("SyncJump", RPCMode.All);
-			rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,jumpSpeed.y);		//<--- besser für JumpAblePlatforms	
-			//rigidbody2D.AddForce(new Vector2(0.0F, jumpForce.y));						//<--- klappt nicht 100% mit JumpAblePlatforms
-		}
-		else if(!grounded && walled && inputJump) {
-			myNetworkView.RPC("SyncWallJump", RPCMode.All);
-			rigidbody2D.velocity = new Vector2(0,0);												//alte Geschwindigkeit entfernen
-			rigidbody2D.velocity = new Vector2((transform.localScale.x)*jumpSpeed.x, jumpSpeed.y);	//<--- besser für JumpAblePlatforms
-		}
-//		rigidbody2D.velocity = new Vector2(rigidbody2D.velocity.x,rigidbody2D.velocity.y-gravity);		//<--- besser für JumpAblePlatforms	
-		
 	}
 
 	[RPC]
@@ -845,6 +677,86 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+	public void HeadJumpVictim()
+	{
+		isHit = true;
+		anim.SetBool(hash.spawnBool,false);
+		anim.SetBool(hash.gameOverBool,false);
+		anim.SetBool(hash.headJumpedBool,false);
+		anim.SetBool(hash.deadBool,false);
+		anim.SetTrigger(hash.hitTrigger);			// Lösung!
+		
+		// Death Sound abspielen
+		AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
+
+		//Animation setzen
+		anim.SetBool(hash.headJumpedBool,true);
+
+		/**
+		 * Physics
+		 * 
+		 * // Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
+		 **/
+		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
+		bodyCollider2D.enabled = false;
+		//myBodyTrigger.enabled = false;
+		
+		// FeetCollider deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
+		feetCollider2D.enabled = false;
+		
+		// HeadCollider deaktivieren (Spieler kann nicht nochmal Schaden durch HeadJump-Angriff nehmen da er tot ist)
+		headCollider2D.enabled = false;
+
+		// PowerUp Hit Collider deaktivieren (Spieler kann keinen Schaden mehr durch PowerUp-Angriff nehmen da er tot ist)
+		powerUpCollider2D.enabled = false;
+		
+		/* Ki und Controlls deaktivieren */
+		isDead = true;
+		isHit = false;				// <-- kann wieder auf false gesetzt werden, da Spieler jetzt tot ist!
+
+
+		if(server())
+		{
+			networkView.RPC("SpawnAnimationDelay", RPCMode.All, currentLevel.getRandomSpawnPosition() );			// wenn server jetzt schon rpc mit spawnposition sended
+																											// und reSpawnDelay > triptime
+																											// kann syncron auf allen clients die spawnanimation starten
+																											// ansonsten, nur auf server spawndelay coroutine starten// und nach ablauf rpc an alle clients startanimation
+			//networkView.RPC("SetSpawnPosition", RPCMode.All, currentLevel.getRandomSpawnPosition() );
+
+			// spieler so zeitnah wie möglich spielen lassen
+		}
+		// StartCoroutine(SpawnAnimation)... in kombination mit //networkView.RPC("SetSpawnPosition", RPCMode.All, currentLevel.getRandomSpawnPosition() );
+
+		// server erhält erst input wenn spieler !isDead
+	}
+
+	Level currentLevel;
+
+	public bool debugSpawn = false;
+	float reSpawnDelayTime = 2f;
+	
+	bool spawnProtection = false;
+	float spawnProtectionTime = 2f;
+	Color[] spawnProtectionAnimation;
+
+	IEnumerator SpawnDelay()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("CoRoutine: SpawnDelay()");
+		yield return new WaitForSeconds(reSpawnDelayTime);
+		StartSpawnAnimation();
+	}
+
+
+	//[RPC]
+	void SetSpawnPosition()
+	{
+		//		float newPositionX = Random.Range(0.0f, 19.0f);
+		//		float newPositionY = Random.Range(2f, 15.0f);
+		//		float oldPositionZ = myCharacter.transform.position.z;
+		//		myCharacter.gameObject.transform.position = new Vector3(newPositionX,newPositionY,oldPositionZ);
+		this.transform.position = currentLevel.getRandomSpawnPosition();
+	}
 
 	void Dead()
 	{
@@ -855,7 +767,56 @@ public class PlatformCharacter : MonoBehaviour {
 		myGroundStopperCollider.enabled = false;
 	}
 
-	void Invincible()
+	public void InvincibleAttackVictim()
+	{
+		isHit = true;
+		anim.SetBool(hash.spawnBool,false);
+		anim.SetBool(hash.gameOverBool,false);
+		anim.SetBool(hash.headJumpedBool,false);
+		anim.SetBool(hash.deadBool,false);
+		anim.SetTrigger(hash.hitTrigger);			// Lösung!
+
+		// Death Sound abspielen
+		AudioSource.PlayClipAtPoint(deathSound,transform.position,1);
+
+		//NoHeadJump();
+		//Animation setzen
+		anim.SetBool(hash.deadBool,true);
+		//SetCharacterColliderDead();
+		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
+		
+		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
+		bodyCollider2D.enabled = false;
+		
+		// FeetCollider deaktivieren (Gegenspieler nehmen keinen Schaden mehr)
+		feetCollider2D.enabled = false;
+		
+		// HeadCollider deaktivieren (Spieler kann nicht nochmal schaden nehmen)
+		headCollider2D.enabled = false;
+
+		// aus bildbereich fallen
+		myGroundStopperCollider.enabled = false;
+		
+		//DeadAnimationPhysics();
+		rigidbody2D.velocity = new Vector2(0f, 10f);
+
+		//myReSpawnScript.StartReSpawn();
+		isDead = true;
+		isHit = false;
+
+		if(server())
+		{
+			networkView.RPC("SpawnAnimationDelay", RPCMode.All, currentLevel.getRandomSpawnPosition() );			// wenn server jetzt schon rpc mit spawnposition sended
+			// und reSpawnDelay > triptime
+			// kann syncron auf allen clients die spawnanimation starten
+			// ansonsten, nur auf server spawndelay coroutine starten// und nach ablauf rpc an alle clients startanimation
+			//networkView.RPC("SetSpawnPosition", RPCMode.All, currentLevel.getRandomSpawnPosition() );
+			
+			// spieler so zeitnah wie möglich spielen lassen
+		}
+	}
+
+	void InvincibleMode()
 	{
 		headCollider2D.enabled = false;
 		feetCollider2D.enabled = false;
@@ -871,15 +832,124 @@ public class PlatformCharacter : MonoBehaviour {
 		bodyCollider2D.enabled = false;
 		powerUpCollider2D.enabled = false;
 		myGroundStopperCollider.enabled = true;
+
+		isDead = false;
+		isHit = false;
+
+		StartCoroutine(SpawnProtectionTime());
 	}
 
-	void SpawnAnimation()
+	[RPC]
+	void SpawnAnimationDelay(Vector3 spawnPosition, NetworkMessageInfo info)
 	{
-		headCollider2D.enabled = false;
-		feetCollider2D.enabled = false;
-		bodyCollider2D.enabled = false;
+		authoritativeSpawnPosition = spawnPosition;
+		double delay = Network.time - info.timestamp;
+		if(delay > reSpawnDelayTime)
+		{
+			reSpawnDelayTime = 0f;
+		}
+		else
+			reSpawnDelayTime = (float)delay;
+
+		StartCoroutine(SpawnDelay());
+	}
+
+	Vector3 authoritativeSpawnPosition;
+
+	public void StartSpawnAnimation()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("StartSpawnAnimation()");
+		this.transform.renderer.enabled = false;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame erstellt wird bis render aktiviert wird
+		
+		// neue Position halten
+		rigidbody2D.isKinematic = true;
+		
+//		if(server())
+//		{
+//			// Random Spawn Position
+//			SetSpawnPosition();
+//		}
+
+		this.transform.position = authoritativeSpawnPosition;
+
+		// schwachsinn, spawnAnimation startet!
+		//CheckPosition();
+		//SimulateAnimation();
+		
+		// Spawn Animation
+		anim.SetBool(hash.spawnBool, true);
+
+		kinematic = true;
+
+		// Kinematic = true, alle Collider & Trigger aus
+
+		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		powerUpCollider2D.enabled = false;
-		myGroundStopperCollider.enabled = false;
+		// Body Trigger deaktivieren, PowerUps einsammeln 			
+		bodyCollider2D.enabled = false;						
+		// FeetCollider deaktivieren (Gegenspieler nehmen Schaden)
+		feetCollider2D.enabled = false;
+		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
+		headCollider2D.enabled = false;
+		// falls spawn position im boden ist 
+		myGroundStopperCollider.enabled = true;
+
+		/* Ki und Controlls deaktivieren */
+		isDead = true;
+
+		this.transform.renderer.enabled = true;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame seit dem deaktivieren erzeugt wurde
+	}
+
+	void LateUpdate()
+	{
+		if(!spawnProtection)
+		{
+			if(anim.GetCurrentAnimatorStateInfo(0).nameHash == hash.spawnProtectionState)
+			{
+				if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+					Debug.LogWarning("SpawnProtectionState");
+				spawnProtection = true;	// coroutine ist zu langsam, wird sonst zweimal gestartet!
+				anim.SetTrigger(hash.nextStateTrigger);	// spawnprotection state verlassen
+				// Spawn Animation finished!
+				// nach SpawnAnimation Collider & Trigger auf SpawnProtection setzen
+				SpawnProtection();
+				// SpawnProtection Timer starten
+
+			}
+			else
+			{
+				
+			}
+		}
+		else //if(spawnProtection)
+		{
+			spriteRenderer.color = spawnProtectionAnimation[0];
+		}
+	}
+
+	void InitSpawnProtectionAnimation()
+	{
+		spawnProtectionAnimation = new Color[1];
+		spawnProtectionAnimation [0] = new Color (1f, 1f, 1f, 0.5f);	// alpha channel = 0.5
+	}
+
+	IEnumerator SpawnProtectionTime()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("CoRoutine: SpawnProtection()");
+		spawnProtection = true;
+		yield return new WaitForSeconds(spawnProtectionTime);
+		spawnProtection = false;
+		SpawnComplete();
+	}
+
+	void SpawnComplete()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("SpawnComplete()");
+		spriteRenderer.color = new Color(1f,1f,1f,1f);	// transparenz entfernen
+		Fighting();
 	}
 
 	void Fighting()

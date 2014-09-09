@@ -51,92 +51,45 @@ public class ReSpawnScript : MonoBehaviour {
 
 	void SetSpawnAnimationCharacterCollider()
 	{
-		rigidbody2D.isKinematic = true;
-		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-
 		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
-		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = false;
 		// Body Trigger aktivieren, PowerUps einsammeln 			<<---- problem!!!! wird auch zum angriffserkennung (attack & hitarea) im ragemodus benutzt! 
 		myBodyTrigger.enabled = false;						
-		//					myCharacterCollider2D.enabled = false;
-		
 		// FeetCollider aktivieren (Gegenspieler nehmen Schaden)
 		myFeetTrigger.enabled = false;
 		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
 		myHeadTrigger.enabled = false;
-		//					feet.gameObject.SetActive(false);
-		//					headCollider2D.enabled = false;
-		
-		//					// verhindern dass das GameObject durch die Gravität in Boden fällt
-		//					myCharacter.rigidbody2D.isKinematic = true;
-		
 		/* Ki und Controlls deaktivieren */
 		myPlatformCharacterScript.isDead = true;
 	}
 
 	void SetSpawnProtectionCharacterCollider()
 	{
-		rigidbody2D.isKinematic = false;
-		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,true);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,true);
-
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
-
 		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
-		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = false;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
 		// Body Trigger aktivieren, PowerUps einsammeln 			<<---- problem!!!! wird auch zum angriffserkennung (attack & hitarea) im ragemodus benutzt! 
 		myBodyTrigger.enabled = false;
-		//					myCharacterCollider2D.enabled = false;
-		
 		// FeetCollider aktivieren (Gegenspieler nehmen Schaden)
 		myFeetTrigger.enabled = true;
 		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
 		myHeadTrigger.enabled = false;
-		//					feet.gameObject.SetActive(false);
-		//					headCollider2D.enabled = false;
-		
-		//					// verhindern dass das GameObject durch die Gravität in Boden fällt
-		//					myCharacter.rigidbody2D.isKinematic = true;
-		
 		/* Ki und Controlls aktivieren */
 		myPlatformCharacterScript.isDead = false;
 	}
 
 	void SetSpawnCompleteCharacterCollider()
 	{
-		rigidbody2D.isKinematic = false;
-		// Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player1,false);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player2,false);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player3,false);
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.player4,false);
-
 		myGroundStopperCollider.enabled = true;	// wurde bei invincible attack deaktiviert...
-//		Physics2D.IgnoreLayerCollision(myCharacter.layer,layer.powerUp,false);
-		
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		myBodyCollider.enabled = true;												//aktiviert, da collision ignoriert werden! und spieler auf boden liegen bleiben soll
 		// Body Trigger aktivieren, PowerUps einsammeln
 		myBodyTrigger.enabled = true;
-		//					myCharacterCollider2D.enabled = false;
-		
 		// FeetCollider aktivieren (Gegenspieler nehmen Schaden)
 		myFeetTrigger.enabled = true;
 		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
 		myHeadTrigger.enabled = true;
-		//					feet.gameObject.SetActive(false);
-		//					headCollider2D.enabled = false;
-		
-		//					// verhindern dass das GameObject durch die Gravität in Boden fällt
-		//					myCharacter.rigidbody2D.isKinematic = true;
-		
 		/* Ki und Controlls aktivieren */
 		myPlatformCharacterScript.isDead = false;
 	}
@@ -191,7 +144,7 @@ public class ReSpawnScript : MonoBehaviour {
 		// neue Position halten
 		rigidbody2D.isKinematic = true;
 
-		if(PhotonNetwork.isMasterClient)
+		if(Network.isServer)
 		{
 			// Random Spawn Position
 			SetSpawnPosition();
