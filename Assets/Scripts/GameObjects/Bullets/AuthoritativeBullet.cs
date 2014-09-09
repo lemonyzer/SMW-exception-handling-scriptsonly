@@ -22,7 +22,7 @@ public class AuthoritativeBullet : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.gameObject.layer == layer.player)
+		if(other.gameObject.layer == layer.body)
 		{
 			if(other.gameObject != ownerCharacter)
 			{

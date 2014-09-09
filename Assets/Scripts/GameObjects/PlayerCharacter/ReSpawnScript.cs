@@ -36,7 +36,7 @@ public class ReSpawnScript : MonoBehaviour {
 
 	void InitColliderAndTrigger()
 	{
-		BoxCollider2D[] myBody = GetComponents<BoxCollider2D>();
+		BoxCollider2D[] myBody = transform.Find(Tags.body).GetComponents<BoxCollider2D>();
 		foreach(BoxCollider2D coll in myBody)
 		{
 			if(coll.isTrigger)

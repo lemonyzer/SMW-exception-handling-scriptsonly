@@ -107,6 +107,7 @@ public class PlatformCharacter : MonoBehaviour {
 	private BoxCollider2D bodyCollider2D;
 	private BoxCollider2D headCollider2D;
 	private BoxCollider2D feetCollider2D;
+	private BoxCollider2D powerUpCollider2D;
 	private SpriteRenderer spriteRenderer;
 
 
@@ -133,9 +134,11 @@ public class PlatformCharacter : MonoBehaviour {
 		inputScript = GetComponent<PlatformUserControl>();
 
 		spriteRenderer = GetComponent<SpriteRenderer>();
-		bodyCollider2D = GetComponent<BoxCollider2D>();
+
+		bodyCollider2D = transform.FindChild(Tags.body).GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
 		feetCollider2D = transform.FindChild(Tags.feet).GetComponent<BoxCollider2D>();
+		powerUpCollider2D = transform.FindChild(Tags.powerUpHitArea).GetComponent<BoxCollider2D>();
 
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
 		hash = gameController.GetComponent<HashID>();
@@ -842,5 +845,50 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+
+	void Dead()
+	{
+		headCollider2D.enabled = false;
+		feetCollider2D.enabled = false;
+		bodyCollider2D.enabled = false;
+		powerUpCollider2D.enabled = false;
+		myGroundStopperCollider.enabled = false;
+	}
+
+	void Invincible()
+	{
+		headCollider2D.enabled = false;
+		feetCollider2D.enabled = false;
+		bodyCollider2D.enabled = false;
+		powerUpCollider2D.enabled = true;
+		myGroundStopperCollider.enabled = true;
+	}
+
+	void SpawnProtection()
+	{
+		headCollider2D.enabled = false;
+		feetCollider2D.enabled = true;
+		bodyCollider2D.enabled = false;
+		powerUpCollider2D.enabled = false;
+		myGroundStopperCollider.enabled = true;
+	}
+
+	void SpawnAnimation()
+	{
+		headCollider2D.enabled = false;
+		feetCollider2D.enabled = false;
+		bodyCollider2D.enabled = false;
+		powerUpCollider2D.enabled = false;
+		myGroundStopperCollider.enabled = false;
+	}
+
+	void Fighting()
+	{
+		headCollider2D.enabled = true;
+		feetCollider2D.enabled = true;
+		bodyCollider2D.enabled = true;
+		powerUpCollider2D.enabled = true;
+		myGroundStopperCollider.enabled = true;
+	}
 
 }
