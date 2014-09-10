@@ -46,6 +46,10 @@ public class ItemCollectorScript : MonoBehaviour {
 				//TODO layer static script
 				//TODO Layer sets up Physic2D Layer ignoring/reaction
 
+				// Problem: andere Spieler haben auch ItemCollector
+				if(other.gameObject.name == Tags.itemCollector)
+					return;
+
 				/**
 				 *	Version Simple!
 				 **/

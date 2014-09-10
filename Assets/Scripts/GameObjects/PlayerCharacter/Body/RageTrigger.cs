@@ -27,15 +27,16 @@ public class RageTrigger : MonoBehaviour {
 				if(other.gameObject.layer == layer.powerUp)											// problem player interacts not with player (because of collider)
 																									// bodyCollider -> in Child GO
 				{
+					// check if other collider is from a player or a powerup
 					if(other.gameObject.name == Tags.powerUpHitArea)
 					{
-						// other gameObject is an Character
-						if(!other.gameObject.GetComponent<RageModus>().isInRageModus)
+						// other gameObject is child from a Character
+						if(!other.transform.parent.GetComponent<RageModus>().isInRageModus)
 						{
-							if(!other.gameObject.GetComponent<PlatformCharacter>().isDead)			//TODO not needed, if collider is deactivated during respawn-spawnProtection!
+							if(!other.transform.parent.GetComponent<PlatformCharacter>().isDead)			//TODO not needed, if collider is deactivated during respawn-spawnProtection!
 							{
 								// nur wenn anderer Spieler nicht auch in RageModus ist!
-								statsManager.InvincibleAttack(this.gameObject, other.gameObject);
+								statsManager.InvincibleAttack(this.transform.parent.gameObject, other.transform.parent.gameObject);
 							}
 						}
 					}

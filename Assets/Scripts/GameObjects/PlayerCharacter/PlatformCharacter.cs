@@ -577,7 +577,7 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		else
 		{
-			Debug.LogWarning("unknown Item found! " + currentItem.itemName);
+			Debug.LogWarning("unknown Item found! " + goItem.name + " " + currentItem.itemName);
 		}
 
 
@@ -734,6 +734,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	public bool debugSpawn = false;
 	float reSpawnDelayTime = 2f;
+	float reSpawnDelayTimeNetwork = 2f;
 	
 	bool spawnProtection = false;
 	float spawnProtectionTime = 2f;
@@ -743,7 +744,7 @@ public class PlatformCharacter : MonoBehaviour {
 	{
 		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
 			Debug.LogWarning("CoRoutine: SpawnDelay()");
-		yield return new WaitForSeconds(reSpawnDelayTime);
+		yield return new WaitForSeconds(reSpawnDelayTimeNetwork);
 		StartSpawnAnimation();
 	}
 
@@ -836,6 +837,8 @@ public class PlatformCharacter : MonoBehaviour {
 		isDead = false;
 		isHit = false;
 
+		kinematic = false;
+
 		StartCoroutine(SpawnProtectionTime());
 	}
 
@@ -843,13 +846,19 @@ public class PlatformCharacter : MonoBehaviour {
 	void SpawnAnimationDelay(Vector3 spawnPosition, NetworkMessageInfo info)
 	{
 		authoritativeSpawnPosition = spawnPosition;
-		double delay = Network.time - info.timestamp;
-		if(delay > reSpawnDelayTime)
+		double rpcTripTime = Network.time - info.timestamp;
+
+		if(rpcTripTime >= reSpawnDelayTime)
 		{
-			reSpawnDelayTime = 0f;
+			reSpawnDelayTimeNetwork = 0f;
 		}
 		else
-			reSpawnDelayTime = (float)delay;
+			reSpawnDelayTimeNetwork = reSpawnDelayTime - (float)rpcTripTime;
+
+		Debug.Log("SpawnAnimationDelay RPC trip time: " + rpcTripTime);
+		Debug.Log("reSpawnDelayTime: " + reSpawnDelayTime);
+		Debug.Log("reSpawnDelayTimeNetwork: " + reSpawnDelayTimeNetwork);
+
 
 		StartCoroutine(SpawnDelay());
 	}

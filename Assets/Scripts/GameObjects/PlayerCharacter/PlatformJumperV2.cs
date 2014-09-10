@@ -40,7 +40,7 @@ public class PlatformJumperV2 : MonoBehaviour {
 		{
 			if(coll.isTrigger)
 			{
-//				myBodyTrigger = coll;
+				bodyCollider = coll;
 			}
 			else
 			{

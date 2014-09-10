@@ -46,7 +46,7 @@ public class BulletBounce : MonoBehaviour {
 		   collision.gameObject.layer == layer.jumpAblePlatform ||
 		   collision.gameObject.layer == layer.block)
 		{
-			Debug.Log(this.ToString() +": UnityPhysics -> BOUNCE");
+//			Debug.Log(this.ToString() +": UnityPhysics -> BOUNCE");
 			Bounce();
 		}
 	}
