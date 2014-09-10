@@ -95,6 +95,16 @@ public class PlatformJumperV2 : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		if(myPlatformCharacter.isDead)
+		{
+			//if headjumped
+			//	break;
+
+			//if powerUpKill
+			//	ignor collisions	<-- calculation work
+			//	override: grounded = false	<-- easy
+			return;
+		}
 		JumpAblePlatformV4();
 	}
 

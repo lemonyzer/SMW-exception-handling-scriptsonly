@@ -62,7 +62,8 @@ public class PlatformCharacter : MonoBehaviour {
 	/** 
 	 * Character Movement 
 	 **/
-	private float maxSpeed = 8.0f;							// max horizontal Speed
+	private float maxSpeed = 8.0f;				// max horizontal Speed (in normal state, if ragemode... other speed)
+	public float currentSpeed = 8.0f;
 	private Vector2 jumpSpeed = new Vector2(8.0F, 10.0F);	// jump Force : wall jump, jump
 
 
@@ -110,6 +111,7 @@ public class PlatformCharacter : MonoBehaviour {
 	private BoxCollider2D bodyCollider2D;
 	private BoxCollider2D headCollider2D;
 	private BoxCollider2D feetCollider2D;
+	private BoxCollider2D itemCollectorCollider2D;
 	private BoxCollider2D powerUpCollider2D;
 	private SpriteRenderer spriteRenderer;
 
@@ -119,10 +121,10 @@ public class PlatformCharacter : MonoBehaviour {
 	 **/
 //	private GameObject bullet;			// should be public in a gameController script
 
-	public void setMaxSpeed(float newMaxSpeed)
-	{
-		maxSpeed = newMaxSpeed;
-	}
+//	public void setMaxSpeed(float newMaxSpeed)
+//	{
+//		maxSpeed = newMaxSpeed;
+//	}
 
 	public float getMaxSpeed()
 	{
@@ -141,6 +143,7 @@ public class PlatformCharacter : MonoBehaviour {
 		bodyCollider2D = transform.FindChild(Tags.body).GetComponent<BoxCollider2D>();
 		headCollider2D = transform.FindChild(Tags.head).GetComponent<BoxCollider2D>();
 		feetCollider2D = transform.FindChild(Tags.feet).GetComponent<BoxCollider2D>();
+		itemCollectorCollider2D = transform.FindChild(Tags.itemCollector).GetComponent<BoxCollider2D>();
 		powerUpCollider2D = transform.FindChild(Tags.powerUpHitArea).GetComponent<BoxCollider2D>();
 
 		gameController = GameObject.FindGameObjectWithTag(Tags.gameController);
@@ -322,6 +325,8 @@ public class PlatformCharacter : MonoBehaviour {
 	float jumpPower = 14; // 7
 
 	private bool kinematic = false;
+	private bool overrideGrounded = false;
+	private bool overrideGroundedValue = false;
 
 	public void Simulate()
 	{
@@ -337,13 +342,31 @@ public class PlatformCharacter : MonoBehaviour {
 			}
 			else
 			{
-				moveDirection.y -= gravity * Time.fixedDeltaTime;
+				if(overrideGrounded)
+				{
+					if(overrideGroundedValue)
+					{
+						//grounded (overriden)
+						moveDirection.y = 0f;
+					}
+					else
+					{
+						moveDirection.y -= gravity * Time.fixedDeltaTime;
+					}
+				}
+				else
+				{
+					if(grounded)
+						moveDirection.y = 0f;			// fix: HeadJumped, fall on ground
+					else
+						moveDirection.y -= gravity * Time.fixedDeltaTime;
+				}
 			}
 			transform.Translate( moveDirection * Time.fixedDeltaTime );
 		}
 		else
 		{
-			moveDirection.x = inputScript.inputHorizontal * maxSpeed;	// Horizontal Movement
+			moveDirection.x = inputScript.inputHorizontal * currentSpeed;	// Horizontal Movement
 
 			// Vertical Movement
 			if(grounded)
@@ -540,7 +563,11 @@ public class PlatformCharacter : MonoBehaviour {
 		{
 			//GetComponent<RageModus>().StartRageModus();
 			if(offline())
-				GetComponent<RageModus>().StartRageModus();
+			{
+				NetworkMessageInfo bla = new NetworkMessageInfo();
+				//bla.timestamp = Network.time; geht nicht
+				GetComponent<RageModus>().StartRageModus(bla);
+			}
 			if(server())
 				networkView.RPC("StartRageModus", RPCMode.All);
 
@@ -697,6 +724,13 @@ public class PlatformCharacter : MonoBehaviour {
 		 * 
 		 * // Layer Collisionen mit Gegenspieler und PowerUps ignorieren, GameObject soll aber auf Boden/Platform fallen und liegen bleiben
 		 **/
+
+		// GameObject soll aber auf Boden/Platform fallen und liegen bleiben
+		myGroundStopperCollider.enabled = true;
+
+		// kann keine Items mehr sammeln
+		itemCollectorCollider2D.enabled = false;
+
 		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
 		bodyCollider2D.enabled = false;
 		//myBodyTrigger.enabled = false;
@@ -795,11 +829,27 @@ public class PlatformCharacter : MonoBehaviour {
 		// HeadCollider deaktivieren (Spieler kann nicht nochmal schaden nehmen)
 		headCollider2D.enabled = false;
 
+		// kann keine Items mehr sammeln
+		itemCollectorCollider2D.enabled = false;
+
+		// kann nicht mehr durch powerups angegriffen werden
+		powerUpCollider2D.enabled = false;
+
 		// aus bildbereich fallen
 		myGroundStopperCollider.enabled = false;
-		
+
+
 		//DeadAnimationPhysics();
-		rigidbody2D.velocity = new Vector2(0f, 10f);
+		// TODO
+		//rigidbody2D.velocity = new Vector2(0f, 10f);
+		bool invincibleVictimAnimation = true;
+		bool headJumpVictimAnimation = false;
+		overrideGrounded = true;
+		overrideGroundedValue = false;
+		moveDirection.y = jumpPower;
+		moveDirection.x = 0f;
+		transform.Translate( moveDirection * Time.fixedDeltaTime );
+		// TODO
 
 		//myReSpawnScript.StartReSpawn();
 		isDead = true;
@@ -817,22 +867,26 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
-	void InvincibleMode()
+	public void InvincibleMode()
 	{
 		headCollider2D.enabled = false;
-		feetCollider2D.enabled = false;
+		feetCollider2D.enabled = false;			// keine headjumps!
 		bodyCollider2D.enabled = false;
-		powerUpCollider2D.enabled = true;
+		powerUpCollider2D.enabled = true;		// bemerkt powerUp (bullets umlenken, owner überschreiben) aber nicht getroffen werden! -> if-abfrage!
 		myGroundStopperCollider.enabled = true;
+		itemCollectorCollider2D.enabled = false; // kann keine items einsammeln
 	}
 
 	void SpawnProtection()
 	{
 		headCollider2D.enabled = false;
-		feetCollider2D.enabled = true;
-		bodyCollider2D.enabled = false;
+		feetCollider2D.enabled = true;		// kann angreifen
+		//bodyCollider2D.enabled = false;										// zwischen body und world stopper unterscheiden?
+		itemCollectorCollider2D.enabled = true;	// kann items sammeln
 		powerUpCollider2D.enabled = false;
-		myGroundStopperCollider.enabled = true;
+
+		myGroundStopperCollider.enabled = true;	// kann auf boden landen
+		bodyCollider2D.enabled = true;			// collidiert mit level
 
 		isDead = false;
 		isHit = false;
@@ -889,19 +943,23 @@ public class PlatformCharacter : MonoBehaviour {
 		// Spawn Animation
 		anim.SetBool(hash.spawnBool, true);
 
-		kinematic = true;
+		kinematic = true;	// bleibt in luft hängen für die zeit der animation, spieler input ist auch deaktiviert (durch isDead)
+		// Kinematic = true, alle Collider & Trigger aus (bis auf groundStopper und body (World stopper)
 
-		// Kinematic = true, alle Collider & Trigger aus
+		// kann keine items während spawnanimation einsammeln
+		itemCollectorCollider2D.enabled = false;
 
-		// Body BoxCollider2D deaktivieren (Gegenspieler können durchlaufen)
+		// kann nicht von powerups getroffen werden
 		powerUpCollider2D.enabled = false;
-		// Body Trigger deaktivieren, PowerUps einsammeln 			
-		bodyCollider2D.enabled = false;						
+
 		// FeetCollider deaktivieren (Gegenspieler nehmen Schaden)
 		feetCollider2D.enabled = false;
+
 		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
 		headCollider2D.enabled = false;
+
 		// falls spawn position im boden ist 
+		bodyCollider2D.enabled = true;						
 		myGroundStopperCollider.enabled = true;
 
 		/* Ki und Controlls deaktivieren */
@@ -961,13 +1019,15 @@ public class PlatformCharacter : MonoBehaviour {
 		Fighting();
 	}
 
-	void Fighting()
+	public void Fighting()
 	{
 		headCollider2D.enabled = true;
 		feetCollider2D.enabled = true;
 		bodyCollider2D.enabled = true;
-		powerUpCollider2D.enabled = true;
 		myGroundStopperCollider.enabled = true;
+		itemCollectorCollider2D.enabled = true;
+		powerUpCollider2D.enabled = true;
+
 	}
 
 }

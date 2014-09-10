@@ -192,6 +192,8 @@ public class NetworkedPlayer : MonoBehaviour
 		inputScript.inputJump = recvedInputJump;
 		characterScript.Simulate();
 
+		if(characterScript.isDead)	// no position correction needed!
+			return;
 
 		// authorative movement, without anti cheat check!
 		//this.transform.position = recvedPosition;

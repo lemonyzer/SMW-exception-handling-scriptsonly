@@ -4,6 +4,7 @@ using System.Collections;
 public class RageModus : MonoBehaviour {
 
 	private float rageTime = 3*3.202f;
+	private float rageTimeNetwork = 0;
 	public bool isInRageModus = false;
 	private float oldMaxSpeed;
 
@@ -165,19 +166,42 @@ public class RageModus : MonoBehaviour {
 	}
 
 	[RPC]
-	public void StartRageModus()
+	public void StartRageModus(NetworkMessageInfo info)
 	{
+
+		double rpcTripTime = Network.time - info.timestamp;
+		
+		if(rpcTripTime >= rageTime)
+		{
+			rageTimeNetwork = 0f;
+		}
+		else
+			rageTimeNetwork = rageTime - (float)rpcTripTime;
+
+		//TO DONE characterScript.maxSpeed
+		//TO DONE characterScript.currentSpeed
+		//DONE
 		oldMaxSpeed = myPlatformCharacter.getMaxSpeed();
 		rageMaxSpeed = oldMaxSpeed * 1.2f;
-		myPlatformCharacter.setMaxSpeed(rageMaxSpeed);
+		myPlatformCharacter.currentSpeed = rageMaxSpeed;
+
+
 //		headCollider2D.enabled = false;						// wird benötigt um blocks zu zerstören... SendDamageTrigger wird durch isInRageMode abgebrochen
+		//TODO doku: 
+		//	angreifer und opfer müssen abgefragt werden um headjump zu verifizieren.
+		// angreifer muss leben und angreifen dürfen
+		// opfer muss leben und angreifbar sein
+		// opfer braucht headtrigger noch für andere aktionen, daher muss er aktiv bleiben
+		// wird feet für etwas anderes benutzt? falls nein -> collision in headtriggerscript auswerten, kein getcomponent zugrif auf anderen spieler notwendig...
 		feetCollider2D.enabled = false;
 
 		playSound();
 
+		myPlatformCharacter.InvincibleMode();		// sets collider
+
 //		bodyCollider2D.isTrigger = false;
 
-//		disableCollision();
+//		disableCollision(); erkennt bevorstehende collisionen mit anderen bodyCollider und deaktiviert collisionen unter den beiden collider
 		
 		isInRageModus = true;
 		myPlatformCharacter.isInRageModus = true;
@@ -193,7 +217,7 @@ public class RageModus : MonoBehaviour {
 
 	IEnumerator RageTime()
 	{
-		yield return new WaitForSeconds(rageTime);
+		yield return new WaitForSeconds(rageTimeNetwork);
 		stopRageModus();
 	}
 
@@ -213,82 +237,12 @@ public class RageModus : MonoBehaviour {
 		myPlatformCharacter.isInRageModus = false;
 //		headCollider2D.enabled = true;				// wurde nicht deaktiviert... // wird benötigt um blocks zu zerstören... SendDamageTrigger wird durch isInRageMode abgebrochen
 		feetCollider2D.enabled = true;
-		myPlatformCharacter.setMaxSpeed(oldMaxSpeed);
+		myPlatformCharacter.currentSpeed = myPlatformCharacter.getMaxSpeed();
+
+		myPlatformCharacter.Fighting();		// sets colliders
 //		bodyCollider2D.isTrigger = false;
 		
 		//anim.SetBool(hash.hasPowerUpBool,hasPowerUp);
 		//AudioSource.PlayClipAtPoint(powerUpReloadedSound,transform.position,1);
 	}
-
-//	void disableCollision()
-//	{
-//		int currentLayer = gameObject.layer;
-//		for(int i=0; i<4; i++)
-//		{
-//			if(i==0)
-//				currentLayer = layer.player1;
-//			if(i==1)
-//				currentLayer = layer.player2;
-//			if(i==2)
-//				currentLayer = layer.player3;
-//			if(i==3)
-//				currentLayer = layer.player4;
-//			
-//			if(gameObject.layer != currentLayer)
-//				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,true);
-//		}
-//	}
-
-//	void enableCollision()
-//	{
-//		int currentLayer = gameObject.layer;
-//		for(int i=0; i<4; i++)
-//		{
-//			if(i==0)
-//				currentLayer = layer.player1;
-//			if(i==1)
-//				currentLayer = layer.player2;
-//			if(i==2)
-//				currentLayer = layer.player3;
-//			if(i==3)
-//				currentLayer = layer.player4;
-//			
-//			if(gameObject.layer != currentLayer)
-//				Physics2D.IgnoreLayerCollision(gameObject.layer,currentLayer,false);
-//		}
-//	}
-
-
-
-//	void OnCollisionEnter2D (Collision2D collision)
-//	{
-//		// Network.peerType == PeerState.Disconnected
-//		if(Network.isServer || networkView == null)
-//		{
-//			if(isInRageModus)
-//			{
-//				if(this.gameObject.layer != collision.gameObject.layer)										// Spieler aus eigenem Team(layer) nicht zerstören
-//				{
-//					bool enemyObject = false;
-//					if(collision.gameObject.layer == layer.player)
-//					{
-//						enemyObject = true;
-//					}
-//					//				else if(other.gameObject.layer == layer.powerUp)
-//					//				{
-//					//					enemyObject = true;
-//					//				}
-//					
-//					if(enemyObject)
-//					{
-//						//networkView.RPC
-//						//other.gameObject.GetComponent<NetworkView>().RPC(
-//						statsManager.InvincibleAttack(this.gameObject, collision.gameObject);			// Layerfilter -> wir sind auf PlatformCharacter ebene (nicht im child feet/head)
-//						//other.gameObject.GetComponent<HealthController>().ApplyDamage(this.gameObject, 1 ,true);
-//					}
-//				}
-//			}
-//		}
-//	}
-
 }
