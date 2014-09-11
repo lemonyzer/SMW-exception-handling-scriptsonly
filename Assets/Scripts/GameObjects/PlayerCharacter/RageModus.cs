@@ -170,13 +170,23 @@ public class RageModus : MonoBehaviour {
 	{
 
 		double rpcTripTime = Network.time - info.timestamp;
-		
-		if(rpcTripTime >= rageTime)
+		if(info.timestamp != 0)
 		{
-			rageTimeNetwork = 0f;
+			if(rpcTripTime >= rageTime)
+			{
+				rageTimeNetwork = 0f;
+			}
+			else
+				rageTimeNetwork = rageTime - (float)rpcTripTime;
 		}
 		else
-			rageTimeNetwork = rageTime - (float)rpcTripTime;
+		{
+			// offline 
+			rageTimeNetwork = rageTime;
+		}
+
+		Debug.Log(this.ToString() + " rpcTripTime: " + rpcTripTime);
+		Debug.Log(this.ToString() + " rageTimeNetwork: " + rageTimeNetwork);
 
 		//TO DONE characterScript.maxSpeed
 		//TO DONE characterScript.currentSpeed

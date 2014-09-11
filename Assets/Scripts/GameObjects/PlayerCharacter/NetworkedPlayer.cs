@@ -193,7 +193,10 @@ public class NetworkedPlayer : MonoBehaviour
 		characterScript.Simulate();
 
 		if(characterScript.isDead)	// no position correction needed!
+		{
+			Debug.LogWarning("character is Dead. Input reveiced but, no positioncorrection are checked and sent");
 			return;
+		}
 
 		// authorative movement, without anti cheat check!
 		//this.transform.position = recvedPosition;

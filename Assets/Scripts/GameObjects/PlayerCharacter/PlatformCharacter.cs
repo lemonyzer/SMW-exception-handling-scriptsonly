@@ -214,6 +214,8 @@ public class PlatformCharacter : MonoBehaviour {
 		transform.position = playerPos;
 	}
 
+	Collider2D[] foundColliderArray = new Collider2D[1];
+
 	void CheckPosition()
 	{
 
@@ -237,61 +239,82 @@ public class PlatformCharacter : MonoBehaviour {
 //		Debug.DrawLine(playerColliderTopLeftPos, playerColliderBottomRightPos, Color.yellow);
 //		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderTopRightPos, Color.yellow);
 		Debug.DrawLine(playerColliderTopLeftPos, playerColliderTopRightPos, Color.yellow);
+		Debug.DrawLine(playerColliderTopLeftPos, playerColliderBottomRightPos, Color.yellow);
+		Debug.DrawLine(playerColliderTopRightPos, playerColliderBottomLeftPos, Color.yellow);
 		Debug.DrawLine(playerColliderBottomLeftPos, playerColliderBottomRightPos, Color.yellow);
 
-		LayerMask ground = 1 << layer.block;
-		ground |= 1 << layer.ground;
-		ground |= 1 << layer.jumpAblePlatform;
 
-		ground = 0;
-		ground |= 1 << layer.jumpAblePlatform;
-		Collider2D foundCollider = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
-		if(foundCollider != null)
+		/**
+		 * check if standing on activ jumpPlatform
+		 **/
+
+//		LayerMask jumpOnPlatform = 1 << layer.jumpAblePlatform;
+//Layer.class
+		//Collider2D foundCollider = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, jumpOnPlatform);
+
+		bool platformGrounded = false;
+
+		//int overlapCount = Physics2D.OverlapAreaNonAlloc(playerColliderTopLeftPos, playerColliderBottomRightPos, foundColliderArray, jumpOnPlatform );
+		foundColliderArray[0] = null;
+		Physics2D.OverlapAreaNonAlloc(playerColliderTopLeftPos, playerColliderBottomRightPos, foundColliderArray, layer.whatIsJumpOnPlatform );
+
+		if(foundColliderArray[0] != null)
 		{
-			// hat jumpOnPlatformCollider gefunden
-			// check ob die collision aktiviert ist
-			if(Physics2D.GetIgnoreCollision(foundCollider, myGroundStopperCollider))
+			// Collider aus JumpOnPlatform Ebene (Laye) inerhalb des definierten Bereiches gefunden
+			// yellow zone collids with jumpOnPlatform
+
+			// kontrollieren ob Kollision zwischen Platform und groundStopper ignoriert wird (Ignorierung/Berücksichtigung wird von PlatformJumperScript durchgeführt)
+			// wenn Kollision ignoriert wird dann ist der Character zurzeit nicht am Fallen sondern am Springen
+
+			if(Physics2D.GetIgnoreCollision(foundColliderArray[0], myGroundStopperCollider))
 			{
-				// true => Kollision mit gefundener JumpOnPlatform ist deaktiviert
-				// yellow zone collids with jumpOnPlatform
-
-//				Debug.Log("Kollision mit " + foundCollider.name + " ist DEAKTIVIERT");
-
-				grounded = false;
-//				ground = 0;
-//				ground |= 1 << layer.ground;
-//				ground |= 1 << layer.block;
-//				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+				// true => Kollision mit gefundener JumpOnPlatform wird ignoriert (deaktiviert)
+				platformGrounded = false;
 			}
 			else
 			{
-				// false => Kollision mit gefundener JumpOnPlatform ist AKTIV!!!
-//				Debug.Log("Kollision mit " + foundCollider.name + " ist AKTIV");
+				// false => Kollision mit gefundener JumpOnPlatform wird berücksichtigt (aktiv)
 				if(moveDirection.y <= 0)
 				{
-					grounded = true;
+					platformGrounded = true;
 				}
-
-	//			Debug.Log(ground.value);
-	//			int max = int.MaxValue;
-	//			max &= 0 << layer.jumpAblePlatform;
-	//			//ground &= 0 << max;
-	//			ground &= 0 << layer.jumpAblePlatform;
-	//			Debug.Log(ground.value);
-//				ground = 0;
-//				ground |= 1 << layer.ground;
-//				ground |= 1 << layer.block;
-//				grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
 			}
 		}
-		else
+
+
+		/**
+		 * 	Checking if standing on solid/static groundCollider
+		 **/
+
+
+//		LayerMask ground = 1 << layer.block;
+//		ground |= 1 << layer.ground;
+//Layer.class
+
+		grounded = false;
+
+		if(!platformGrounded)
 		{
-			ground = 0;
-			ground |= 1 << layer.ground;
-			ground |= 1 << layer.block;
-			grounded = Physics2D.OverlapArea(playerColliderTopLeftPos, playerColliderBottomRightPos, ground);
+			// KEINEN Collider aus JumpOnPlatform Ebene (Laye) inerhalb des definierten Bereiches gefunden
+			// yellow zone doesn't collid with jumpOnPlatform Collider
+
+			platformGrounded = false;
+			foundColliderArray[0] = null;
+			Physics2D.OverlapAreaNonAlloc(playerColliderTopLeftPos, playerColliderBottomRightPos, foundColliderArray, layer.whatIsStaticGround);
+			if(foundColliderArray[0] != null)
+			{
+				grounded = true;
+			}
+			else
+			{
+				grounded = false;
+			}
 		}
 
+		if(grounded || platformGrounded)		// grounded unnötig
+		{
+			grounded = true;
+		}
 
 		/**
 		 * Walled
@@ -565,6 +588,9 @@ public class PlatformCharacter : MonoBehaviour {
 			if(offline())
 			{
 				NetworkMessageInfo bla = new NetworkMessageInfo();
+				Debug.Log("Time.time " + Time.time);
+				Debug.Log("Network.time " + Network.time);
+				Debug.Log("NetworkMessageInfo: timestamp " + bla.timestamp);
 				//bla.timestamp = Network.time; geht nicht
 				GetComponent<RageModus>().StartRageModus(bla);
 			}
@@ -766,7 +792,7 @@ public class PlatformCharacter : MonoBehaviour {
 
 	Level currentLevel;
 
-	public bool debugSpawn = false;
+	bool debugSpawn = true;
 	float reSpawnDelayTime = 2f;
 	float reSpawnDelayTimeNetwork = 2f;
 	
@@ -991,6 +1017,7 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		else //if(spawnProtection)
 		{
+			// in spawnProtection
 			spriteRenderer.color = spawnProtectionAnimation[0];
 		}
 	}

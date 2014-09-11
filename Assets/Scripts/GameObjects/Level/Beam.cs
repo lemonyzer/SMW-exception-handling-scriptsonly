@@ -137,10 +137,6 @@ public class Beam : MonoBehaviour {
 		{
 			beamableObject = true;
 		}
-		else if(other.gameObject.layer == layer.bullet)
-		{
-			beamableObject = true;
-		}
 		else if(other.gameObject.layer == layer.powerUp)
 		{
 			// problem! character hat auch ein child gameobject in powerUp layer!

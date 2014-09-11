@@ -6,7 +6,9 @@ public class Layer : MonoBehaviour {
 	// Physic Layer
 	
 	public LayerMask allPlayer;
-	public LayerMask whatIsGround;
+	public LayerMask whatIsStaticGround;
+	public LayerMask whatIsJumpOnPlatform;
+	public LayerMask whatIsAllGround;
 	public LayerMask whatIsWall;
 
 	public int player;
@@ -16,7 +18,7 @@ public class Layer : MonoBehaviour {
 //	public int player3;
 //	public int player4;
 	
-	public int enemy;
+//	public int enemy;
 	public int feet;
 	public int head;
 	public int body;
@@ -27,14 +29,14 @@ public class Layer : MonoBehaviour {
 //	public int floor;
 	public int block;
 	public int jumpAblePlatform;
-	public int jumpAblePlatformSaveZone;
+//	public int jumpAblePlatformSaveZone;
 	
 	public int powerUp;
-	public int bullet;
+//	public int bullet;
 	
 	public int groundStopper;
 	
-	public int fader;
+//	public int fader;
 
 	public const string playerLayerName = "Player";
 
@@ -49,19 +51,19 @@ public class Layer : MonoBehaviour {
 	public const string itemLayerName = "Item";
 	public const string powerUpLayerName= "PowerUp";
 
-	public const string enemyLayerName = "Enemy";
+//	public const string enemyLayerName = "Enemy";
 
 	public const string groundLayerName = "Ground";
 //	public const string tagAbleLayerName = "TagAble";
 //	public const string floorLayerName = "Floor";
 	public const string blockLayerName = "Block";
 	public const string jumpAblePlatformLayerName = "JumpOnPlatform";
-	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
+//	public const string jumpAblePlatformSaveZoneLayerName = "JumpSaveZone";
 
-	public const string bulletLayerName = "Bullet";
+//	public const string bulletLayerName = "Bullet";
 	public const string groundStopperLayerName = "GroundStopper";
 	
-	public const string faderLayerName = "Fader";
+//	public const string faderLayerName = "Fader";
 	
 	void Awake()
 	{
@@ -86,7 +88,7 @@ public class Layer : MonoBehaviour {
 		groundStopper = LayerMask.NameToLayer(groundStopperLayerName);
 		powerUp = LayerMask.NameToLayer(powerUpLayerName);
 
-		bullet = LayerMask.NameToLayer(bulletLayerName);
+//		bullet = LayerMask.NameToLayer(bulletLayerName);
 
 		
 //		enemy = LayerMask.NameToLayer(enemyLayerName);
@@ -96,15 +98,19 @@ public class Layer : MonoBehaviour {
 //		floor = LayerMask.NameToLayer(floorLayerName);
 		block = LayerMask.NameToLayer(blockLayerName);
 		jumpAblePlatform = LayerMask.NameToLayer(jumpAblePlatformLayerName);
-		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
+//		jumpAblePlatformSaveZone = LayerMask.NameToLayer(jumpAblePlatformSaveZoneLayerName);
 
-		whatIsGround = 1 << ground;
+		whatIsStaticGround = 1 << ground;
 //		whatIsGround |= 1 << tagAble;
 //		whatIsGround = 1 << floor;
-		whatIsGround |= 1 << jumpAblePlatform;
-		whatIsGround |= 1 << block;
-		
-		whatIsWall = whatIsGround;
+		whatIsStaticGround |= 1 << block;
+
+		whatIsJumpOnPlatform = 1 << jumpAblePlatform;
+
+		whatIsAllGround = whatIsStaticGround;
+		whatIsAllGround |= 1 << jumpAblePlatform;
+
+		whatIsWall = whatIsStaticGround;
 		
 
 //		fader = LayerMask.NameToLayer(faderLayerName);

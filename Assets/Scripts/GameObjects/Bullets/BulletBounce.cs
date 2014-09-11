@@ -31,7 +31,7 @@ public class BulletBounce : MonoBehaviour {
 			Debug.DrawLine(groundCheckPosition, groundCheckPosition + new Vector3(1,0,0));
 			
 			groundCheckPosition = this.transform.position - groundCheckPositionOffset;		// sprite pivot need to be in center position
-			if(Physics2D.OverlapPoint(groundCheckPosition, layer.whatIsGround))
+			if(Physics2D.OverlapPoint(groundCheckPosition, layer.whatIsAllGround))
 			{
 				Debug.Log(this.ToString() +": bounce");
 				Bounce();
