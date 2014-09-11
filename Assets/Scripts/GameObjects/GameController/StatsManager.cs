@@ -159,8 +159,8 @@ public class StatsManager : MonoBehaviour {
 	[RPC]
 	public void SyncHeadJump(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
 	{
-		if(GameState.currentState == GameState.States.Running)
-        {
+		//if(GameState.currentState == GameState.States.Running)
+        //{
 			if(attackersRealOwner != null &&
 			   victimsRealOwner != null)
 			{
@@ -178,36 +178,8 @@ public class StatsManager : MonoBehaviour {
 			{
 				Debug.LogError("Character ohne RealOwner beteiligt! BOT?");
 			}
-		}
+		//}
     }
-
-	bool isAuthoritativeHost()
-	{
-		if(offline ())
-			return true;
-		
-		if(server ())
-			return true;
-		
-		return false;
-		
-	}
-	
-	bool offline()
-	{
-		if(Network.peerType == NetworkPeerType.Disconnected)
-			return true;
-		
-		return false;
-	}
-	
-	bool server()
-	{
-		if(Network.isServer)
-			return true;
-		
-		return false;
-	}
 
 	public void InvincibleAttack(GameObject attacker, GameObject victim)
 	{
@@ -244,8 +216,8 @@ public class StatsManager : MonoBehaviour {
 	[RPC]
 	public void SyncInvincibleAttack(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
 	{
-		if(GameState.currentState == GameState.States.Running)
-		{
+		//if(GameState.currentState == GameState.States.Running)
+		//{
 			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
@@ -256,7 +228,7 @@ public class StatsManager : MonoBehaviour {
 			victimCharacterScript.InvincibleAttackVictim();
 			
 			AddKill(playerAttacker, playerVictim);
-        }
+        //}
     }
 
 
@@ -289,8 +261,8 @@ public class StatsManager : MonoBehaviour {
 	[RPC]
 	public void SyncBulletHitAnimation(NetworkPlayer attackersRealOwner, NetworkPlayer victimsRealOwner)
 	{
-		if(GameState.currentState == GameState.States.Running)
-		{
+		//if(GameState.currentState == GameState.States.Running)
+		//{
 			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
@@ -301,7 +273,7 @@ public class StatsManager : MonoBehaviour {
 			victimCharacterScript.InvincibleAttackVictim();
 			
 			//AddKill(playerAttacker, playerVictim);
-		}
+		//}
 	}
 
 	[RPC]
@@ -310,5 +282,34 @@ public class StatsManager : MonoBehaviour {
 		Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 		Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 		AddKill(playerAttacker, playerVictim);
+	}
+
+
+	bool isAuthoritativeHost()
+	{
+		if(offline ())
+			return true;
+		
+		if(server ())
+			return true;
+		
+		return false;
+		
+	}
+	
+	bool offline()
+	{
+		if(Network.peerType == NetworkPeerType.Disconnected)
+			return true;
+		
+		return false;
+	}
+	
+	bool server()
+	{
+		if(Network.isServer)
+			return true;
+		
+		return false;
 	}
 }

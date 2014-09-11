@@ -730,6 +730,18 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 	}
 
+	Vector3 authoritativeSpawnPosition;
+	
+	Level currentLevel;
+	
+	bool debugSpawn = true;
+	float reSpawnDelayTime = 2f;
+	float reSpawnDelayTimeNetwork = 2f;
+	
+	bool spawnProtection = false;
+	float spawnProtectionTime = 2f;
+	Color[] spawnProtectionAnimation;
+
 	public void HeadJumpVictim()
 	{
 		isHit = true;
@@ -790,15 +802,28 @@ public class PlatformCharacter : MonoBehaviour {
 		// server erhält erst input wenn spieler !isDead
 	}
 
-	Level currentLevel;
-
-	bool debugSpawn = true;
-	float reSpawnDelayTime = 2f;
-	float reSpawnDelayTimeNetwork = 2f;
+	[RPC]
+	void SpawnAnimationDelay(Vector3 spawnPosition, NetworkMessageInfo info)
+	{
+		authoritativeSpawnPosition = spawnPosition;
+		double rpcTripTime = Network.time - info.timestamp;
+		
+		if(rpcTripTime >= reSpawnDelayTime)
+		{
+			reSpawnDelayTimeNetwork = 0f;
+		}
+		else
+			reSpawnDelayTimeNetwork = reSpawnDelayTime - (float)rpcTripTime;
+		
+		Debug.Log("SpawnAnimationDelay RPC trip time: " + rpcTripTime);
+		Debug.Log("reSpawnDelayTime: " + reSpawnDelayTime);
+		Debug.Log("reSpawnDelayTimeNetwork: " + reSpawnDelayTimeNetwork);
+		
+		
+		StartCoroutine(SpawnDelay());
+	}
 	
-	bool spawnProtection = false;
-	float spawnProtectionTime = 2f;
-	Color[] spawnProtectionAnimation;
+
 
 	IEnumerator SpawnDelay()
 	{
@@ -808,6 +833,152 @@ public class PlatformCharacter : MonoBehaviour {
 		StartSpawnAnimation();
 	}
 
+	public void StartSpawnAnimation()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("StartSpawnAnimation()");
+		this.transform.renderer.enabled = false;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame erstellt wird bis render aktiviert wird
+		
+		// neue Position halten
+		//rigidbody2D.isKinematic = true;				// BUG BUG BUG BUG BUG
+		
+		//		if(server())
+		//		{
+		//			// Random Spawn Position
+		//			SetSpawnPosition();
+		//		}
+		
+		this.transform.position = authoritativeSpawnPosition;
+		
+		// schwachsinn, spawnAnimation startet!
+		//CheckPosition();
+		//SimulateAnimation();
+		
+		// Spawn Animation
+		anim.SetBool(hash.spawnBool, true);
+		
+		kinematic = true;	// bleibt in luft hängen für die zeit der animation, spieler input ist auch deaktiviert (durch isDead)
+		// Kinematic = true, alle Collider & Trigger aus (bis auf groundStopper und body (World stopper)
+		
+		// kann keine items während spawnanimation einsammeln
+		itemCollectorCollider2D.enabled = false;
+		
+		// kann nicht von powerups getroffen werden
+		powerUpCollider2D.enabled = false;
+		
+		// FeetCollider deaktivieren (Gegenspieler nehmen Schaden)
+		feetCollider2D.enabled = false;
+		
+		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
+		headCollider2D.enabled = false;
+		
+		// falls spawn position im boden ist 
+		bodyCollider2D.enabled = true;						
+		myGroundStopperCollider.enabled = true;
+		
+		/* Ki und Controlls deaktivieren */
+		isDead = true;
+		
+		this.transform.renderer.enabled = true;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame seit dem deaktivieren erzeugt wurde
+	}
+	
+	void LateUpdate()
+	{
+		if(!spawnProtection)
+		{
+			if(anim.GetCurrentAnimatorStateInfo(0).nameHash == hash.spawnProtectionState)
+			{
+				if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+					Debug.LogWarning("SpawnProtectionState");
+				spawnProtection = true;	// coroutine ist zu langsam, wird sonst zweimal gestartet!
+				anim.SetTrigger(hash.nextStateTrigger);	// spawnprotection state verlassen
+				// Spawn Animation finished!
+				// nach SpawnAnimation Collider & Trigger auf SpawnProtection setzen
+				SpawnProtection();
+				// SpawnProtection Timer starten
+				
+			}
+			else
+			{
+				
+			}
+		}
+		else //if(spawnProtection)
+		{
+			// in spawnProtection
+			spriteRenderer.color = spawnProtectionAnimation[0];
+		}
+	}
+
+	void SpawnProtection()
+	{
+		headCollider2D.enabled = false;
+		feetCollider2D.enabled = true;		// kann angreifen
+		//bodyCollider2D.enabled = false;										// zwischen body und world stopper unterscheiden?
+		itemCollectorCollider2D.enabled = true;	// kann items sammeln
+		powerUpCollider2D.enabled = false;
+		
+		myGroundStopperCollider.enabled = true;	// kann auf boden landen
+		bodyCollider2D.enabled = true;			// collidiert mit level
+		
+		isDead = false;
+		isHit = false;
+		
+		kinematic = false;
+		
+		StartCoroutine(SpawnProtectionTime());
+	}
+	
+	IEnumerator SpawnProtectionTime()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("CoRoutine: SpawnProtection()");
+		spawnProtection = true;
+		yield return new WaitForSeconds(spawnProtectionTime);
+		spawnProtection = false;
+		SpawnComplete();
+	}
+	
+	void SpawnComplete()
+	{
+		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
+			Debug.LogWarning("SpawnComplete()");
+		spriteRenderer.color = new Color(1f,1f,1f,1f);	// transparenz entfernen
+		Fighting();
+	}
+	
+	public void Fighting()
+	{
+		headCollider2D.enabled = true;
+		feetCollider2D.enabled = true;
+		bodyCollider2D.enabled = true;
+		myGroundStopperCollider.enabled = true;
+		itemCollectorCollider2D.enabled = true;
+		powerUpCollider2D.enabled = true;
+
+
+		// Debugging
+		// Error not found... collision is not ignored!
+//		int foundCount = Physics2D.OverlapAreaNonAlloc(new Vector2(currentLevel.left,currentLevel.bottom),
+//		                              new Vector2(currentLevel.width-Mathf.Abs(currentLevel.left),currentLevel.height-Mathf.Abs(currentLevel.bottom)),
+//		                              allCurrentColliders,
+//		                              layer.whatIsStaticGround);
+//
+//		for(int i = 0; i< foundCount; i++)
+//		{
+//			Collider2D collider = allCurrentColliders[i];
+//			//Debug.Log(bodyCollider2D.transform.parent.name + ", " + collider.name + " ignored: " + Physics2D.GetIgnoreCollision(myGroundStopperCollider, collider));
+//			Debug.Log(bodyCollider2D.transform.parent.name);
+//			Debug.Log(collider.name);
+//			Debug.Log(" ignored: " + Physics2D.GetIgnoreCollision(myGroundStopperCollider, collider));
+//
+//			Physics2D.IgnoreCollision(bodyCollider2D, collider, false);
+//			Physics2D.IgnoreCollision(myGroundStopperCollider, collider, false);
+//		}
+
+	}
+
+//	Collider2D[] allCurrentColliders = new Collider2D[100];
 
 	//[RPC]
 	void SetSpawnPosition()
@@ -819,14 +990,15 @@ public class PlatformCharacter : MonoBehaviour {
 		this.transform.position = currentLevel.getRandomSpawnPosition();
 	}
 
-	void Dead()
-	{
-		headCollider2D.enabled = false;
-		feetCollider2D.enabled = false;
-		bodyCollider2D.enabled = false;
-		powerUpCollider2D.enabled = false;
-		myGroundStopperCollider.enabled = false;
-	}
+//	void Dead()
+//	{
+//		headCollider2D.enabled = false;
+//		feetCollider2D.enabled = false;
+//		bodyCollider2D.enabled = false;
+//		itemCollectorCollider2D.enabled = false;		
+//		powerUpCollider2D.enabled = false;
+//		myGroundStopperCollider.enabled = false;
+//	}
 
 	public void InvincibleAttackVictim()
 	{
@@ -903,158 +1075,12 @@ public class PlatformCharacter : MonoBehaviour {
 		itemCollectorCollider2D.enabled = false; // kann keine items einsammeln
 	}
 
-	void SpawnProtection()
-	{
-		headCollider2D.enabled = false;
-		feetCollider2D.enabled = true;		// kann angreifen
-		//bodyCollider2D.enabled = false;										// zwischen body und world stopper unterscheiden?
-		itemCollectorCollider2D.enabled = true;	// kann items sammeln
-		powerUpCollider2D.enabled = false;
-
-		myGroundStopperCollider.enabled = true;	// kann auf boden landen
-		bodyCollider2D.enabled = true;			// collidiert mit level
-
-		isDead = false;
-		isHit = false;
-
-		kinematic = false;
-
-		StartCoroutine(SpawnProtectionTime());
-	}
-
-	[RPC]
-	void SpawnAnimationDelay(Vector3 spawnPosition, NetworkMessageInfo info)
-	{
-		authoritativeSpawnPosition = spawnPosition;
-		double rpcTripTime = Network.time - info.timestamp;
-
-		if(rpcTripTime >= reSpawnDelayTime)
-		{
-			reSpawnDelayTimeNetwork = 0f;
-		}
-		else
-			reSpawnDelayTimeNetwork = reSpawnDelayTime - (float)rpcTripTime;
-
-		Debug.Log("SpawnAnimationDelay RPC trip time: " + rpcTripTime);
-		Debug.Log("reSpawnDelayTime: " + reSpawnDelayTime);
-		Debug.Log("reSpawnDelayTimeNetwork: " + reSpawnDelayTimeNetwork);
-
-
-		StartCoroutine(SpawnDelay());
-	}
-
-	Vector3 authoritativeSpawnPosition;
-
-	public void StartSpawnAnimation()
-	{
-		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
-			Debug.LogWarning("StartSpawnAnimation()");
-		this.transform.renderer.enabled = false;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame erstellt wird bis render aktiviert wird
-		
-		// neue Position halten
-		rigidbody2D.isKinematic = true;
-		
-//		if(server())
-//		{
-//			// Random Spawn Position
-//			SetSpawnPosition();
-//		}
-
-		this.transform.position = authoritativeSpawnPosition;
-
-		// schwachsinn, spawnAnimation startet!
-		//CheckPosition();
-		//SimulateAnimation();
-		
-		// Spawn Animation
-		anim.SetBool(hash.spawnBool, true);
-
-		kinematic = true;	// bleibt in luft hängen für die zeit der animation, spieler input ist auch deaktiviert (durch isDead)
-		// Kinematic = true, alle Collider & Trigger aus (bis auf groundStopper und body (World stopper)
-
-		// kann keine items während spawnanimation einsammeln
-		itemCollectorCollider2D.enabled = false;
-
-		// kann nicht von powerups getroffen werden
-		powerUpCollider2D.enabled = false;
-
-		// FeetCollider deaktivieren (Gegenspieler nehmen Schaden)
-		feetCollider2D.enabled = false;
-
-		// HeadTrigger deaktivieren, (in SpawnProtection nicht angreifbar)
-		headCollider2D.enabled = false;
-
-		// falls spawn position im boden ist 
-		bodyCollider2D.enabled = true;						
-		myGroundStopperCollider.enabled = true;
-
-		/* Ki und Controlls deaktivieren */
-		isDead = true;
-
-		this.transform.renderer.enabled = true;				// sieht besser aus macht eigentlich kein unterschied, da kein neuer frame seit dem deaktivieren erzeugt wurde
-	}
-
-	void LateUpdate()
-	{
-		if(!spawnProtection)
-		{
-			if(anim.GetCurrentAnimatorStateInfo(0).nameHash == hash.spawnProtectionState)
-			{
-				if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
-					Debug.LogWarning("SpawnProtectionState");
-				spawnProtection = true;	// coroutine ist zu langsam, wird sonst zweimal gestartet!
-				anim.SetTrigger(hash.nextStateTrigger);	// spawnprotection state verlassen
-				// Spawn Animation finished!
-				// nach SpawnAnimation Collider & Trigger auf SpawnProtection setzen
-				SpawnProtection();
-				// SpawnProtection Timer starten
-
-			}
-			else
-			{
-				
-			}
-		}
-		else //if(spawnProtection)
-		{
-			// in spawnProtection
-			spriteRenderer.color = spawnProtectionAnimation[0];
-		}
-	}
-
 	void InitSpawnProtectionAnimation()
 	{
 		spawnProtectionAnimation = new Color[1];
 		spawnProtectionAnimation [0] = new Color (1f, 1f, 1f, 0.5f);	// alpha channel = 0.5
 	}
 
-	IEnumerator SpawnProtectionTime()
-	{
-		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
-			Debug.LogWarning("CoRoutine: SpawnProtection()");
-		spawnProtection = true;
-		yield return new WaitForSeconds(spawnProtectionTime);
-		spawnProtection = false;
-		SpawnComplete();
-	}
 
-	void SpawnComplete()
-	{
-		if(debugSpawn && this.transform.name.StartsWith("Carbuncle"))
-			Debug.LogWarning("SpawnComplete()");
-		spriteRenderer.color = new Color(1f,1f,1f,1f);	// transparenz entfernen
-		Fighting();
-	}
-
-	public void Fighting()
-	{
-		headCollider2D.enabled = true;
-		feetCollider2D.enabled = true;
-		bodyCollider2D.enabled = true;
-		myGroundStopperCollider.enabled = true;
-		itemCollectorCollider2D.enabled = true;
-		powerUpCollider2D.enabled = true;
-
-	}
 
 }

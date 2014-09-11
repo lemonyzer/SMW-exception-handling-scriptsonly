@@ -8,6 +8,13 @@ public class Level : MonoBehaviour {
 
 	bool backgroundFound = false;
 
+	public float left;
+	public float z;
+	public float bottom;
+	public float width;
+	public float height;
+
+
 	void Awake()
 	{
 		background = GameObject.FindGameObjectWithTag(Tags.background);
@@ -15,10 +22,21 @@ public class Level : MonoBehaviour {
 		{
 			bgSpriteRenderer = background.GetComponent<SpriteRenderer>();
 			backgroundFound = true;
+
+
+			left = bgSpriteRenderer.bounds.center.x - bgSpriteRenderer.bounds.extents.x;
+			bottom = bgSpriteRenderer.bounds.center.y - bgSpriteRenderer.bounds.extents.y;
+			
+			width = bgSpriteRenderer.bounds.extents.x*2;
+			height = bgSpriteRenderer.bounds.extents.y*2;
 		}
 		else
 		{
 			Debug.LogError("kein Background gesetzt, kein RandomSpawnPoint berechenbar!!!");
+
+			/**
+			 *	Mit Camera rechnen!!! 
+			 **/
 		}
 	}
 
@@ -29,40 +47,39 @@ public class Level : MonoBehaviour {
 //			float x,y,z=0;
 //			x = Camera.main.transform.position.x;
 //			y = Camera.main.transform.position.y;
-			float z = 0;
+			z = 0;
 
 
 			// hat weniger mit camera zu tun!!!
 			// die position des background gameobjects ist wichtig!
-			float left = bgSpriteRenderer.bounds.center.x - bgSpriteRenderer.bounds.extents.x;
+
 			// nehmen wir an transform bei -10,-7.5,0
 			// spriteRenderer.sprite bounds
 			// center = (0,0,0)
-
+			
 			//Sprite Pivot leftbottom! testweiße wurde background position verschoben
-//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
-//			GameController (Level): BackgroundGO Position: (10.0, 7.5, 0.0)
-//			GameController (Level): Renderer Bounds: Center: (20.0, 15.0, 0.0), Extents: (10.0, 7.5, 0.1)
-//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
-
+			//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
+			//			GameController (Level): BackgroundGO Position: (10.0, 7.5, 0.0)
+			//			GameController (Level): Renderer Bounds: Center: (20.0, 15.0, 0.0), Extents: (10.0, 7.5, 0.1)
+			//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
+			
 			//Sprite Pivot leftbottom! background correct positioniert 
-//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
-//			GameController (Level): BackgroundGO Position: (-10.0, -7.5, 0.0)
-//			GameController (Level): Renderer Bounds: Center: (0.0, 0.0, 0.0), Extents: (10.0, 7.5, 0.1)
-//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
-
+			//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
+			//			GameController (Level): BackgroundGO Position: (-10.0, -7.5, 0.0)
+			//			GameController (Level): Renderer Bounds: Center: (0.0, 0.0, 0.0), Extents: (10.0, 7.5, 0.1)
+			//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
+			
 			//Sprite Pivot leftbottom! background (0,0,0) positioniert
-//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
-//			GameController (Level): BackgroundGO Position: (0.0, 0.0, 0.0)
-//			GameController (Level): Renderer Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
-//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
+			//			GameController (Level): Cam Position: (0.0, 0.0, -10.0)
+			//			GameController (Level): BackgroundGO Position: (0.0, 0.0, 0.0)
+			//			GameController (Level): Renderer Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
+			//			GameController (Level): Sprite Bounds: Center: (10.0, 7.5, 0.0), Extents: (10.0, 7.5, 0.1)
 
+			left = bgSpriteRenderer.bounds.center.x - bgSpriteRenderer.bounds.extents.x;
+			bottom = bgSpriteRenderer.bounds.center.y - bgSpriteRenderer.bounds.extents.y;
 
-
-			float bottom = bgSpriteRenderer.bounds.center.y - bgSpriteRenderer.bounds.extents.y;
-
-			float width = bgSpriteRenderer.bounds.extents.x*2;
-			float height = bgSpriteRenderer.bounds.extents.y*2;
+			width = bgSpriteRenderer.bounds.extents.x*2;
+			height = bgSpriteRenderer.bounds.extents.y*2;
 
 			//float width = bgSpriteRenderer.sprite.bounds.extents.x*2 - left;
 			//float width = bgSpriteRenderer.sprite.bounds.extents.x*2;
