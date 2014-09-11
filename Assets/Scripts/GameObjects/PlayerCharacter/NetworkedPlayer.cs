@@ -88,10 +88,36 @@ public class NetworkedPlayer : MonoBehaviour
 
 	// simulate movement local
 	// send input and calculated position to server / masterclient
+	public bool localPlayerUnityEnginePhysicsUsed = true;
+	bool frameRPCsended = false;
+	float inputToRPCDelay = 0f;
 	void FixedUpdate()
 	{
 		if( ownerScript.owner == Network.player )
 		{
+			if (moveHistory.Count > 0)
+			{
+				// ein FixedUpdate() aufruf später abschicken (position wird von physic engine korrigiert falls collision stattfindet)	// send 20ms delay!!!
+				if(localPlayerUnityEnginePhysicsUsed)
+				{
+					if(!frameRPCsended)
+					{
+						Debug.Log("Input-Physics-Send lag: " + ((int)((Time.time - inputToRPCDelay)*1000)) + " ms");
+						move lastMoveStateWithPhysics = moveHistory[0];
+						lastMoveStateWithPhysics.Position = this.transform.position;
+						moveHistory.RemoveAt(0);
+						moveHistory.Insert (0, lastMoveStateWithPhysics);
+						myNetworkView.RPC( "ProcessInput", RPCMode.Server, lastMoveStateWithPhysics.HorizontalAxis, lastMoveStateWithPhysics.jump, this.transform.position );
+					}
+				}
+			}
+
+			if(localPlayerUnityEnginePhysicsUsed)
+			{
+				frameRPCsended = false;
+				inputToRPCDelay = Time.time;
+			}
+
 			if(correctedPosition)
 			{
 				Debug.Log("corrected Position, skip input for one frame");
@@ -108,8 +134,11 @@ public class NetworkedPlayer : MonoBehaviour
 			// get current move state
 			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, Network.time );
 
-			// information required to locate the own boxcollider (should be 100 ms behind the charactersprite)
-			moveState.Position = this.transform.position;
+			if(!localPlayerUnityEnginePhysicsUsed)
+			{
+				// information required to locate the own boxcollider (should be 100 ms behind the charactersprite)
+				moveState.Position = this.transform.position;		// not corrected by physics engine!!! could be realy wrong!!!
+			}
 
 			// buffer move state
 			moveHistory.Insert( 0, moveState );
@@ -121,7 +150,7 @@ public class NetworkedPlayer : MonoBehaviour
 			}
 
 			// send state to server
-			if(Network.isClient)
+			if(Network.isClient && !localPlayerUnityEnginePhysicsUsed)
 			{
 //				if(clientNeedsToSendNewInput)
 //				{

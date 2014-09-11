@@ -22,16 +22,19 @@ public class AuthoritativeBullet : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(other.gameObject.layer == layer.body)
+		if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
 		{
-			if(other.gameObject != ownerCharacter)
+			if(other.gameObject.layer == layer.body)
 			{
-				statsManager.BulletHit(ownerCharacter, other.gameObject );
-				Network.Destroy(this.gameObject);
-			}
-			else
-			{
-				Debug.LogWarning(this.ToString() +", own Bullet!");
+				if(other.gameObject != ownerCharacter)
+				{
+					statsManager.BulletHit(ownerCharacter, other.gameObject );
+					Network.Destroy(this.gameObject);
+				}
+				else
+				{
+					Debug.LogWarning(this.ToString() +", own Bullet!");
+				}
 			}
 		}
 	}

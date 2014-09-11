@@ -42,12 +42,15 @@ public class BulletBounce : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision)
 	{
-		if(collision.gameObject.layer == layer.ground ||
-		   collision.gameObject.layer == layer.jumpAblePlatform ||
-		   collision.gameObject.layer == layer.block)
+		if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
 		{
-//			Debug.Log(this.ToString() +": UnityPhysics -> BOUNCE");
-			Bounce();
+			if(collision.gameObject.layer == layer.ground ||
+			   collision.gameObject.layer == layer.jumpAblePlatform ||
+			   collision.gameObject.layer == layer.block)
+			{
+	//			Debug.Log(this.ToString() +": UnityPhysics -> BOUNCE");
+				Bounce();
+			}
 		}
 	}
 
