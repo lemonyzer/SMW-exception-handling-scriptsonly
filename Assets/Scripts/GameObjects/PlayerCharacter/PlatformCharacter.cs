@@ -168,6 +168,10 @@ public class PlatformCharacter : MonoBehaviour {
 		anim = GetComponent<Animator>();
 		ownerScript = GetComponent<RealOwner>();
 
+		if(Application.loadedLevelName == "UnityNetworkRace")
+		{
+			beamEnabled = false;
+		}
 	}
 
 
@@ -193,8 +197,13 @@ public class PlatformCharacter : MonoBehaviour {
 	public bool platformJump = false;
 	BoxCollider2D myGroundStopperCollider;
 
+	bool beamEnabled = true;
+
 	void CheckBeam()
 	{
+		if(!beamEnabled)
+			return;
+
 		//playerPos spriterenderer boundaries
 		Vector2 playerPos = new Vector2(transform.position.x, transform.position.y);
 		

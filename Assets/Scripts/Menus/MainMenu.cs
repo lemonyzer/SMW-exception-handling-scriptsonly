@@ -50,9 +50,14 @@ public class MainMenu : MonoBehaviour {
 
 		// rechts unten
 		GUI.enabled = false;
-		if(GUI.Button(new Rect(halfScreenWidth,halfScreenHeight,halfScreenWidth,halfScreenHeight),"Interpolation & Prediction"))
+		if(GUI.Button(new Rect(halfScreenWidth,halfScreenHeight,halfScreenWidth*0.5f,halfScreenHeight),"Other"))
 		{
 			nextLevel = "hostclientmenu";
+		}
+		GUI.enabled = true;
+		if(GUI.Button(new Rect(halfScreenWidth+halfScreenWidth*0.5f,halfScreenHeight,halfScreenWidth*0.5f,halfScreenHeight),"Race"))
+		{
+			nextLevel = "UnityNetworkRace";
 		}
 		GUI.enabled = true;
 
