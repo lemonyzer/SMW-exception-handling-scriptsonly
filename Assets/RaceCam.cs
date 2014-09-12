@@ -3,6 +3,13 @@ using System.Collections;
 
 public class RaceCam : MonoBehaviour {
 
+	public GameObject target;
+
+	void Awake()
+	{
+//		currentMode = camMode.
+	}
+
 	// Use this for initialization
 	void Start () {
 	
@@ -13,20 +20,53 @@ public class RaceCam : MonoBehaviour {
 	
 	}
 
+	// auto
 	private float hSpeed = 4;
 	private Vector3 moveDirection = Vector3.right;
 
+	// follow
+	private Vector3 camPosition;
+
+//	public struct camMode {
+//		autoRight,
+//		autoLeft,
+//		autoRightLeft,
+//		followLocalPlayer,
+//		followSelectedPlayer,
+//	}
+//
+//	public camMode currentMode;
+
 	void FixedUpdate()
 	{
-		if(transform.position.x <= 0)
+		if(target == null)
 		{
-			moveDirection = Vector3.right;
+			if(transform.position.x <= 0)
+			{
+				moveDirection = Vector3.right;
+			}
+			else if(transform.position.x >= 60)
+			{
+				moveDirection = Vector3.left;
+			}
+			transform.Translate( moveDirection * hSpeed * Time.fixedDeltaTime);
 		}
-		else if(transform.position.x >= 60)
+		else
 		{
-			moveDirection = Vector3.left;
+			camPosition = new Vector3(target.transform.position.x, 0,-10);
+			Debug.Log(camPosition);
+			transform.position = camPosition;
 		}
-		transform.Translate( moveDirection * hSpeed * Time.fixedDeltaTime);
 
+	}
+
+	public void removeTarget()
+	{
+		target = null;
+	}
+
+	public void setTarget(GameObject newTarget)
+	{
+		target = newTarget;
 	}
 }

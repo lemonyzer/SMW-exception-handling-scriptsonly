@@ -878,7 +878,7 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 	public bool debugEnabled = false;
 	
 	private Rect windowPlayerDictionaryRect = new Rect(20, 25, Screen.width-40, 200);
-	private Rect windowPlayerInfoGUIRect = new Rect(10f,10f,Screen.width-20,90);
+	private Rect windowPlayerInfoGUIRect = new Rect(80f,10f,Screen.width-160,90);
 	
 	void OnGUI()
 	{

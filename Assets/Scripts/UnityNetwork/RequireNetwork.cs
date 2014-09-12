@@ -3,9 +3,14 @@ using System.Collections;
 
 public class RequireNetwork : MonoBehaviour
 {
-	void Awake()
+	void OnGUI()
 	{
 		if( Network.peerType == NetworkPeerType.Disconnected )
-			Network.InitializeServer( 20, 25005, true );
+		{
+			if( GUILayout.Button("Start Server (20 Client Slots + 'Serverslot')", GUILayout.Width(Screen.width), GUILayout.Height(Screen.height)))
+			{
+				Network.InitializeServer( 20, 25005, true );
+			}
+		}
 	}
 }
