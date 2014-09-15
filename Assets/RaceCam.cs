@@ -3,6 +3,7 @@ using System.Collections;
 
 public class RaceCam : MonoBehaviour {
 
+	public bool holdStartPos = true; 
 	public GameObject target;
 
 	void Awake()
@@ -39,25 +40,27 @@ public class RaceCam : MonoBehaviour {
 
 	void FixedUpdate()
 	{
-		if(target == null)
+		if(!holdStartPos)
 		{
-			if(transform.position.x <= 0)
+			if(target == null)
 			{
-				moveDirection = Vector3.right;
+				if(transform.position.x <= 0)
+				{
+					moveDirection = Vector3.right;
+				}
+				else if(transform.position.x >= 60)
+				{
+					moveDirection = Vector3.left;
+				}
+				transform.Translate( moveDirection * hSpeed * Time.fixedDeltaTime);
 			}
-			else if(transform.position.x >= 60)
+			else
 			{
-				moveDirection = Vector3.left;
+				camPosition = new Vector3(target.transform.position.x, 0,-10);
+				//Debug.Log(camPosition);
+				transform.position = camPosition;
 			}
-			transform.Translate( moveDirection * hSpeed * Time.fixedDeltaTime);
 		}
-		else
-		{
-			camPosition = new Vector3(target.transform.position.x, 0,-10);
-			Debug.Log(camPosition);
-			transform.position = camPosition;
-		}
-
 	}
 
 	public void removeTarget()

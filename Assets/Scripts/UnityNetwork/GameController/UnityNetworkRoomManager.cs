@@ -129,7 +129,10 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		GameState.currentState = GameState.States.Starting;
 		
 		// music off
-		myAudioSource.Stop();
+		if(myAudioSource != null)
+		{
+			myAudioSource.Stop();
+		}
 		StartCoroutine(startCountDown());
 	}
 	
@@ -226,8 +229,8 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 			Debug.LogWarning("room Background Music in roomManager not set in the Inspector");
 
 		syncedLocalPersistentPlayerDictionary = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary;
-		Player server = new Player(Network.player, null);
-		syncedLocalPersistentPlayerDictionary.AddPlayer(Network.player,server);
+//		Player server = new Player(Network.player, null);																		// WTF ???
+//		syncedLocalPersistentPlayerDictionary.AddPlayer(Network.player,server);
 	}
 	
 	/**
@@ -488,6 +491,13 @@ public class UnityNetworkRoomManager : MonoBehaviour {
 		//			Debug.LogWarning("UpdateCurrentPlayerCharacter already done!"); // ??? maybe bad, should be also doin it in this RPC
 		//			return;
 		//		}
+
+		if(characterGameObjectViewID == null)
+		{
+			Debug.LogError("Character existiert nicht mehr: characterGameObjectViewID == null");
+			return;
+		}
+
 		Debug.LogWarning("RPC UpdateCurrentPlayerCharacter " + currentNetworkPlayer + ", " + prefabFilename + ", " + characterGameObjectViewID); 
 		GameObject characterGameObject = null;
 		try {

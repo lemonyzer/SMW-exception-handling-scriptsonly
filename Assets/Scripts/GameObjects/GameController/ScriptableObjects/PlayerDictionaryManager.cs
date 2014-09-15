@@ -31,7 +31,8 @@ public class PlayerDictionaryManager : MonoBehaviour {
             }
 			if(Application.loadedLevelName == Scenes.photonLobby ||
 			   Application.loadedLevelName == Scenes.mainmenu ||
-			   Application.loadedLevelName == Scenes.unityNetworkLobby)
+			   Application.loadedLevelName == Scenes.unityNetworkLobby ||
+			   Application.loadedLevelName == Scenes.unityNetworkRace)
 			{
 				// wenn aktuelles Level PhotonLobby ist, lösche alle Einträge aus PlayerDictionary
 				syncedLocalPersistentPlayerDictionary.RemoveAll();

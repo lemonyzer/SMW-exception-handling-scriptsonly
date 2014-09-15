@@ -60,6 +60,10 @@ public class ConnectToGame : MonoBehaviour
 
 	void OnGUI()
 	{
+		if(Network.peerType == NetworkPeerType.Client ||
+		   Network.peerType == NetworkPeerType.Server)
+			return;
+
 		// let the user enter IP address
 		GUILayout.Label( "IP Address" );
 		ip = GUILayout.TextField( ip, GUILayout.Width( 200f ), GUILayout.MinHeight(minButtonHeight) );

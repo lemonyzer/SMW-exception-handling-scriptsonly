@@ -233,7 +233,7 @@ public class StatsManager : MonoBehaviour {
 
 
 	
-	public void BulletHit(GameObject attacker, GameObject victim)
+	public void BulletHit(GameObject bulletOwner, GameObject victim)					// wenn spieler scene verlässt oder character wechselt, müssen alle bullets entfernt werden!!!
 	{
 		if(myNetworkView != null || Network.peerType != NetworkPeerType.Disconnected)
 		{
@@ -246,7 +246,7 @@ public class StatsManager : MonoBehaviour {
 		
 		if(GameState.currentState == GameState.States.Running)
 		{
-			NetworkPlayer attackersRealOwner = attacker.GetComponent<RealOwner>().owner;
+			NetworkPlayer attackersRealOwner = bulletOwner.GetComponent<RealOwner>().owner;
 			NetworkPlayer victimsRealOwner = victim.GetComponent<RealOwner>().owner;
 			
 			myNetworkView.RPC("SyncBulletHitAnimation", RPCMode.All, attackersRealOwner, victimsRealOwner);

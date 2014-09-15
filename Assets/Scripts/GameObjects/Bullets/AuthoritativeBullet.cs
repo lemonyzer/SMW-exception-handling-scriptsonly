@@ -22,14 +22,26 @@ public class AuthoritativeBullet : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
+		if(other.gameObject.layer == layer.powerUp)
 		{
-			if(other.gameObject.layer == layer.body)
+			if(other.transform.parent != null)
 			{
-				if(other.gameObject != ownerCharacter)
+				if(other.transform.parent.gameObject != ownerCharacter)
 				{
-					statsManager.BulletHit(ownerCharacter, other.gameObject );
-					Network.Destroy(this.gameObject);
+					Debug.Log("BulletTrigger, in enemy Hit Area");
+
+					if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
+					{
+						if(other.transform.parent.GetComponent<PlatformCharacter>().isInRageModus)
+						{
+							this.ownerCharacter = other.transform.parent.gameObject;								// Rage Mode, sets new Owner
+						}
+						else
+						{
+							statsManager.BulletHit(ownerCharacter, other.transform.parent.gameObject );
+							Network.Destroy(this.gameObject);
+						}
+					}
 				}
 				else
 				{

@@ -18,6 +18,7 @@ public class UnityNetworkCharacterSelector : MonoBehaviour {
 		gameController = this.gameObject;
 		gameManager = gameController.GetComponent<UnityNetworkRoomManager> ();
 		networkViewGameManager = gameController.GetComponent<NetworkView> ();
+		layer = gameController.GetComponent<Layer>();
 	}
 	
 	void Update()
@@ -69,7 +70,8 @@ public class UnityNetworkCharacterSelector : MonoBehaviour {
 		Vector2 direction = ray.direction;									// direction
 		float distance = 100f;
 		// 2D
-		RaycastHit2D hit = Physics2D.Raycast(origin,direction,distance);
+		LayerMask mask = 1 << layer.defaultLayer;
+		RaycastHit2D hit = Physics2D.Raycast(origin,direction,distance,mask);
 		bool hitted = false;
 		if(hit.collider != null)
 			hitted = true;
@@ -88,7 +90,7 @@ public class UnityNetworkCharacterSelector : MonoBehaviour {
 			else 
 			{
 				// nothing spawnable hitted
-				Debug.Log(this.ToString() + ": wrong Tag!");
+				Debug.Log(this.ToString() + ": wrong Tag! (" + hit.collider.name + " " + hit.collider.tag + ")");
 			}
 		}
 		else

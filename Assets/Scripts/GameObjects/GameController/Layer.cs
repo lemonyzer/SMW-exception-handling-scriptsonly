@@ -11,6 +11,7 @@ public class Layer : MonoBehaviour {
 	public LayerMask whatIsAllGround;
 	public LayerMask whatIsWall;
 
+	public int defaultLayer;
 	public int player;
 
 //	public int player1;
@@ -38,6 +39,8 @@ public class Layer : MonoBehaviour {
 	
 //	public int fader;
 
+
+	public const string defaultLayerName = "Default";
 	public const string playerLayerName = "Player";
 
 //	public const string player1LayerName = "Player1";
@@ -68,6 +71,8 @@ public class Layer : MonoBehaviour {
 	void Awake()
 	{
 		Debug.LogWarning(this.ToString() + ": Awake() - init public layer integers, scripts layer instantiation have to be AFTER this initialisation, NOT IN AWAKE!!!" );
+
+		defaultLayer = LayerMask.NameToLayer(defaultLayerName);
 		player = LayerMask.NameToLayer(playerLayerName);
 //		player1 = LayerMask.NameToLayer(player1LayerName);
 //		player2 = LayerMask.NameToLayer(player2LayerName);

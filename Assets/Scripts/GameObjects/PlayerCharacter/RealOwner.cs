@@ -20,6 +20,14 @@ public class RealOwner : MonoBehaviour {
 		{
 			//Hey thats us! We can control this player: enable this script (this enables Update());
 			characterControls.enabled = true;
+
+			if(Application.loadedLevelName == "UnityNetworkRace")
+			{
+				Camera.main.GetComponent<RaceCam>().target = this.gameObject;
+				Camera.main.GetComponent<RaceCam>().holdStartPos = false;
+				Debug.Log("following " + this.gameObject.name);
+				//Camera.main.GetComponent<RaceCam>().target = this.gameObject;
+			}
 		}
 	}
 	

@@ -102,7 +102,7 @@ public class NetworkedPlayer : MonoBehaviour
 				{
 					if(!frameRPCsended)
 					{
-						Debug.Log("Input-Physics-Send lag: " + ((int)((Time.time - inputToRPCDelay)*1000)) + " ms");
+						//Debug.Log("Input-Physics-Send lag: " + ((int)((Time.time - inputToRPCDelay)*1000)) + " ms");
 						move lastMoveStateWithPhysics = moveHistory[0];
 						lastMoveStateWithPhysics.Position = this.transform.position;
 						moveHistory.RemoveAt(0);

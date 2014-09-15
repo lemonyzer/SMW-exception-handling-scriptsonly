@@ -117,8 +117,11 @@ public class Level : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		Debug.Log(this.ToString() +": Cam Position: " + Camera.main.transform.position);
-		Debug.Log(this.ToString() +": BackgroundGO Position: " + background.transform.position);
-		Debug.Log(this.ToString() +": Renderer Bounds: " + bgSpriteRenderer.bounds);
-		Debug.Log(this.ToString() +": Sprite Bounds: " + bgSpriteRenderer.sprite.bounds);
+		if(background != null)
+		{
+			Debug.Log(this.ToString() +": BackgroundGO Position: " + background.transform.position);
+			Debug.Log(this.ToString() +": Renderer Bounds: " + bgSpriteRenderer.bounds);
+			Debug.Log(this.ToString() +": Sprite Bounds: " + bgSpriteRenderer.sprite.bounds);
+		}
 	}
 }

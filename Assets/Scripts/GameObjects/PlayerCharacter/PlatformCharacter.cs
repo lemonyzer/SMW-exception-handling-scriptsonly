@@ -333,24 +333,24 @@ public class PlatformCharacter : MonoBehaviour {
 		//Debug.DrawLine(playerPos, playerPos+wallCheckPosition + 1*transform.localScale.x * new Vector2(wallRadius,0), Color.green);
 	}
 
-	void SetAnim() 
-	{
-		if(anim == null)
-		{
-			Debug.LogError("Animator not set");
-		}
-		else
-		{
-			anim.SetBool(hash.groundedBool, grounded);
-			anim.SetBool(hash.walledBool, walled);
-			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
-			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
-//			if(gameObject.name.StartsWith("Kirby"))
-//		   	{	
-//				Debug.Log(gameObject.name + ": " + rigidbody2D.velocity);
-//			}
-		}
-	}
+//	void SetAnim() 
+//	{
+//		if(anim == null)
+//		{
+//			Debug.LogError("Animator not set");
+//		}
+//		else
+//		{
+//			anim.SetBool(hash.groundedBool, grounded);
+//			anim.SetBool(hash.walledBool, walled);
+//			anim.SetFloat(hash.vSpeedFloat, rigidbody2D.velocity.y);
+//			anim.SetFloat(hash.hSpeedFloat, rigidbody2D.velocity.x);
+////			if(gameObject.name.StartsWith("Kirby"))
+////		   	{	
+////				Debug.Log(gameObject.name + ": " + rigidbody2D.velocity);
+////			}
+//		}
+//	}
 
 	float gravity = 30; // 8
 	public Vector3 moveDirection = Vector3.zero;
@@ -468,7 +468,7 @@ public class PlatformCharacter : MonoBehaviour {
 			if(!hasNoHorizontalInputShown)
 			{
 				hasNoHorizontalInputShown = true;
-				Debug.Log(this.ToString() + ": no Input");
+				//Debug.Log(this.ToString() + ": no Input");
 			}
 		}
 	}
