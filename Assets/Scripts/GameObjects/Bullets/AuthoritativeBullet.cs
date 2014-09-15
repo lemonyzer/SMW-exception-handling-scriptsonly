@@ -22,6 +22,14 @@ public class AuthoritativeBullet : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
+		if(ownerCharacter == null)
+		{
+			//Spieler hat character gewechselt oder ist disconnected.
+			Debug.Log("Spieler hat Character gewechselt oder ist disconnected, Bullet wird zerstört.");
+			if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
+				Network.Destroy(this.gameObject);
+			return;
+		}
 		if(other.gameObject.layer == layer.powerUp)
 		{
 			if(other.transform.parent != null)
