@@ -242,6 +242,11 @@ public class StatsManager : MonoBehaviour {
 				return;
 			}
 		}
+		if(myNetworkView == null)
+		{
+			Debug.Log("keine NetworkView!!!!");
+			return;
+		}
 		// wird nur von PhotonMasterClient ausgeführt....
 		
 		if(GameState.currentState == GameState.States.Running)

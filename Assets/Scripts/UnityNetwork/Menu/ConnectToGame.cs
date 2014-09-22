@@ -24,6 +24,15 @@ public class ConnectToGame : MonoBehaviour
 	private string ip = "tofast.ddns.net";
 	private int port = 25005;
 
+
+	// masterserver host list
+
+	// are we currently trying to download a host list?
+	bool loadingHostList = false;
+	// the current position within the scrollview
+	private Vector2 scrollPos = Vector2.zero;
+
+
 	private string ipPC = "192.168.0.129";
 	private string ipMWhite = "192.168.0.113";
 	private string ipMBlack = "192.168.0.146";
@@ -59,6 +68,14 @@ public class ConnectToGame : MonoBehaviour
 
 		myIP = Network.player.ipAddress;
 		myExternalIP = Network.player.externalIP;
+//		if(Network.HavePublicAddress())
+//		{
+//			myExternalIP = Network.player.externalIP;
+//		}
+//		else
+//		{
+//			myExternalIP = "unknown";
+//		}
 	}
 
 	/**
@@ -96,6 +113,32 @@ public class ConnectToGame : MonoBehaviour
     }
 
 	bool currentTestRunning = false;
+
+	void Start()
+	{
+		// immediately request a list of hosts
+		refreshHostList();
+	}
+
+	void refreshHostList()
+	{
+		// let the user know we are awaiting results from the master server
+		loadingHostList = true;
+		MasterServer.ClearHostList();
+		MasterServer.RequestHostList( registeredGameType );
+	}
+	
+	// this is called when the Master Server reports an event to the client – for example, server registered successfully, host list received, etc
+	void OnMasterServerEvent( MasterServerEvent msevent )
+	{
+		if( msevent == MasterServerEvent.HostListReceived )
+		{
+			// received the host list, no longer awaiting results
+			loadingHostList = false;
+		}
+	}
+
+	bool useNatToConnect = true;
 
 	void OnGUI()
 	{
@@ -149,7 +192,14 @@ public class ConnectToGame : MonoBehaviour
 			if(!doneTesting)
 			{
 				// test lief noch nicht
-				Network.InitializeServer( clientSlots, port, useNat );
+//				Network.InitializeServer( clientSlots, port, useNat );
+//				MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
+
+				TestConnection();
+				currentTestRunning = true;
+				currentTestFinished = false;
+				myIP = Network.player.ipAddress;
+                myExternalIP = Network.player.externalIP;
 			}
 			else
 			{
@@ -165,7 +215,7 @@ public class ConnectToGame : MonoBehaviour
 			//			again to update the lobby.
 		}
 
-		GUI.enabled = doneTesting;
+		GUI.enabled = true;
 		// host a server on the given port, only allow 3 incoming connection (3 other players)
 		if( GUILayout.Button( "Host offline", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
@@ -178,7 +228,7 @@ public class ConnectToGame : MonoBehaviour
 			//			if the server changes to a new level, you might call RegisterHost 
 			//			again to update the lobby.
 		}
-
+		GUI.enabled = doneTesting;
 		if( GUILayout.Button( "Host online", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
 			Network.Disconnect();
@@ -196,6 +246,48 @@ public class ConnectToGame : MonoBehaviour
 
 		GUILayout.BeginArea(new Rect(Screen.width * 0.5f, 0, Screen.width * 0.5f, Screen.height));
 		GUILayout.Label("Servers");
+
+		useNatToConnect = GUILayout.Toggle (useNatToConnect, "Use NAT punchthrough and connect with MasterServer help");
+
+		if( GUILayout.Button( "Refresh", GUILayout.MinHeight(minButtonHeight) ) )
+		{
+			refreshHostList();
+		}
+		
+		if( loadingHostList )
+		{
+			GUILayout.Label( "Loading..." );
+		}
+		else
+		{
+			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.Width( 200f ), GUILayout.Height( 200f ) );
+			
+			HostData[] hosts = MasterServer.PollHostList();
+			for( int i = 0; i < hosts.Length; i++ )
+			{
+				if( GUILayout.Button( hosts[i].gameName, GUILayout.ExpandWidth( true ) ) )
+				{
+					if(useNatToConnect)
+					{
+						Debug.Log("Connecting to " + hosts[i].guid + " with help of NAT punchthrough" );
+						Network.Connect( hosts[i].guid );
+					}
+					else
+					{
+						Debug.Log("Connecting to " + hosts[i].ToString() + " no NAT punchthrough" );
+						Network.Connect( hosts[i] );
+					}
+				}
+			}
+			
+			if( hosts.Length == 0 )
+			{
+				GUILayout.Label( "No servers running" );
+			}
+			
+			GUILayout.EndScrollView();
+		}
+
 		foreach(Host host in hostList)
 		{
 			if( GUILayout.Button( host.ip + " " + host.name,  GUILayout.MinHeight(minButtonHeight) ) )
@@ -226,6 +318,14 @@ public class ConnectToGame : MonoBehaviour
 			currentTestFinished = false;
 			myIP = Network.player.ipAddress;
 			myExternalIP = Network.player.externalIP;
+//			if(Network.HavePublicAddress())
+//			{
+//				myExternalIP = Network.player.externalIP;
+//			}
+//			else
+//			{
+//				myExternalIP = "unknown";
+//			}
 			return;
 		}
 
