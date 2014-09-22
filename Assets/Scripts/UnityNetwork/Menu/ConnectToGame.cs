@@ -56,6 +56,9 @@ public class ConnectToGame : MonoBehaviour
 		//UPnPTest();
 		natTest = new NatTest();
 		natTest.Start();
+
+		myIP = Network.player.ipAddress;
+		myExternalIP = Network.player.externalIP;
 	}
 
 	/**
@@ -92,22 +95,21 @@ public class ConnectToGame : MonoBehaviour
 			upnpStatus = "You do not have an UPnP-enabled router.";
     }
 
+	bool currentTestRunning = false;
+
 	void OnGUI()
 	{
 //		if(Network.peerType == NetworkPeerType.Client ||
 //		   Network.peerType == NetworkPeerType.Server)
 //			return;
-
+		GUILayout.Label("IP: " + myIP);
+		GUILayout.Label("external IP: " + myExternalIP);
 		GUILayout.Label("UPnP Status: " + upnpStatus);
 
 		GUILayout.Label("Current Status: " + testStatus);
 		GUILayout.Label("Test result : " + testMessage);
 		GUILayout.Label(shouldEnableNatMessage);
-		if (!doneTesting)
-		{
-			TestConnection();
-//			return;
-		}
+
 
 		// let the user enter IP address
 		GUILayout.Label( "IP Address" );
@@ -129,9 +131,46 @@ public class ConnectToGame : MonoBehaviour
 		}
 		GUILayout.EndHorizontal();
 
+//		if (!doneTesting)
+//		{
+		if(currentTestRunning)
+		{
+			TestConnection();
+		}
+		else
+		{
+		}
+		//			return;
+//		}
+
+		GUI.enabled = !currentTestRunning;
+		if( GUILayout.Button( "Test Connection", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
+		{
+			if(!doneTesting)
+			{
+				// test lief noch nicht
+				Network.InitializeServer( clientSlots, port, useNat );
+			}
+			else
+			{
+				// test wurde schon einmal gestartet -> server ist bereits initialisiert!
+				doneTesting = false;
+				TestConnection(true);
+				currentTestRunning = true;
+			}
+			
+			//			You can call RegisterHost more than once while a server is running 
+			//			to update the information stored on the Master Server. For example, 
+			//			if the server changes to a new level, you might call RegisterHost 
+			//			again to update the lobby.
+		}
+
+		GUI.enabled = doneTesting;
 		// host a server on the given port, only allow 3 incoming connection (3 other players)
 		if( GUILayout.Button( "Host offline", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
+			Network.Disconnect();
+			hosting = true;
 			Network.InitializeServer( clientSlots, port, useNat );
 			
 			//			You can call RegisterHost more than once while a server is running 
@@ -139,11 +178,14 @@ public class ConnectToGame : MonoBehaviour
 			//			if the server changes to a new level, you might call RegisterHost 
 			//			again to update the lobby.
 		}
-		GUI.enabled = doneTesting;
+
 		if( GUILayout.Button( "Host online", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
+			Network.Disconnect();
+			hosting = true;
 			Network.InitializeServer( clientSlots, port, useNat );
 			MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
+
 
 //			You can call RegisterHost more than once while a server is running 
 //			to update the information stored on the Master Server. For example, 
@@ -172,16 +214,33 @@ public class ConnectToGame : MonoBehaviour
 		NetworkLevelLoader.Instance.LoadLevel( Scenes.unityNetworkGameRoom );
 	}
 
+	private bool hosting = false;
+
 	void OnServerInitialized()
 	{
+		if(!hosting)
+		{
+			// server wurde initiiert um TestConnection aufbauen zu lassen. (Test Server... keine neue Scene laden!)
+			TestConnection();
+			currentTestRunning = true;
+			currentTestFinished = false;
+			myIP = Network.player.ipAddress;
+			myExternalIP = Network.player.externalIP;
+			return;
+		}
+
 		Debug.Log( "Server initialized" );
 		NetworkLevelLoader.Instance.LoadLevel( Scenes.unityNetworkGameRoom );
 	}
 
-	void TestConnection() {
+	string myIP = "unknown";
+	string myExternalIP = "unknown";
+	bool currentTestFinished = false;
+
+	void TestConnection(bool forceTest = false) {
 		// Start/Poll the connection test, report the results in a label and 
 		// react to the results accordingly
-		connectionTestResult = Network.TestConnection();
+		connectionTestResult = Network.TestConnection(forceTest);
 		switch (connectionTestResult) {
 		case ConnectionTesterStatus.Error: 
 			testMessage = "Problem determining NAT capabilities";
@@ -252,6 +311,7 @@ public class ConnectToGame : MonoBehaviour
 			break;
 		}
 		if (doneTesting) {
+			currentTestRunning = false;
 			if (useNat)
 				shouldEnableNatMessage = "When starting a server the NAT\n"+ "punchthrough feature should be enabled (useNat parameter)";
 			else
