@@ -140,6 +140,47 @@ public class ConnectToGame : MonoBehaviour
 
 	bool useNatToConnect = true;
 
+	bool headlessServer = false;
+	public void StartHeadlessServer()
+	{
+		// test connection
+		//test if port is open
+
+		//if port is closed
+		//try opening port with upnp portmapping
+
+		//verify portmapping
+		//test if port is open
+
+		//if port is still closed
+		//check nat status
+		headlessServer = true;
+		currentTestRunning = true;
+		TestConnection();
+
+		//start server with useNAT variable
+	}
+
+	void Update()
+	{
+		if(headlessServer)
+		{
+			if(!doneTesting)
+			{
+				TestConnection();
+			}
+			else
+			{
+				Debug.Log("doneTesting");
+				Debug.Log("starting server, useNAT = " +useNat.ToString());
+				hosting = true;
+				registeredGameName += " " + useNat.ToString() + " headless";
+				Network.InitializeServer( clientSlots, port, useNat );
+				MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
+			}
+		}
+	}
+
 	void OnGUI()
 	{
 //		if(Network.peerType == NetworkPeerType.Client ||

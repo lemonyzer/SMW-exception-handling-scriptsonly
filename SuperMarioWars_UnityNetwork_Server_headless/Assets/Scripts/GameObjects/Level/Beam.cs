@@ -59,7 +59,11 @@ public class Beam : MonoBehaviour {
 	void Start()
 	{
 		backgroundSpriteRenderer = this.GetComponent<SpriteRenderer>();
-
+		if(backgroundSpriteRenderer == null)
+		{
+			Debug.LogError("kein SpriteRenderer am Background gefunden, BeamZone kann nicht berechnet werden.");
+			return;
+		}
 		backgroundCenterPositionX = backgroundSpriteRenderer.bounds.center.x;
 		backgroundWidth = backgroundSpriteRenderer.bounds.size.x;
 //		leftBeamZoneX = backgroundCenterPositionX - (backgroundWidth * 0.5f) + saveBeamOffsetX;	// + !!!
