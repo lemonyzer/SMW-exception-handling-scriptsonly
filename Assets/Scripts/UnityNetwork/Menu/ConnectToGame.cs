@@ -2,22 +2,23 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class ConnectToGame : MonoBehaviour
 {
-	public string registeredGameName = "smw_alpha";
-	public string registeredGameType = "platformer";
-	public string registeredGameComment = "classic";
+	private string registeredGameName = "smw";
+	private string registeredGameType = "smw_alpha";
+	private string registeredGameComment = "classic";
 
-	public string testStatus = "Testing network connection capabilities.";
-	public string testMessage = "Test in progress";
-	public string shouldEnableNatMessage;
-	public bool doneTesting = false;
-	public bool probingPublicIP = false;
+	private string testStatus = "Testing network connection capabilities.";
+	private string testMessage = "Test in progress";
+	private string shouldEnableNatMessage;
+	private bool doneTesting = false;
+	private bool probingPublicIP = false;
 	private int serverPort = 25005;
-	public ConnectionTesterStatus connectionTestResult = ConnectionTesterStatus.Undetermined;
-	public float timer = 0;
+	private ConnectionTesterStatus connectionTestResult = ConnectionTesterStatus.Undetermined;
+	private float timer = 0;
 	// Indicates if the useNat parameter be enabled when starting a server
-	public bool useNat = false;
+	private bool useNat = false;
 
 	public int clientSlots = 10;
 
@@ -51,8 +52,6 @@ public class ConnectToGame : MonoBehaviour
 		}
 	}
 
-	NatTest natTest;
-
 	void Awake()
 	{
 		hostList = new List<Host>();
@@ -63,11 +62,11 @@ public class ConnectToGame : MonoBehaviour
 		InitGUIStyle ();
 
 		//UPnPTest();
-		natTest = new NatTest();
-		natTest.Start();
 
+		Network.Connect("http://www.google.com");
 		myIP = Network.player.ipAddress;
 		myExternalIP = Network.player.externalIP;
+		Network.Disconnect();
 //		if(Network.HavePublicAddress())
 //		{
 //			myExternalIP = Network.player.externalIP;
@@ -101,21 +100,22 @@ public class ConnectToGame : MonoBehaviour
 
 	public string upnpStatus = "Test not started";
 
-	void UPnPTest()
-	{
-		upnpStatus = "Test running";
-        if(NAT.DiscoverWithTryCatch())
-		{
-			upnpStatus = "You have an UPnP-enabled router and your IP is: "+NAT.GetExternalIP();
-		}
-		else
-			upnpStatus = "You do not have an UPnP-enabled router.";
-    }
+//	void UPnPTest()
+//	{
+//		upnpStatus = "Test running";
+//        if(NAT.DiscoverWithTryCatch())
+//		{
+//			upnpStatus = "You have an UPnP-enabled router and your IP is: "+NAT.GetExternalIP();
+//		}
+//		else
+//			upnpStatus = "You do not have an UPnP-enabled router.";
+//    }
 
 	bool currentTestRunning = false;
 
 	void Start()
 	{
+//		UPnPPortMapping();
 		// immediately request a list of hosts
 		refreshHostList();
 	}
@@ -140,80 +140,41 @@ public class ConnectToGame : MonoBehaviour
 
 	bool useNatToConnect = true;
 
-	bool headlessServer = false;
-	public void StartHeadlessServer()
-	{
-		// test connection
-		//test if port is open
-
-		//if port is closed
-		//try opening port with upnp portmapping
-
-		//verify portmapping
-		//test if port is open
-
-		//if port is still closed
-		//check nat status
-		headlessServer = true;
-		currentTestRunning = true;
-		TestConnection();
-
-		//start server with useNAT variable
-	}
-
-	void Update()
-	{
-		if(headlessServer)
-		{
-			if(!doneTesting)
-			{
-				TestConnection();
-			}
-			else
-			{
-				Debug.Log("doneTesting");
-				Debug.Log("starting server, useNAT = " +useNat.ToString());
-				hosting = true;
-				registeredGameName += " " + useNat.ToString() + " headless";
-				Network.InitializeServer( clientSlots, port, useNat );
-				MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
-			}
-		}
-	}
-
 	void OnGUI()
 	{
 //		if(Network.peerType == NetworkPeerType.Client ||
 //		   Network.peerType == NetworkPeerType.Server)
 //			return;
 		GUILayout.Label("IP: " + myIP);
-		GUILayout.Label("external IP: " + myExternalIP);
-		GUILayout.Label("UPnP Status: " + upnpStatus);
+		GUILayout.Label("External IP: " + myExternalIP);
+		if(upnp != null)
+		{
+			GUILayout.Label("UPnP Portmapping Status: " + upnp.status);
+
+
+			if(upnp.status == TNet.UPnP.Status.Searching)
+			{
+				GUILayout.Label("Gateway IP: searching");
+			}
+			else
+			{
+				GUILayout.Label("Gateway IP: " + upnp.gatewayAddress.ToString());
+			}
+		}
+
+		if(doneTesting)
+		{
+			GUILayout.Label("useNat Status: " + useNat);
+		}
+		else
+		{
+			GUILayout.Label("useNat Status: unknown!");
+		}
 
 		GUILayout.Label("Current Status: " + testStatus);
 		GUILayout.Label("Test result : " + testMessage);
 		GUILayout.Label(shouldEnableNatMessage);
 
-
-		// let the user enter IP address
-		GUILayout.Label( "IP Address" );
-		ip = GUILayout.TextField( ip, GUILayout.Width( 200f ), GUILayout.MinHeight(minButtonHeight) );
-
-		GUILayout.BeginHorizontal();
-		// let the user enter port number
-		// port is an integer, so only numbers are allowed
-		GUILayout.Label( "Port" );
-		string port_str = GUILayout.TextField( port.ToString(), GUILayout.Width( 70f ), GUILayout.MinHeight(minButtonHeight) );
-		int port_num = port;
-		if( int.TryParse( port_str, out port_num ) )
-			port = port_num;
-
-		// connect to the IP and port
-		if( GUILayout.Button( "Connect", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
-		{
-			Network.Connect( ip, port );
-		}
-		GUILayout.EndHorizontal();
 
 //		if (!doneTesting)
 //		{
@@ -226,9 +187,24 @@ public class ConnectToGame : MonoBehaviour
 		}
 		//			return;
 //		}
-
+		GUILayout.BeginHorizontal();
+		if(upnp != null)
+		{
+			if(upnpActive)
+			{
+				GUI.enabled = false;
+			}
+			else
+			{
+				GUI.enabled = true;
+			}
+		}
+		if( GUILayout.Button( "UPnP Portmapping", GUILayout.Width( 125f ), GUILayout.MinHeight(minButtonHeight) ) )
+		{
+			StartCoroutine(UPnPPortMapping());
+		}
 		GUI.enabled = !currentTestRunning;
-		if( GUILayout.Button( "Test Connection", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
+		if( GUILayout.Button( "NAT Test", GUILayout.Width( 75f ), GUILayout.MinHeight(minButtonHeight) ) )
 		{
 			if(!doneTesting)
 			{
@@ -255,7 +231,8 @@ public class ConnectToGame : MonoBehaviour
 			//			if the server changes to a new level, you might call RegisterHost 
 			//			again to update the lobby.
 		}
-
+		GUILayout.EndHorizontal();
+		GUILayout.BeginHorizontal();
 		GUI.enabled = true;
 		// host a server on the given port, only allow 3 incoming connection (3 other players)
 		if( GUILayout.Button( "Host offline", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
@@ -275,18 +252,41 @@ public class ConnectToGame : MonoBehaviour
 			Network.Disconnect();
 			hosting = true;
 			Network.InitializeServer( clientSlots, port, useNat );
-			MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
-
+			//MasterServer.RegisterHost(registeredGameType, registeredGameName + " " + port.ToString() + " NAT:" + useNat.ToString() , registeredGameComment);
+			MasterServer.RegisterHost(registeredGameType, registeredGameName + " useNat=" + useNat, registeredGameComment);
 
 //			You can call RegisterHost more than once while a server is running 
 //			to update the information stored on the Master Server. For example, 
 //			if the server changes to a new level, you might call RegisterHost 
 //			again to update the lobby.
 		}
+		GUILayout.EndHorizontal();
 		GUI.enabled = true;
 
 		GUILayout.BeginArea(new Rect(Screen.width * 0.5f, 0, Screen.width * 0.5f, Screen.height));
-		GUILayout.Label("Servers");
+
+		// let the user enter IP address
+		GUILayout.Label( "Manually connecting" );
+		GUILayout.Label( "Server Address (IP/Hostname)" );
+		ip = GUILayout.TextField( ip, GUILayout.Width( 200f ), GUILayout.MinHeight(minButtonHeight) );
+		
+		GUILayout.BeginHorizontal();
+		// let the user enter port number
+		// port is an integer, so only numbers are allowed
+		GUILayout.Label( "Port", GUILayout.Width( 30f ) );
+		string port_str = GUILayout.TextField( port.ToString(), GUILayout.Width( 70f ), GUILayout.MinHeight(minButtonHeight) );
+		int port_num = port;
+		if( int.TryParse( port_str, out port_num ) )
+			port = port_num;
+		
+		// connect to the IP and port
+		if( GUILayout.Button( "Connect", GUILayout.Width( 100f ), GUILayout.MinHeight(minButtonHeight) ) )
+		{
+			Network.Connect( ip, port );
+		}
+		GUILayout.EndHorizontal();
+
+		GUILayout.Label("Servers found");
 
 		useNatToConnect = GUILayout.Toggle (useNatToConnect, "Use NAT punchthrough and connect with MasterServer help");
 
@@ -301,23 +301,55 @@ public class ConnectToGame : MonoBehaviour
 		}
 		else
 		{
-			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.Width( 200f ), GUILayout.Height( 200f ) );
+			scrollPos = GUILayout.BeginScrollView( scrollPos, GUILayout.ExpandWidth( true ), GUILayout.ExpandHeight( true ) );
 			
 			HostData[] hosts = MasterServer.PollHostList();
 			for( int i = 0; i < hosts.Length; i++ )
 			{
-				if( GUILayout.Button( hosts[i].gameName, GUILayout.ExpandWidth( true ) ) )
+				string tmpIp = "";
+				int x = 0;
+				while (x < hosts[i].ip.Length) {
+					tmpIp = hosts[i].ip[x] + " ";
+					x++;
+				}
+
+				if( GUILayout.Button( hosts[i].gameName + " " + tmpIp + ":" + hosts[i].port + " useNAT:" + hosts[i].useNat.ToString(), GUILayout.ExpandWidth( true ), GUILayout.MinHeight(minButtonHeight) ) )
 				{
-					if(useNatToConnect)
-					{
-						Debug.Log("Connecting to " + hosts[i].guid + " with help of NAT punchthrough" );
-						Network.Connect( hosts[i].guid );
-					}
-					else
-					{
-						Debug.Log("Connecting to " + hosts[i].ToString() + " no NAT punchthrough" );
-						Network.Connect( hosts[i] );
-					}
+//					if(tmpIp == myExternalIP)
+//					{
+//						//myExtrenalIP kann fälschlischerweiße die Interne sein!!! 
+//						//vorher prüfen!
+//						Debug.LogWarning("same IP");
+//						// host kann hinter gleichem router sitzen und ist vielleicht direkt erreichbar
+//						if(useNatToConnect)
+//						{
+//							//connect over nat punchthrough/hairpinning/relay
+//							Network.Connect( hosts[i].guid );
+//						}
+//						else
+//						{
+//							//ignoriere, connect over hairpinning
+//							Debug.Log("same ip "+ tmpIp +"! connect over hairpinning");
+//							Network.Connect( tmpIp );
+//						}
+//					}
+//					else
+//					{
+						if(useNatToConnect)
+						{
+							Debug.Log("Connecting to " + hosts[i].guid + " with help of NAT punchthrough" );
+							Network.Connect( hosts[i].guid );
+						}
+						else if(false)
+						{
+							Network.Connect( hosts[i] );
+						}
+						else
+						{
+							Debug.Log("Connecting to " + tmpIp + " no NAT punchthrough" );
+							Network.Connect( tmpIp, hosts[i].port );
+						}
+//					}
 				}
 			}
 			
@@ -329,13 +361,13 @@ public class ConnectToGame : MonoBehaviour
 			GUILayout.EndScrollView();
 		}
 
-		foreach(Host host in hostList)
-		{
-			if( GUILayout.Button( host.ip + " " + host.name,  GUILayout.MinHeight(minButtonHeight) ) )
-			{
-				Network.Connect( host.ip, port );
-			}
-		}
+//		foreach(Host host in hostList)
+//		{
+//			if( GUILayout.Button( host.ip + " " + host.name,  GUILayout.MinHeight(minButtonHeight) ) )
+//			{
+//				Network.Connect( host.ip, port );
+//			}
+//		}
 		GUILayout.EndArea();
 
 	}
@@ -459,5 +491,25 @@ public class ConnectToGame : MonoBehaviour
 				shouldEnableNatMessage = "NAT punchthrough not needed";
 			testStatus = "Done testing";
 		}
+	}
+
+	bool upnpActive = false;
+	TNet.UPnP upnp;
+	IEnumerator UPnPPortMapping()
+	{
+//		if(upnpActive)
+//		{
+//			yield return 0;
+//		}
+		upnpActive = true;
+		upnp = new TNet.UPnP();
+		yield return new WaitForSeconds(5);
+		if(upnp.status == TNet.UPnP.Status.Success)
+		{
+			upnp.name = registeredGameName;
+			upnp.OpenUDP(port);
+		}
+		upnp.Close();
+		upnpActive = false;
 	}
 }
