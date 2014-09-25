@@ -30,19 +30,29 @@ public class NetworkedPlayer : MonoBehaviour
 			this.tripTime = Network.time - this.Timestamp;	// Network.time == time when Server received State, tripTime is the duration
 		}
 	}
-	
+
+	public class Power {
+		public float maxSpeed;
+	}
+
+	public class Normal : Power {
+	}
+
 	// represents a move command sent to the server
 	private struct move
 	{
 		public float HorizontalAxis;
 		public bool jump;
+		public bool power;
 		public double Timestamp;
 		public Vector3 Position;
+
 		
-		public move( float horiz, bool jump, double timestamp )
+		public move( float horiz, bool jump, bool power, double timestamp )
 		{
 			this.HorizontalAxis = horiz;
 			this.jump = jump;
+			this.power = power;
 			this.Timestamp = timestamp;
 			this.Position = new Vector3(0f,0f,0f);
 		}
@@ -108,6 +118,14 @@ public class NetworkedPlayer : MonoBehaviour
 						moveHistory.RemoveAt(0);
 						moveHistory.Insert (0, lastMoveStateWithPhysics);
 						myNetworkView.RPC( "ProcessInput", RPCMode.Server, lastMoveStateWithPhysics.HorizontalAxis, lastMoveStateWithPhysics.jump, this.transform.position );
+						if(characterScript.canUsePowerButton)
+						{
+							if(inputScript.inputPower)
+							{
+////////////////////////////////characterScript.item.coolDown();
+								myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
+							}
+						}
 					}
 				}
 			}
@@ -132,7 +150,7 @@ public class NetworkedPlayer : MonoBehaviour
 
 			// this is my character
 			// get current move state
-			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, Network.time );
+			move moveState = new move( inputScript.inputHorizontal , inputScript.inputJump, inputScript.inputPower, Network.time );
 
 			if(!localPlayerUnityEnginePhysicsUsed)
 			{
@@ -158,15 +176,47 @@ public class NetworkedPlayer : MonoBehaviour
 //					clientNeedsToSendNewInput = false;
 //				}
 				myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, this.transform.position );
+				if(characterScript.canUsePowerButton)
+				{
+					if(inputScript.inputPower)
+					{
+						characterScript.PowerPredictedAnimation();	// instant reaktion, feels better!
+						myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
+					}
+				}
 			}
 			else if(Network.isServer)
 			{
 				// cant send from server to server!
+				if(characterScript.canUsePowerButton)
+				{
+					if(inputScript.inputPower)
+					{
+						ProcessPowerRequest();
+					}
+				}
 			}
 		}
 		else
 		{
 
+		}
+	}
+
+	[RPC]
+	void ProcessPowerRequest()
+	{
+		if(!Network.isServer)
+		{
+			return;
+		}
+		if(characterScript.hasItem)
+		{
+			//power like shooting bullets dont need extra RPC to clients. server will instantiate bullet object, clients can see it.
+			//other powers like shield need animation on client (all clients, server aswell) so RPC to start ShieldAnimation.
+			//TODO polymorphismus
+			// class Items.power() with correct execution/rpc.
+			characterScript.power();
 		}
 	}
 
@@ -689,9 +739,10 @@ public class NetworkedPlayer : MonoBehaviour
 	}
 	
 	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info) {
-		
+
 		// Code runs on NetworkView Owner
-		// Send data to all Clients
+		// if Owner is Server, send to all Clients
+		// if Owner is Client, send to all Players (not only to Server!!!)
 		if (stream.isWriting)
 		{
 			Vector3 authorativePos = transform.position;				// authorative calculated position

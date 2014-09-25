@@ -27,7 +27,10 @@ public class AuthoritativeBullet : MonoBehaviour {
 			//Spieler hat character gewechselt oder ist disconnected.
 			Debug.Log("Spieler hat Character gewechselt oder ist disconnected, Bullet wird zerstört.");
 			if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
+			{
+				Network.RemoveRPCs(this.networkView.viewID);
 				Network.Destroy(this.gameObject);
+			}
 			return;
 		}
 		if(other.gameObject.layer == layer.powerUp)
@@ -47,6 +50,7 @@ public class AuthoritativeBullet : MonoBehaviour {
 						else
 						{
 							statsManager.BulletHit(ownerCharacter, other.transform.parent.gameObject );
+							Network.RemoveRPCs(this.networkView.viewID);
 							Network.Destroy(this.gameObject);
 						}
 					}

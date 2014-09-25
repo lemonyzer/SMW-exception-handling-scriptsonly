@@ -63,7 +63,7 @@ public class ConnectToGame : MonoBehaviour
 
 		//UPnPTest();
 
-		Network.Connect("http://www.google.com");
+		Network.Connect("www.google.com");
 		myIP = Network.player.ipAddress;
 		myExternalIP = Network.player.externalIP;
 		Network.Disconnect();
@@ -222,7 +222,9 @@ public class ConnectToGame : MonoBehaviour
 			{
 				// test wurde schon einmal gestartet -> server ist bereits initialisiert!
 				doneTesting = false;
-				TestConnection(true);
+				forceTest = true;
+				TestConnection();
+				forceTest = false;
 				currentTestRunning = true;
 			}
 			
@@ -410,7 +412,9 @@ public class ConnectToGame : MonoBehaviour
 	string myExternalIP = "unknown";
 	bool currentTestFinished = false;
 
-	void TestConnection(bool forceTest = false) {
+	bool forceTest = false;
+
+	void TestConnection() {
 		// Start/Poll the connection test, report the results in a label and 
 		// react to the results accordingly
 		connectionTestResult = Network.TestConnection(forceTest);
@@ -503,7 +507,7 @@ public class ConnectToGame : MonoBehaviour
 //		}
 		upnpActive = true;
 		upnp = new TNet.UPnP();
-		yield return new WaitForSeconds(5);
+		yield return new WaitForSeconds(10);
 		if(upnp.status == TNet.UPnP.Status.Success)
 		{
 			upnp.name = registeredGameName;
@@ -512,4 +516,58 @@ public class ConnectToGame : MonoBehaviour
 		upnp.Close();
 		upnpActive = false;
 	}
+
+
+
+	bool headlessServer = false;
+	public void StartHeadlessServer()
+	{
+		// test connection
+		//test if port is open
+		
+		//if port is closed
+		//try opening port with upnp portmapping
+		
+		//verify portmapping
+		//test if port is open
+		
+		//if port is still closed
+		//check nat status
+		doneTesting = false;
+		headlessServer = true;
+		currentTestRunning = true;
+		TestConnection();
+		
+		//start server with useNAT variable
+	}
+
+	bool serverRunning = false;
+	void Update()
+	{
+		if(headlessServer)
+		{
+			if(serverRunning)
+				return;				// dont initialize more than once!
+
+			if(!doneTesting)
+			{
+				TestConnection();
+			}
+			else
+			{
+				if(currentTestRunning)
+				{
+					return;			// just to be sure Update() runs not parallel!
+				}
+				Debug.Log("doneTesting");
+				Debug.Log("starting server, useNAT = " +useNat.ToString());
+				hosting = true;
+				registeredGameName += "headless, useNat:" + useNat.ToString();
+				serverRunning = true;
+				Network.InitializeServer( clientSlots, port, useNat );
+				MasterServer.RegisterHost(registeredGameType, registeredGameName, registeredGameComment);
+			}
+		}
+	}
+
 }

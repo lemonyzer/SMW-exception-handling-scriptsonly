@@ -35,6 +35,9 @@ public class PlatformUserControl : MonoBehaviour {
 	//	[System.NonSerialized]
 	public bool inputJump = false;
 
+	//	[System.NonSerialized]
+	public bool inputPower = false;
+
 	// jump needs single klick, or key pressing
 	private bool keyPressed = true;
 	
@@ -50,9 +53,17 @@ public class PlatformUserControl : MonoBehaviour {
 	 * Input Flags (Jump Button)
 	 **/
 	//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
-	int buttonTapCount=0;			// tap count current jump touch (right screen)
-	bool buttonIsPressed = false;	// flag if player presses jump 		
-	bool buttonIsTapped = false;	// flag if player presses jump again		
+	int buttonATapCount=0;			// tap count current jump touch (right screen)
+	bool buttonAIsPressed = false;	// flag if player presses jump 		
+	bool buttonAIsTapped = false;	// flag if player presses jump again		
+
+	/**
+	 * Input Flags (Jump Button)
+	 **/
+	//	int buttonTouchID=-1;			// ID of current jump touch (right screen)
+	int buttonBTapCount=0;			// tap count current jump touch (right screen)
+	bool buttonBIsPressed = false;	// flag if player presses jump 		
+	bool buttonBIsTapped = false;	// flag if player presses jump again		
 	
 	/**
 	 * Input Flags (Analog Stick)
@@ -84,6 +95,7 @@ public class PlatformUserControl : MonoBehaviour {
 	private float inputKeyboardHorizontal = 0f;
 	private float inputKeyboardVertical = 0f;
 	private bool inputKeyboardJump = false;                    
+	private bool inputKeyboardPower = false;
 	
 	void Awake()
 	{
@@ -177,24 +189,42 @@ public class PlatformUserControl : MonoBehaviour {
 	{
 		if(keyPressed)
 		{
-			if(buttonIsPressed || inputKeyboardJump)
+			if(buttonAIsPressed || inputKeyboardJump)
 			{
 				inputJump = true;
 			}
 			else
 			{
 				inputJump = false;
+			}
+
+			if(buttonBIsPressed || inputKeyboardPower)
+			{
+				inputPower = true;
+			}
+			else
+			{
+				inputPower = false;
 			}
 		}
 		else
 		{
-			if(buttonIsTapped || inputKeyboardJump)
+			if(buttonAIsTapped || inputKeyboardJump)
 			{
 				inputJump = true;
 			}
 			else
 			{
 				inputJump = false;
+			}
+
+			if(buttonBIsTapped || inputKeyboardPower)
+			{
+				inputPower = true;
+			}
+			else
+			{
+				inputPower = false;
 			}
 		}
 
@@ -231,10 +261,12 @@ public class PlatformUserControl : MonoBehaviour {
 		if(keyPressed)
 		{
 			inputKeyboardJump = Input.GetKey (KeyCode.Space);
+			inputKeyboardPower = Input.GetKey (KeyCode.E);
 		}
 		else
 		{
 			inputKeyboardJump = Input.GetKeyDown (KeyCode.Space);
+			inputKeyboardPower = Input.GetKeyDown (KeyCode.E);
 		}
 	}
 	
@@ -245,26 +277,48 @@ public class PlatformUserControl : MonoBehaviour {
 	
 	void AnalogStickAndButton() {
 		// muss auf false gesetzt werden, da schleife beendet wird wenn touch gefunden
-		buttonIsPressed = false;
-		buttonIsTapped = false;
+		buttonAIsPressed = false;
+		buttonAIsTapped = false;
+		buttonBIsPressed = false;
+		buttonBIsTapped = false;
 		analogStickIsStillPressed = false;
 		foreach (Touch touch in Input.touches)
 		{
-			if(!buttonIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
+			if(!buttonAIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
 			{
-				if(touch.position.x > (Screen.width * 0.5f))
+				if(touch.position.x > (Screen.width * 0.75f))
 				{
 					//debugmsg += "Jump found\n";
 					//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
-					if(buttonTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
-						buttonTapCount = touch.tapCount;	
-						buttonIsTapped = true;				
-						buttonIsPressed = true;
+					if(buttonATapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
+						buttonATapCount = touch.tapCount;	
+						buttonAIsTapped = true;				
+						buttonAIsPressed = true;
 					}
 					else
 					{
-						buttonIsTapped = false;
-						buttonIsPressed = true;
+						buttonAIsTapped = false;
+						buttonAIsPressed = true;
+					}
+				}
+			}
+
+			if(!buttonBIsTapped)	// Button (rechte Seite) muss nur einmal gefunden werden
+			{
+				if(touch.position.x > (Screen.width * 0.5f) &&
+				   touch.position.x < (Screen.width * 0.75f))
+				{
+					//debugmsg += "Jump found\n";
+					//					buttonTouchID = touch.fingerId;			// ID des Touches speichern um beim nächsten durchlauf TapCount des Touches kontrollieren zu können
+					if(buttonBTapCount < touch.tapCount) {	// Spieler muss Taste immer wieder erneut drücken, um Aktion auszulösen
+						buttonBTapCount = touch.tapCount;	
+						buttonBIsTapped = true;				
+						buttonBIsPressed = true;
+					}
+					else
+					{
+						buttonBIsTapped = false;
+						buttonBIsPressed = true;
 					}
 				}
 			}
@@ -445,12 +499,19 @@ public class PlatformUserControl : MonoBehaviour {
 			}
 		}
 		
-		if(!buttonIsPressed)
+		if(!buttonAIsPressed)
 		{
 			//debugmsg += "kein Button gefunden\n";
 			//kein Button in der Schleife oben gefunden, zurücksetzen
 			//			buttonTouchID = -1;
-			buttonTapCount = 0;
+			buttonATapCount = 0;
+		}
+		if(!buttonBIsPressed)
+		{
+			//debugmsg += "kein Button gefunden\n";
+			//kein Button in der Schleife oben gefunden, zurücksetzen
+			//			buttonTouchID = -1;
+			buttonBTapCount = 0;
 		}
 		
 		if(!analogStickTouchBegan)

@@ -152,6 +152,7 @@ public class PlatformCharacter : MonoBehaviour {
 		layer = gameController.GetComponent<Layer>();
 
 		InitSpawnProtectionAnimation();
+		InitPredictedShootAnimation();
 //		gameSceneManager = gameController.GetComponent<GameSceneManager>();
 
 		//LayerMasks();	// <-- wichtig in Start... Awake ist zu früh
@@ -614,8 +615,13 @@ public class PlatformCharacter : MonoBehaviour {
 			if(server())
 			{
 				StartCoroutine(SpawnBullet());				// spezzialfall... bullets werden von server gemanaged (authoritativ )
-			//	myNetworkView.RPC ("", RPCMode.All);		// an alle?? eigentlich nur an Spieler	
+				//	myNetworkView.RPC ("", RPCMode.All);		// an alle?? eigentlich nur an Spieler	
 			}
+		}
+		else if(currentItem.itemName == "FireFlower2")
+		{
+			// aktiviere Power Button für Character
+			myNetworkView.RPC("ActivatePower", RPCMode.All, "FireFlower2");
 		}
 		else if(currentItem.itemName == "BoBomb")
 		{
@@ -651,10 +657,88 @@ public class PlatformCharacter : MonoBehaviour {
 			}
 			if(server())
 			{
+				Network.RemoveRPCs(goItem.networkView.viewID);
 				Network.Destroy(goItem);
 			}
 		}
 
+	}
+
+	public bool canUsePowerButton = false;
+	public bool hasItem = false;
+
+	public bool powerPredictedAnimation = false;
+	int powerPredictedAnimationState = 0;
+	int inputPowerCount = 0;
+
+	public void PowerPredictedAnimation()
+	{
+		powerPredictedAnimation = true;
+		powerPredictedAnimationState = inputPowerCount++ % predictedShootAnimation.Length;
+	}
+
+	public void power()
+	{
+		if(item == "FireFlower2")
+		{
+			if(isAuthoritativeHost())
+			{
+				SpawnSingleBullet();
+			}
+		}
+	}
+
+	[RPC]
+	public void authoritativePowerStart()
+	{
+		// bullet instantiated by server...
+		if(isAuthoritativeHost())
+		{
+			SpawnSingleBullet();
+		}
+	}
+
+
+	public void SpawnSingleBullet()
+	{
+		GameObject bulletPrefab = (GameObject) Resources.Load("PowerUps/"+"FireBall", typeof(GameObject));
+		if(bulletPrefab == null)
+		{
+			Debug.LogError("bulletPrefab coudn't be loaded!!!! check path / and name");
+			return;
+		}
+		GameObject bulletGameObject = null;
+		if(server())
+		{
+			bulletGameObject = (GameObject) Network.Instantiate( bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity, 0);
+		}
+		else if(offline())
+		{
+			bulletGameObject = (GameObject) Instantiate(bulletPrefab, new Vector3(this.transform.localScale.x * bulletSpawnPositionOffset.x,1* bulletSpawnPositionOffset.y,1* bulletSpawnPositionOffset.z) + this.transform.position, Quaternion.identity);
+		}
+		
+		bulletGameObject.GetComponent<AuthoritativeBullet>().ownerCharacter = this.gameObject;// important!!!
+		bulletGameObject.GetComponent<AuthoritativeBullet>().moveDirection = new Vector3(this.transform.localScale.x,0,0);
+		bulletGameObject.rigidbody2D.velocity = new Vector3(this.transform.localScale.x * AuthoritativeBullet.moveSpeed.x,1 * AuthoritativeBullet.moveSpeed.y,1* AuthoritativeBullet.moveSpeed.z);
+
+	}
+
+	string item ="";
+
+	[RPC]
+	void ActivatePower(string item)
+	{
+		this.item = item;
+		canUsePowerButton = true;
+		hasItem = true;
+	}
+
+	[RPC]
+	void DeactivatePower()
+	{
+		canUsePowerButton = false;
+		hasItem = false;
+		item = "";
 	}
 
 	bool CharacterCanCollectItems()
@@ -750,6 +834,7 @@ public class PlatformCharacter : MonoBehaviour {
 	bool spawnProtection = false;
 	float spawnProtectionTime = 2f;
 	Color[] spawnProtectionAnimation;
+	Color[] predictedShootAnimation;
 
 	public void HeadJumpVictim()
 	{
@@ -907,9 +992,14 @@ public class PlatformCharacter : MonoBehaviour {
 				// SpawnProtection Timer starten
 				
 			}
+
+			if(powerPredictedAnimation)
+			{
+				spriteRenderer.color = predictedShootAnimation[powerPredictedAnimationState];
+			}
 			else
 			{
-				
+				spriteRenderer.color = new Color(1f,1f,1f,1f);
 			}
 		}
 		else //if(spawnProtection)
@@ -1090,6 +1180,18 @@ public class PlatformCharacter : MonoBehaviour {
 		spawnProtectionAnimation [0] = new Color (1f, 1f, 1f, 0.5f);	// alpha channel = 0.5
 	}
 
+	void InitPredictedShootAnimation()
+	{
+		predictedShootAnimation = new Color[8];
+		predictedShootAnimation [0] = new Color (0f, 0f, 0f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [1] = new Color (0f, 0f, 1f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [2] = new Color (0f, 1f, 0f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [3] = new Color (0f, 1f, 1f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [4] = new Color (1f, 0f, 0f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [5] = new Color (1f, 0f, 1f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [6] = new Color (1f, 1f, 0f, 1f);	// alpha channel = 0.5
+		predictedShootAnimation [7] = new Color (1f, 1f, 1f, 1f);	// alpha channel = 0.5
+	}
 
 
 }

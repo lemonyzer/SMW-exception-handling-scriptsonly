@@ -61,7 +61,8 @@ public class Beam : MonoBehaviour {
 		backgroundSpriteRenderer = this.GetComponent<SpriteRenderer>();
 		if(backgroundSpriteRenderer == null)
 		{
-			Debug.Log(this.ToString() + " has no SpriteRenderer, can't calculate Beam Area Positions");
+			Debug.LogError(this.ToString() + " has no SpriteRenderer, can't calculate Beam Area Positions");
+			return;
 		}
 		backgroundCenterPositionX = backgroundSpriteRenderer.bounds.center.x;
 		backgroundWidth = backgroundSpriteRenderer.bounds.size.x;
