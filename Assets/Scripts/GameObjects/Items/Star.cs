@@ -5,11 +5,6 @@ public class Star : WithPower {
 
 	public GameObject item;
 
-	public Star(GameObject go)
-	{
-		item = go;
-	}
-
 	public RPCMode rpcMode = RPCMode.All;
 
 	public Power powerScript;

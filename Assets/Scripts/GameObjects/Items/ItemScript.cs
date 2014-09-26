@@ -5,6 +5,11 @@ public class ItemScript : MonoBehaviour {
 
 	public Item item;
 
+	void Awake() {
+		//item = new Item(this.gameObject);	// Item is abstract...
+		//ItemLibrary.items
+	}
+
 	// Use this for initialization
 	void Start () {
 	
