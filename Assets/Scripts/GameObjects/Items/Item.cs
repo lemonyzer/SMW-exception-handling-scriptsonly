@@ -1,44 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public abstract class Item : MonoBehaviour {
+public abstract class Item {
 
 	// get only (read only) == field
 	// get and set 			== propertie
 
-	public abstract PlatformCharacter collector { get;set; }
-	public abstract int itemId { get;set; }
-	public abstract Power powerScript { get;set; }
-	public abstract string powerScriptName { get;set; }
+//	public abstract PlatformCharacter collector { get;set; }
+//	public abstract int itemId { get;set; }
+//	public abstract Power powerScript { get;set; }
+//	public abstract string powerScriptName { get;set; }
 
-    public string itemName;
-    public float itemStayTime = 8f; 
-    
-    public void StartDestroyTimer()
-	{
-		StartCoroutine(DestroyPowerUp());
-	}
 
-	IEnumerator DestroyPowerUp()
-	{
-		yield return new WaitForSeconds(itemStayTime);
-		if(Network.peerType == NetworkPeerType.Disconnected)
-		{
-			Destroy(this.gameObject);
-		}
-		if(Network.isServer)
-		{
-			if(this.gameObject != null)
-			{
-				Network.RemoveRPCs(this.networkView.viewID);
-				Network.Destroy(this.gameObject);
-			}
-			else
-			{
-				Debug.LogWarning("nothing to Destroy! already destroyed/collected?!");
-			}
-		}
-	}
 
 
 

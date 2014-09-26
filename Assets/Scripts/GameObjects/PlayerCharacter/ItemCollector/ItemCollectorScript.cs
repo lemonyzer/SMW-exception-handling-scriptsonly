@@ -36,6 +36,7 @@ public class ItemCollectorScript : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
+		return;
 		if(Network.isServer || Network.peerType == NetworkPeerType.Disconnected)
 		{
 			// itemCollector is @ gameObject that is in item layer
@@ -53,7 +54,7 @@ public class ItemCollectorScript : MonoBehaviour {
 				/**
 				 *	Version Simple!
 				 **/
-				myCharacterScript.CollectingItem(other.gameObject);
+				myCharacterScript.CollectingItem(other.gameObject,2);
 				return;
 
 //				/**

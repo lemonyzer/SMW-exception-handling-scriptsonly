@@ -573,7 +573,32 @@ public class PlatformCharacter : MonoBehaviour {
 	}
 
 
-	public void CollectingItem(GameObject goItem)
+	public void CollectingItem(Item collectingItem)
+	{
+		if(!isAuthoritativeHost())
+		{
+			return;
+		}
+
+		
+		if(collectingItem == null)
+		{
+			Debug.LogError(collectingItem.name + " has no Item Script attached!!!");
+			return;
+		}
+
+		if(!CharacterCanCollectItems())
+		{
+			Debug.LogWarning(this.ToString() + " can't collect items right now!");
+			return;
+		}
+		
+		collectingItem.Collecting(this);
+	}
+
+
+	// wird auf server ausgeführt, kontrolleirt ob character und spieler item einsammeln dürfen.
+	public void CollectingItem(GameObject goItem, int a)
 	{
 		if(!isAuthoritativeHost())
 		{
@@ -581,7 +606,10 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		// runs on server/offline only
 
-		Item currentItem = goItem.GetComponent<Item>();
+		Item currentItem = goItem.GetComponent<Item>();		// muss genaues Script erhalten <-- Item is wrong
+
+		// lösung: statt ontriggerenter function an character, ontriggerenterfunction an itemscript
+		// collectorCharacterScript.CollectingItem(this (:Item));
 
 		if(currentItem == null)
 		{
@@ -613,6 +641,9 @@ public class PlatformCharacter : MonoBehaviour {
 		bool destroyItem = true;
 
 		//TODO Polymorphism
+		return;
+
+
 		if(currentItem.itemName == "Star")
 		{
 			//GetComponent<RageModus>().StartRageModus();
@@ -705,7 +736,7 @@ public class PlatformCharacter : MonoBehaviour {
 	{
 		if(isAuthoritativeHost())
 		{
-			power1.activated();
+			power1.activate();
 		}
 //		if(item == "FireFlower2")
 //		{

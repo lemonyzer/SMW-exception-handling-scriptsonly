@@ -3,49 +3,74 @@ using System.Collections;
 
 public class Star : WithPower {
 
+	public GameObject item;
+
+	public Star(GameObject go)
+	{
+		item = go;
+	}
+
 	public RPCMode rpcMode = RPCMode.All;
 
-	public override Power powerScript {
-		get {
-			throw new System.NotImplementedException ();
-		}
-		set {
-			powerScript = new Rage();														// review!!! VERIFY
-		}
+	public Power powerScript;
+	public string powerScriptName;
+	public PlatformCharacter collector;
+	public int itemId;
+	public Layer layer;
+
+	public void Awake()
+	{
+		layer = GameObject.FindGameObjectWithTag(Tags.gameController).GetComponent<Layer>();
 	}
 
-	public override string powerScriptName {
-		get {
-			throw new System.NotImplementedException ();
-		}
-		set {
-			powerScriptName = typeof(Rage).ToString();									// review!!! VERIFY
-		}
-	}
-    
-	public override PlatformCharacter collector {
-		get {
-			throw new System.NotImplementedException ();
-		}
-		set {
-			collector = value;
-		}
-	}
-
-	public override int itemId {
-		get {
-			throw new System.NotImplementedException ();
-		}
-		set {
-			itemId = value;
-		}
-	}
+//	public override Power powerScript {
+//		get {
+//			throw new System.NotImplementedException ();
+//		}
+//		set {
+//			powerScript = new Rage();														// review!!! VERIFY
+//		}
+//	}
+//
+//	public override string powerScriptName {
+//		get {
+//			throw new System.NotImplementedException ();
+//		}
+//		set {
+//			powerScriptName = typeof(Rage).ToString();									// review!!! VERIFY
+//		}
+//	}
+//    
+//	public override PlatformCharacter collector {
+//		get {
+//			throw new System.NotImplementedException ();
+//		}
+//		set {
+//			collector = value;
+//		}
+//	}
+//
+//	public override int itemId {
+//		get {
+//			throw new System.NotImplementedException ();
+//		}
+//		set {
+//			itemId = value;
+//		}
+//	}
 
 
 	public override void Collecting(PlatformCharacter collector)
 	{
 		this.collector = collector;
-		collector.myNetworkView.RPC("CollectingItem", rpcMode, itemId);			// Serverseitig
+		collector.myNetworkView.RPC("CollectedItem", rpcMode, itemId);			// Serverseitig
+
+		
+		if(Network.isServer)
+		{
+			Network.RemoveRPCs(this.item.networkView.viewID);
+			Network.Destroy(this.item.gameObject);
+		}
 	}
 
 	public override void Collected(PlatformCharacter collector, NetworkMessageInfo info)
@@ -86,7 +111,7 @@ public class Star : WithPower {
 		Power characterPowerScript = collector.gameObject.GetComponent(powerScriptName) as Power;
 		if(characterPowerScript != null)
 		{
-			//characterPowerScript.activated();
+			//characterPowerScript.gained(info);
 			Debug.LogError("GetComponent(string) hat funktioniert!");
 		}
 		else
@@ -102,7 +127,7 @@ public class Star : WithPower {
 		characterPowerScript = collector.gameObject.GetComponent( powerScript.GetType().Name ) as Power;
 		if(characterPowerScript != null)
 		{
-			characterPowerScript.activated();
+			characterPowerScript.gained(info);
 			Debug.LogError("GetComponent(powerScript.GetType().Name) hat funktioniert!");
 		}
 		else
@@ -112,8 +137,22 @@ public class Star : WithPower {
 
 		//characterPowerScript = collector.gameObject.GetComponent(typeof(Power) ) as Power;		// geht nicht, es nach einer speziellen Power gesucht!!!! dies würde die erste Componente liefern die vom Typ Power ist!
 		//characterPowerScript = collector.gameObject.GetComponent(Types.GetType(power) ) as Power;
+
+
 	}
 
 	//power's can run MonoBehaviour functions (Awake(),Start(),Update(),FixedUpdate(),LateUpdate(),...) without being attached to an GameObject?
 
+
+	void OnTriggerEnter2D(Collider2D other)
+	{
+		if(other.gameObject.layer == layer.item)
+		{
+			if(other.gameObject.name == Tags.itemCollector)
+			{
+				// Player gefunden
+				other.transform.parent.GetComponent<PlatformCharacter>().CollectingItem(this);
+			}
+		}
+	}
 }

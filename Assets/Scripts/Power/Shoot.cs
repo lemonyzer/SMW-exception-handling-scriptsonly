@@ -12,7 +12,7 @@ public class Shoot : Power {
 	
 	// Update is called once per frame
 	void Update () {
-		Debug.Log(this.ToString() + " " + this.gameObject.name);
+//		Debug.Log(this.ToString() + " " + this.gameObject.name);
 
 	}
 
@@ -21,7 +21,7 @@ public class Shoot : Power {
 
 	}
 
-	public override void gained ()
+	public override void gained (NetworkMessageInfo info)
 	{
 		throw new System.NotImplementedException ();
 	}
@@ -31,7 +31,7 @@ public class Shoot : Power {
 		throw new System.NotImplementedException ();
 	}
 	
-	public override void activated ()
+	public override void activate ()
 	{
 		throw new System.NotImplementedException ();
     }
