@@ -8,9 +8,27 @@ public class Flower : WithPower {
 			throw new System.NotImplementedException ();
 		}
 		set {
-			collector = value;
+			throw new System.NotImplementedException ();
 		}
 	}
+
+	public override Power powerScript {
+		get {
+			throw new System.NotImplementedException ();
+		}
+		set {
+			powerScript = new Shoot();
+		}
+	}
+	
+	public override string powerScriptName {
+		get {
+			throw new System.NotImplementedException ();
+        }
+        set {
+			powerScriptName = "Rage";
+        }
+    }
 	
 	public override int itemId {
 		get {

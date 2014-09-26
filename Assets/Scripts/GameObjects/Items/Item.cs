@@ -7,7 +7,9 @@ public abstract class Item : MonoBehaviour {
 	// get and set 			== propertie
 
 	public abstract PlatformCharacter collector { get;set; }
-	public abstract int itemId{ get;set; }
+	public abstract int itemId { get;set; }
+	public abstract Power powerScript { get;set; }
+	public abstract string powerScriptName { get;set; }
 
     public string itemName;
     public float itemStayTime = 8f; 

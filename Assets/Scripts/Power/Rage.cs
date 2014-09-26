@@ -15,7 +15,11 @@ public class Rage : Power {
 
 	public override void gained ()
 	{
-		throw new System.NotImplementedException ();
+		//if(gamemode.powerprefs.rage == auto)
+		activated();
+		//else
+		//powerbtn aktivieren
+		//timer aktivieren...
 	}
 
 	public override void lost ()
@@ -25,6 +29,7 @@ public class Rage : Power {
 
 	public override void activated ()
 	{
-		throw new System.NotImplementedException ();
+		this.GetComponent<RageModus>().StartRageModus();			// später wird statt weiteres script... alles in diesem script durchgeführt was diese poewr betrifft!
+
 	}
 }
