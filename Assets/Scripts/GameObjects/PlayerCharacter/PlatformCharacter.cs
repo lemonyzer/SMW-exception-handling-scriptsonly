@@ -566,6 +566,12 @@ public class PlatformCharacter : MonoBehaviour {
 		gameObject.rigidbody2D.WakeUp();
 	}
 	
+	[RPC]
+	public void CollectedItem(int itemId, NetworkMessageInfo info)
+	{
+		ItemLibrary.getItem(itemId).Collected(this, info);
+	}
+
 
 	public void CollectingItem(GameObject goItem)
 	{
@@ -583,11 +589,26 @@ public class PlatformCharacter : MonoBehaviour {
 			return;
 		}
 
+
+		/**
+		 *  Polymorphie in CharacterCanCollectItems... CharacterStates  myCharacterState.collecting(goItem)?
+		 * 																myCharacterState.collecting(currentItem)?
+		 * 
+		 **/
+
 		if(!CharacterCanCollectItems())
 		{
 			Debug.LogWarning(this.ToString() + " can't collect items right now!");
-			return;
-		}
+            return;
+        }
+        
+        currentItem.Collecting(this);
+
+		//
+		/**
+		 * DONE, no more if's!!!!			GO destroy, if(item.destroyAfterCollecting) Destroy go;
+		 * 									currentItem.Collecting(this, goItem);	// collecting itself destroys the item (offline/online)
+		 **/
 
 		bool destroyItem = true;
 
@@ -677,15 +698,22 @@ public class PlatformCharacter : MonoBehaviour {
 		powerPredictedAnimationState = inputPowerCount++ % predictedShootAnimation.Length;
 	}
 
-	public void power()
+	public Power power1;
+	public Power power2;
+
+	public void Power()
 	{
-		if(item == "FireFlower2")
+		if(isAuthoritativeHost())
 		{
-			if(isAuthoritativeHost())
-			{
-				SpawnSingleBullet();
-			}
+			power1.activated();
 		}
+//		if(item == "FireFlower2")
+//		{
+//			if(isAuthoritativeHost())
+//			{
+//				SpawnSingleBullet();
+//			}
+//		}
 	}
 
 	[RPC]

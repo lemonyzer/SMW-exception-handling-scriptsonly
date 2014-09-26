@@ -22,6 +22,7 @@ public class Tags : MonoBehaviour {
 	 * Scene, Level Parts
 	 **/
 	public const string gameController = "GameController";
+//	public const string itemLibrary = "ItemLibrary";
 	public const string background = "Background";
 	public const string invincibleSound = "InvincibleSound";
 	public const string powerUp = "PowerUp";

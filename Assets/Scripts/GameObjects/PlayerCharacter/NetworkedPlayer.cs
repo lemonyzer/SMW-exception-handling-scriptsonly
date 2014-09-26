@@ -216,7 +216,7 @@ public class NetworkedPlayer : MonoBehaviour
 			//other powers like shield need animation on client (all clients, server aswell) so RPC to start ShieldAnimation.
 			//TODO polymorphismus
 			// class Items.power() with correct execution/rpc.
-			characterScript.power();
+			characterScript.Power();
 		}
 	}
 

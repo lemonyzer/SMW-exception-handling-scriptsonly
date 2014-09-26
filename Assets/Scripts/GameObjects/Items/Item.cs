@@ -3,10 +3,16 @@ using System.Collections;
 
 public abstract class Item : MonoBehaviour {
 
-	public string itemName;
-	public float itemStayTime = 8f; 
+	// get only (read only) == field
+	// get and set 			== propertie
 
-	public void StartDestroyTimer()
+	public abstract PlatformCharacter collector { get;set; }
+	public abstract int itemId{ get;set; }
+
+    public string itemName;
+    public float itemStayTime = 8f; 
+    
+    public void StartDestroyTimer()
 	{
 		StartCoroutine(DestroyPowerUp());
 	}
@@ -86,6 +92,6 @@ public abstract class Item : MonoBehaviour {
      **/
 
     public abstract void Collecting(PlatformCharacter collector);	// Serverseitig (authoritative)
-	public abstract void Collected(PlatformCharacter collector);	// Server- und Clientseitig (RPCMode.All)
+	public abstract void Collected(PlatformCharacter collector, NetworkMessageInfo info);	// Server- und Clientseitig (RPCMode.All)
 
 }
