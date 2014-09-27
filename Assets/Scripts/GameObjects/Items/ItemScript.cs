@@ -1,53 +1,37 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ItemScript : MonoBehaviour {
-
-	public Item item;
-
-	void Awake() {
-		//item = new Item(this.gameObject);	// Item is abstract...
-		//ItemLibrary.items
-	}
-
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+public abstract class ItemScript : MonoBehaviour {
 
 
-	public string itemName;
-	public float itemStayTime = 8f; 
-	
-	public void StartDestroyTimer()
-	{
-		StartCoroutine(DestroyPowerUp());
-	}
-	
-	IEnumerator DestroyPowerUp()
-	{
-		yield return new WaitForSeconds(itemStayTime);
-		if(Network.peerType == NetworkPeerType.Disconnected)
-		{
-			Destroy(this.gameObject);
-		}
-		if(Network.isServer)
-		{
-			if(this.gameObject != null)
-			{
-				Network.RemoveRPCs(this.networkView.viewID);
-				Network.Destroy(this.gameObject);
-			}
-			else
-			{
-				Debug.LogWarning("nothing to Destroy! already destroyed/collected?!");
-			}
-		}
-	}
+	abstract public Item item { get; set;}
+//	abstract public float itemStayTime { get; set;}			// debug..geht nicht (coroutine)
+
+	public abstract void StartDestroyTimer();
+
+
+
+
+	/**
+	 * Inspector can't handle Polymorphie Scripts /without MonoBehaviour inheritance
+	 **/
+
+	// Item item kann nicht per  Inspector gesetzt und in Prefab gespeichert werden. Um if's zu entgehend muss ItemScript in Items aufgeteilt werden!
+	//	public string itemName = "Star";			// alternative mit if's ... ItemScript string
+	//	
+	//	void OnTriggerEnter2D(Collider2D other)
+	//	{
+	//		if(itemName == "Star")
+	//		{
+	//			item = new Star();
+	//			item.Collecting(this.gameObject, other.gameObject.GetComponent<PlatformCharacter>());
+	//		}
+	//		else if(itemName == "Flower")
+	//		{
+	//			item = new Flower();
+	//			item.Collecting(this.gameObject, other.gameObject.GetComponent<PlatformCharacter>());
+	//		}
+	//	}
+
 
 }

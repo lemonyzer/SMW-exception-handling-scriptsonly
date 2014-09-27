@@ -74,7 +74,7 @@ public class PowerUpBlock : MonoBehaviour {
 								ReleasingRandomPowerUp();
 							}
 							else
-								networkView.RPC("ReleasingRandomPowerUp", RPCMode.All);
+								networkView.RPC("ReleasingRandomPowerUp", RPCMode.All);			// PowerUpBlock animation setzen, Item selbst wird über Network.instantiated
 						}
 					//}
 					//else
@@ -183,7 +183,7 @@ public class PowerUpBlock : MonoBehaviour {
 			{
 				
 			}
-			powerupClone.GetComponent<Item>().StartDestroyTimer();
+			powerupClone.GetComponent<ItemScript>().StartDestroyTimer();
 		}
 
 		if(Network.isServer)
@@ -206,7 +206,7 @@ public class PowerUpBlock : MonoBehaviour {
 			{
 				
 			}
-			powerupClone.GetComponent<Item>().StartDestroyTimer();
+			powerupClone.GetComponent<ItemScript>().StartDestroyTimer();
 //			StartCoroutine(DestroyPowerUp());	// BAD Programming!! powerupClone loses referenz if new PowerUp Spawns...
 //			Destroy(powerupClone,powerUpStayTime);
 		}

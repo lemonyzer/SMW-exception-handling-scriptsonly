@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class Flower : WithPower {
 
-	public Power powerScript;
 	public string powerScriptName;
 	public PlatformCharacter collector;
-	public int itemId;
+	public int itemId = ItemLibrary.flowerID;
+	public Shoot powerScript;
 
 //	public override PlatformCharacter collector {
 //		get {
@@ -44,7 +45,7 @@ public class Flower : WithPower {
 //        }
 //    }
 
-	public override void Collecting(PlatformCharacter collector)
+	public override void Collecting(GameObject itemGO, PlatformCharacter collector)
 	{
 		this.collector = collector;
 

@@ -1,76 +1,41 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class Star : WithPower {
 
-	public GameObject item;
+//	public GameObject item;
 
 	public RPCMode rpcMode = RPCMode.All;
 
-	public Power powerScript;
-	public string powerScriptName;
-	public PlatformCharacter collector;
-	public int itemId;
-	public Layer layer;
+	public int itemId = ItemLibrary.starID;
+	//public Power powerScript = new Rage();						// <--- Item-Power Zuordnung		<-- geht nicht!
+	public Rage powerScript;									// <--- Item-Power Zuordnung	problem: ist schon speziallisiert. kann nicht allgemeint über Power angesprochen werden
+	public string powerScriptName = "Rage";						// <--- Item-Power Zuordnung
 
-	public void Awake()
+
+	public override void Collecting(GameObject itemGO, PlatformCharacter collector)
 	{
-		layer = GameObject.FindGameObjectWithTag(Tags.gameController).GetComponent<Layer>();
-	}
 
-//	public override Power powerScript {
-//		get {
-//			throw new System.NotImplementedException ();
-//		}
-//		set {
-//			powerScript = new Rage();														// review!!! VERIFY
-//		}
-//	}
-//
-//	public override string powerScriptName {
-//		get {
-//			throw new System.NotImplementedException ();
-//		}
-//		set {
-//			powerScriptName = typeof(Rage).ToString();									// review!!! VERIFY
-//		}
-//	}
-//    
-//	public override PlatformCharacter collector {
-//		get {
-//			throw new System.NotImplementedException ();
-//		}
-//		set {
-//			collector = value;
-//		}
-//	}
-//
-//	public override int itemId {
-//		get {
-//			throw new System.NotImplementedException ();
-//		}
-//		set {
-//			itemId = value;
-//		}
-//	}
-
-
-	public override void Collecting(PlatformCharacter collector)
-	{
-		this.collector = collector;
 		collector.myNetworkView.RPC("CollectedItem", rpcMode, itemId);			// Serverseitig
 
-		
+		// rpc geht von collctor aus 				-> Client weiß wer!
+		// itemId 									-> Client weiß was!
+		// rpc hat NetworkMessageInfo mit timeStamp -> Client weiß wann!
+
+		// das itemGO kann Zerstört werden, nach Collecting...
+		// wird für jedes Item seperat gehandelt.
+		// könnte noch interface oder oberklasse mit destroyaftercollecting stayaftercollecting erweitern...
 		if(Network.isServer)
 		{
-			Network.RemoveRPCs(this.item.networkView.viewID);
-			Network.Destroy(this.item.gameObject);
+			Network.RemoveRPCs(itemGO.networkView.viewID);
+			Network.Destroy(itemGO.gameObject);
 		}
 	}
 
 	public override void Collected(PlatformCharacter collector, NetworkMessageInfo info)
 	{
-		this.collector = collector;												// Clientseitig (wenn rpcMode == All) auch Serverseitig 
+//		this.collector = collector;												// Clientseitig (wenn rpcMode == All) auch Serverseitig 
 		/**
 		 *
 		 * PROBLEM
@@ -119,16 +84,26 @@ public class Star : WithPower {
         // collector.gameObject.GetComponent<power.GetType()>().activated();		//<<-- wird nicht mit GetComponent<>() funktionieren!
 
 		characterPowerScript = collector.gameObject.GetComponent( powerScript.GetType() ) as Power;
-		characterPowerScript = collector.gameObject.GetComponent( powerScript.GetType().Name ) as Power;
 		if(characterPowerScript != null)
 		{
 			characterPowerScript.gained(info);
+			Debug.LogError("GetComponent(powerScript.GetType()) hat funktioniert!");
+		}
+		else
+		{
+			Debug.LogError("GetComponent(powerScript.GetType()) hat nicht funktioniert!");
+        }
+
+		characterPowerScript = collector.gameObject.GetComponent( powerScript.GetType().Name ) as Power;
+		if(characterPowerScript != null)
+		{
+//			characterPowerScript.gained(info);
 			Debug.LogError("GetComponent(powerScript.GetType().Name) hat funktioniert!");
 		}
 		else
 		{
 			Debug.LogError("GetComponent(powerScript.GetType().Name) hat nicht funktioniert!");
-        }
+		}
 
 		//characterPowerScript = collector.gameObject.GetComponent(typeof(Power) ) as Power;		// geht nicht, es nach einer speziellen Power gesucht!!!! dies würde die erste Componente liefern die vom Typ Power ist!
 		//characterPowerScript = collector.gameObject.GetComponent(Types.GetType(power) ) as Power;
@@ -139,15 +114,5 @@ public class Star : WithPower {
 	//power's can run MonoBehaviour functions (Awake(),Start(),Update(),FixedUpdate(),LateUpdate(),...) without being attached to an GameObject?
 
 
-	void OnTriggerEnter2D(Collider2D other)
-	{
-		if(other.gameObject.layer == layer.item)
-		{
-			if(other.gameObject.name == Tags.itemCollector)
-			{
-				// Player gefunden
-				other.transform.parent.GetComponent<PlatformCharacter>().CollectingItem(this);
-			}
-		}
-	}
+
 }

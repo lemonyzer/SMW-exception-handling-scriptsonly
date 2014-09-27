@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public abstract class Item {
 
 	// get only (read only) == field
@@ -66,7 +67,7 @@ public abstract class Item {
      * Beispiel unserer Methoden Starten und Landen also durch:
      **/
 
-    public abstract void Collecting(PlatformCharacter collector);	// Serverseitig (authoritative)
+	public abstract void Collecting(GameObject itemGO, PlatformCharacter collector);	// Serverseitig (authoritative)
 	public abstract void Collected(PlatformCharacter collector, NetworkMessageInfo info);	// Server- und Clientseitig (RPCMode.All)
 
 }

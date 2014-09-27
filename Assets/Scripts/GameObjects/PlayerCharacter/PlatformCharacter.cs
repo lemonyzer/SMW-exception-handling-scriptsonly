@@ -573,7 +573,7 @@ public class PlatformCharacter : MonoBehaviour {
 	}
 
 
-	public void CollectingItem(Item collectingItem)
+	public void CollectingItem(ItemScript collectingItem)
 	{
 		if(!isAuthoritativeHost())
 		{
@@ -593,12 +593,12 @@ public class PlatformCharacter : MonoBehaviour {
 			return;
 		}
 		
-		collectingItem.Collecting(this);
+		collectingItem.item.Collecting(collectingItem.gameObject, this);
 	}
 
 
 	// wird auf server ausgeführt, kontrolleirt ob character und spieler item einsammeln dürfen.
-	public void CollectingItem(GameObject goItem, int a)
+	public void CollectingItem(GameObject goItem)
 	{
 		if(!isAuthoritativeHost())
 		{
@@ -606,7 +606,7 @@ public class PlatformCharacter : MonoBehaviour {
 		}
 		// runs on server/offline only
 
-		Item currentItem = goItem.GetComponent<Item>();		// muss genaues Script erhalten <-- Item is wrong
+		Item currentItem = goItem.GetComponent<ItemScript>().item;		// muss genaues Script erhalten <-- Item is wrong
 
 		// lösung: statt ontriggerenter function an character, ontriggerenterfunction an itemscript
 		// collectorCharacterScript.CollectingItem(this (:Item));
@@ -630,7 +630,7 @@ public class PlatformCharacter : MonoBehaviour {
             return;
         }
         
-        currentItem.Collecting(this);
+        currentItem.Collecting(goItem, this);
 
 		//
 		/**
@@ -644,75 +644,75 @@ public class PlatformCharacter : MonoBehaviour {
 		return;
 
 
-		if(currentItem.itemName == "Star")
-		{
-			//GetComponent<RageModus>().StartRageModus();
-			if(offline())
-			{
-				NetworkMessageInfo bla = new NetworkMessageInfo();
-				Debug.Log("Time.time " + Time.time);
-				Debug.Log("Network.time " + Network.time);
-				Debug.Log("NetworkMessageInfo: timestamp " + bla.timestamp);
-				//bla.timestamp = Network.time; geht nicht
-				GetComponent<RageModus>().StartRageModus(bla);
-			}
-			if(server())
-				networkView.RPC("StartRageModus", RPCMode.All);
-
-		}
-		else if(currentItem.itemName == "FireFlower")
-		{
-			if(offline())
-				StartCoroutine(SpawnBullet());
-			if(server())
-			{
-				StartCoroutine(SpawnBullet());				// spezzialfall... bullets werden von server gemanaged (authoritativ )
-				//	myNetworkView.RPC ("", RPCMode.All);		// an alle?? eigentlich nur an Spieler	
-			}
-		}
-		else if(currentItem.itemName == "FireFlower2")
-		{
-			// aktiviere Power Button für Character
-			myNetworkView.RPC("ActivatePower", RPCMode.All, "FireFlower2");
-		}
-		else if(currentItem.itemName == "BoBomb")
-		{
-
-		}
-		else if(currentItem.itemName == "1up")
-		{
-
-		}
-		else if(currentItem.itemName == "2up")
-		{
-
-		}
-		else if(currentItem.itemName == "3up")
-		{
-
-		}
-		else if(currentItem.itemName == "5up")
-		{
-
-		}
-		else
-		{
-			Debug.LogWarning("unknown Item found! " + goItem.name + " " + currentItem.itemName);
-		}
-
-
-		if(destroyItem)
-		{
-			if(offline())
-			{
-				Destroy(goItem);
-			}
-			if(server())
-			{
-				Network.RemoveRPCs(goItem.networkView.viewID);
-				Network.Destroy(goItem);
-			}
-		}
+//		if(currentItem.itemName == "Star")
+//		{
+//			//GetComponent<RageModus>().StartRageModus();
+//			if(offline())
+//			{
+//				NetworkMessageInfo bla = new NetworkMessageInfo();
+//				Debug.Log("Time.time " + Time.time);
+//				Debug.Log("Network.time " + Network.time);
+//				Debug.Log("NetworkMessageInfo: timestamp " + bla.timestamp);
+//				//bla.timestamp = Network.time; geht nicht
+//				GetComponent<RageModus>().StartRageModus(bla);
+//			}
+//			if(server())
+//				networkView.RPC("StartRageModus", RPCMode.All);
+//
+//		}
+//		else if(currentItem.itemName == "FireFlower")
+//		{
+//			if(offline())
+//				StartCoroutine(SpawnBullet());
+//			if(server())
+//			{
+//				StartCoroutine(SpawnBullet());				// spezzialfall... bullets werden von server gemanaged (authoritativ )
+//				//	myNetworkView.RPC ("", RPCMode.All);		// an alle?? eigentlich nur an Spieler	
+//			}
+//		}
+//		else if(currentItem.itemName == "FireFlower2")
+//		{
+//			// aktiviere Power Button für Character
+//			myNetworkView.RPC("ActivatePower", RPCMode.All, "FireFlower2");
+//		}
+//		else if(currentItem.itemName == "BoBomb")
+//		{
+//
+//		}
+//		else if(currentItem.itemName == "1up")
+//		{
+//
+//		}
+//		else if(currentItem.itemName == "2up")
+//		{
+//
+//		}
+//		else if(currentItem.itemName == "3up")
+//		{
+//
+//		}
+//		else if(currentItem.itemName == "5up")
+//		{
+//
+//		}
+//		else
+//		{
+//			Debug.LogWarning("unknown Item found! " + goItem.name + " " + currentItem.itemName);
+//		}
+//
+//
+//		if(destroyItem)
+//		{
+//			if(offline())
+//			{
+//				Destroy(goItem);
+//			}
+//			if(server())
+//			{
+//				Network.RemoveRPCs(goItem.networkView.viewID);
+//				Network.Destroy(goItem);
+//			}
+//		}
 
 	}
 
