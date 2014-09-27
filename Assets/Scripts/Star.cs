@@ -71,8 +71,10 @@ public class Star : WithPower {
 		Power characterPowerScript = collector.gameObject.GetComponent(powerScriptName) as Power;
 		if(characterPowerScript != null)
 		{
-			//characterPowerScript.gained(info);
 			Debug.LogError("GetComponent(string) hat funktioniert!");
+			characterPowerScript.gained(info);
+			//TODO	string workarround!!
+			return;
 		}
 		else
 		{
