@@ -105,6 +105,10 @@ public class NetworkedPlayer : MonoBehaviour
 	{
 		if( ownerScript.owner == Network.player )
 		{
+			if(characterScript.power1 != null)
+			{
+				characterScript.power1.TriggeredUpdate();
+			}
 			if (moveHistory.Count > 0)
 			{
 				// ein FixedUpdate() aufruf später abschicken (position wird von physic engine korrigiert falls collision stattfindet)	// send 20ms delay!!!
@@ -118,14 +122,14 @@ public class NetworkedPlayer : MonoBehaviour
 						moveHistory.RemoveAt(0);
 						moveHistory.Insert (0, lastMoveStateWithPhysics);
 						myNetworkView.RPC( "ProcessInput", RPCMode.Server, lastMoveStateWithPhysics.HorizontalAxis, lastMoveStateWithPhysics.jump, this.transform.position );
-						if(characterScript.canUsePowerButton)
-						{
-							if(inputScript.inputPower)
-							{
-////////////////////////////////characterScript.item.coolDown();
-								myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
-							}
-						}
+//						if(characterScript.canUsePowerButton)
+//						{
+//							if(inputScript.inputPower)
+//							{
+//////////////////////////////////characterScript.item.coolDown();
+//								myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
+//							}
+//						}
 					}
 				}
 			}
@@ -176,14 +180,14 @@ public class NetworkedPlayer : MonoBehaviour
 //					clientNeedsToSendNewInput = false;
 //				}
 				myNetworkView.RPC( "ProcessInput", RPCMode.Server, moveState.HorizontalAxis, moveState.jump, this.transform.position );
-				if(characterScript.canUsePowerButton)
-				{
-					if(inputScript.inputPower)
-					{
-						characterScript.PowerPredictedAnimation();	// instant reaktion, feels better!
-						myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
-					}
-				}
+//				if(characterScript.canUsePowerButton)
+//				{
+//					if(inputScript.inputPower)
+//					{
+//						characterScript.PowerPredictedAnimation();	// instant reaktion, feels better!
+//						myNetworkView.RPC( "ProcessPowerRequest", RPCMode.Server );
+//					}
+//				}
 			}
 			else if(Network.isServer)
 			{
@@ -204,13 +208,14 @@ public class NetworkedPlayer : MonoBehaviour
 	}
 
 	[RPC]
-	void ProcessPowerRequest()
+	public void ProcessPowerRequest()
 	{
 		if(!Network.isServer)
 		{
 			return;
 		}
-		if(characterScript.hasItem)
+
+		if(characterScript.power1 != null)
 		{
 			//power like shooting bullets dont need extra RPC to clients. server will instantiate bullet object, clients can see it.
 			//other powers like shield need animation on client (all clients, server aswell) so RPC to start ShieldAnimation.
@@ -218,6 +223,15 @@ public class NetworkedPlayer : MonoBehaviour
 			// class Items.power() with correct execution/rpc.
 			characterScript.Power();
 		}
+
+//		if(characterScript.hasItem)
+//		{
+//			//power like shooting bullets dont need extra RPC to clients. server will instantiate bullet object, clients can see it.
+//			//other powers like shield need animation on client (all clients, server aswell) so RPC to start ShieldAnimation.
+//			//TODO polymorphismus
+//			// class Items.power() with correct execution/rpc.
+//			characterScript.Power();
+//		}
 	}
 
 	// server

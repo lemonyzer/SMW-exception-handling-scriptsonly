@@ -3,6 +3,8 @@ using System.Collections;
 
 public class PlatformCharacter : MonoBehaviour {
 
+//	public Power power;
+
 	// the position read from the network
 	// used for interpolation
 	private Vector3 readNetworkPos;

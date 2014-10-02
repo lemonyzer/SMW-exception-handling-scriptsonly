@@ -18,4 +18,6 @@ public abstract class Power : MonoBehaviour {
 
 	// Fähigkeit wurde getriggert (manuell von Spieler, von Server oder von Gegenspieler
 	public abstract void activate();
+
+	public abstract void TriggeredUpdate();
 }

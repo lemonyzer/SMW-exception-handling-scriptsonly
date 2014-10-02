@@ -268,7 +268,8 @@ public class StatsManager : MonoBehaviour {
 	{
 		//if(GameState.currentState == GameState.States.Running)
 		//{
-			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
+//			TODO animation für attacker (combos, nemesis, blood...)
+//			Player playerAttacker = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(attackersRealOwner);
 			Player playerVictim = PlayerDictionaryManager.syncedLocalPersistentPlayerDictionary.GetPlayer(victimsRealOwner);
 			
 			//AnimatorController victimsAnimationController = playerVictim.getCharacter().getGameObject().GetComponent<AnimatorController>();

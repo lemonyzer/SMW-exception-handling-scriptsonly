@@ -3,6 +3,17 @@ using System.Collections;
 
 public class Rage : Power {
 
+	
+	// Spieler kann nur eine Power gleichzeitig haben
+	//
+	// charaterScrpt hat ein Datenfeld/Propertie mit aktueller Power.
+	// bei item.Collected
+	// wird diese ggf. deaktiviert und mit neuer überschrieben überschrieben (priorität)
+	// zeitlich befristete deaktiviert sich selbst und nimmt eintrag aus characterScript raus
+	// in FixedUpdate von NetworkPlayer/characterScript wird falls power=! null
+	// power.checkTrigger() ausgeführt
+	// checkTrigger kontrolliert Benutzereingabe.... oder triggerFlags die von einem TriggerEvent ausgeführt werden.
+
 	public override void gained (NetworkMessageInfo info)
 	{
 		gainTimeStamp = info.timestamp;
@@ -24,6 +35,10 @@ public class Rage : Power {
 
 	}
 
+	public override void TriggeredUpdate ()
+	{
+		throw new System.NotImplementedException ();
+	}
 
 	public void autoActivate(NetworkMessageInfo info)
 	{

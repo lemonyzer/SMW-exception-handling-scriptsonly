@@ -3,11 +3,15 @@ using System.Collections;
 
 public class FlowerScript : ItemScript {
 
-	Item item;
+//	Item _item;
 
-	public override Item GetItem()				// macht immer das gleiche virtual anlegen in OberKlasse ItemScript
-	{
-		return item;
+	public override Item item {
+		get {
+			return _item;
+		}
+		set {
+			_item = value;
+		}
 	}
 
 
