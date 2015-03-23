@@ -1,23 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BombItem : Item {
+public class IceWandItem : Item {
 	
 	public RPCMode rpcMode = RPCMode.AllBuffered; // eigentlich brauch die Einsammelinfo nur der betroffende Spieler, ABER andere Spieler sollen sehen das er schießen kann!
 	
-	public int itemId = ItemLibrary.bombID;
+	public int itemId = ItemLibrary.icewandID;
 	public Shoot powerScript;
 	public string powerScriptName = "Shoot";						// <--- Item-Power Zuordnung
 	
 	// Weapon Settings
-	public int projectileLimit = 2;
-	public double bulletToBulletTime = 1.5f;
+	public int projectileLimit = 1;
+	public double bulletToBulletTime = 0f;
 
 	// Projectile
 	public static string resourcesFolder = "Projectiles";		
-	public static string projectilePrefabFilename = "Bomb";		
+	public static string projectilePrefabFilename = "WandBlast";		
 	public static Vector3 projectileSpawnPositionOffset = new Vector3 (1,0,0);
-	public Projectile projectile = new BombProjectile(resourcesFolder, projectilePrefabFilename, projectileSpawnPositionOffset );
+	public Projectile projectile = new WandBlastProjectile(resourcesFolder, projectilePrefabFilename, projectileSpawnPositionOffset );
 
 
 	public override void Collecting(GameObject itemGO, PlatformCharacter collector)
