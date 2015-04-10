@@ -30,7 +30,6 @@ public class SmwCharacterList : ScriptableObject {
 			Debug.LogWarning(this.ToString() + " characterSOList war vorhanden");
 	}
 
-
 	/**
 	 * ArgumentException: ToString can only be called from the main thread.
 	 * Constructors and field initializers will be executed from the loading thread when loading a scene.

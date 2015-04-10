@@ -51,10 +51,7 @@ public class BreakableBlock : MonoBehaviour {
 //					{
 //						other.gameObject.transform.parent.rigidbody2D.velocity = Vector2.zero;	// collision simulieren (player stoppt bei trigger erkennung kurz)
 						breakTriggered = true;	
-						myNView.RPC("Breaking", RPCMode.All);				// all buffered, level is changeing!!
-
-						
-						Network.Destroy(myNView.viewID);					// this one is buffered!!!
+						myNView.RPC("Breaking", RPCMode.AllBuffered);				// all buffered, level is changeing!!
 //					}
 //					else
 //					{

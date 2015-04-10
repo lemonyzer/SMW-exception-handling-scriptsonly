@@ -104,7 +104,16 @@ public class UnityNetworkManager : MonoBehaviour {
 		myNetworkView.RPC("NextCharacter_Rpc", RPCMode.All, Network.player);	// works also with Server -> Server
 		// Parameter wird übergeben da in NetworkMessageInfo bei Server -> Server kein sender drin steht (-1)!
 	}
-	
+
+	/// <summary>
+	/// Switchs the team_ button.
+	/// </summary>
+	public void SwitchTeam_Button()
+	{
+		myNetworkView.RPC("SwitchTeam_Rpc", RPCMode.All, Network.player);	// works also with Server -> Server
+		// Parameter wird übergeben da in NetworkMessageInfo bei Server -> Server kein sender drin steht (-1)!
+    }
+    
 	//TODO Events / Actions / Delegates
 	//TODO persistent object (atleast playerDictionary)
 	/// <summary>
@@ -124,7 +133,7 @@ public class UnityNetworkManager : MonoBehaviour {
 		PlayerDictionaryManager.serverHasPlayer = true;
 		OnPlayerConnected(Network.player);
 	}
-	
+    
 	//TODO generic (like client connect)
 	/// <summary>
 	/// Servers the leave_ button.
@@ -157,7 +166,11 @@ public class UnityNetworkManager : MonoBehaviour {
 	 * CharacterLibrary Reference (Component @ same GameObject)
 	 **/
 	CharacterLibrary myCharacterLibrary;
-	
+
+	/**
+	 * CharacterLibrary Reference (Component @ same GameObject)
+	 **/
+	TeamLibrary myTeams;
 
 	/**
 	 * Player on Serverdevice can join the Game
@@ -189,6 +202,12 @@ public class UnityNetworkManager : MonoBehaviour {
 			myCharacterLibrary = LibraryGO.GetComponent<CharacterLibrary>();
 		else
 			Debug.LogError("GameObject CharacterLibrary fehlt!!! (kommt normalerweise direkt aus vorherigen Scene");
+
+		myTeams = GetComponent<TeamLibrary>();
+		if (myTeams == null)
+		{
+			Debug.LogError("TeamLibrary Componente fehlt!!!");
+		}
 	}
 
 	/// <summary>
@@ -389,19 +408,41 @@ public class UnityNetworkManager : MonoBehaviour {
 
 		//new Player gets first unselected Character
 		SmwCharacter avatar = myCharacterLibrary.characterList.GetFirstUnselected();
-		if(avatar != null)
+		Team playerTeam = myTeams.GetNewPlayerTeam();
+		if(playerTeam != null)
+			Debug.Log(playerTeam.mId);
+		else
+			Debug.LogError("playerTeam == null");
+			
+		int teamPos = Team.ErrorNoFreePosition;
+		if(avatar != null && playerTeam != null)
 		{
+			teamPos = playerTeam.GetFirstFreePosition();
+
+			if(teamPos == Team.ErrorNoFreePosition)
+			{
+				Debug.LogError ("kein freier Playerslot in members gefunden");
+				myNetworkView.RPC("CharacterSelectionFailed_Rpc", RPCMode.All, netPlayer);
+				return;
+			}
+
 			//new Player will be registered in PlayerDictionary (Server)
-			SetupNewPlayer(netPlayer, avatar.charId);
+			SetupNewPlayer(netPlayer, avatar.charId, playerTeam.mId, teamPos);
 		}
 		else
 		{
-			//TODO myNetworkView.RPC("CharacterSelectionFailed_Rpc", requestedNetPlayer);
+			// FEHLER!
+			if(avatar == null)
+				Debug.LogError("avatar == null");	
+			if(playerTeam == null)
+				Debug.LogError("playerTeam == null");
+
+			myNetworkView.RPC("CharacterSelectionFailed_Rpc", RPCMode.All, netPlayer);
 			return;
 		}
 
 		//Server notifys other Clients about new Player
-		myNetworkView.RPC("OnPlayerConnected_Rpc", RPCMode.All, netPlayer, avatar.charId);
+		myNetworkView.RPC("OnPlayerConnected_Rpc", RPCMode.All, netPlayer, avatar.charId, playerTeam.mId, teamPos);
 	}
 
 
@@ -411,13 +452,17 @@ public class UnityNetworkManager : MonoBehaviour {
 	/// <param name="netPlayer">Net player.</param>
 	/// <param name="characterAvatarId">Character avatar identifier.</param>
 	[RPC]
-	void OnPlayerConnected_Rpc(NetworkPlayer netPlayer, int characterAvatarId)
+	void OnPlayerConnected_Rpc(NetworkPlayer netPlayer, int characterAvatarId, int teamId, int teamPos)
 	{
 		if(UserIsAuthoritative())
+		{
+			// Server hat Spieler bereits registriert und eingestellt!
+			// RPC könnte verspätet am Server ausgeführt werden, und würde für kurze Zeit neue Einstellungen vom Spieler überschreiben!
 			return;
-		// nur Clients
+		}
 
-		SetupNewPlayer(netPlayer, characterAvatarId);
+		// nur Clients
+		SetupNewPlayer(netPlayer, characterAvatarId, teamId, teamPos);
 	}
 
 	/// <summary>
@@ -425,20 +470,53 @@ public class UnityNetworkManager : MonoBehaviour {
 	/// </summary>
 	/// <param name="netPlayer">Net player.</param>
 	/// <param name="characterAvatarId">Character avatar identifier.</param>
-	void SetupNewPlayer(NetworkPlayer netPlayer, int characterAvatarId)
+	void SetupNewPlayer(NetworkPlayer netPlayer, int characterAvatarId, int teamId, int teamPos)
 	{
+		// hole Character aus CharacterLibrary
 		SmwCharacter cA = myCharacterLibrary.characterList.Get(characterAvatarId);
-		if(cA != null)
+
+		// hole TeamInformation aus TeamLibrary
+		Team team = myTeams.GetTeam(teamId);
+
+		if (team == null)
 		{
+			// abbrechen
+			// return null;
+			// return ErrorCode
+			Debug.LogError(this.ToString() + " team == null");
+        }
+
+		if(cA == null)
+		{
+			Debug.LogError("SetupNewPlayer() characterAvatarId " + characterAvatarId + " is wrong!");
+        }
+        
+        if(cA != null && team != null)
+        {
+
 			// character is selected
 			cA.charInUse = true;
-			
+
+			// check if Sprite can be accessed
+			//TODO
+			// change Character Colors (Team Color)
+			TeamColor.ChangeColors(team.mColors, cA.charSpritesheet[0].texture);
 			
 			// create new Player
 			Player newPlayer = new Player(netPlayer, cA);
 			Debug.LogError(this.ToString() + " newPlayer Hash: " + newPlayer.GetHashCode());
 			// register newPlayer in PlayerDictionary
 			PlayerDictionaryManager._instance.AddPlayer(netPlayer, newPlayer);
+
+			int tempTeamPos = team.AddMember(newPlayer);
+			if(tempTeamPos == teamPos)
+			{
+				Debug.Log("tempTeamPos == teamPos");
+			}
+			else
+			{
+				Debug.LogError("tempTeamPos != teamPos -> clients bekommen falsche Team Position mitgeteilt");
+			}
 
 			Debug.LogError(this.ToString() + " newPlayer in Dictionary Hash: " + newPlayer.GetHashCode());
 			
@@ -453,10 +531,6 @@ public class UnityNetworkManager : MonoBehaviour {
 			}
 			
 		}
-		else
-		{
-			Debug.LogError("SetupNewPlayer() characterAvatarId " + characterAvatarId + " is wrong!");
-		}
 	}
 
 	/// <summary>
@@ -465,22 +539,24 @@ public class UnityNetworkManager : MonoBehaviour {
 	/// <param name="netPlayer">Net player.</param>
 	void SendCurrentPlayerDictionary(NetworkPlayer netPlayer)
 	{
+		// all other Clients
 		foreach(NetworkPlayer currentNetPlayer in Network.connections)
 		{
 			Player currentPlayer;
 			if(PlayerDictionaryManager._instance.TryGetPlayer(currentNetPlayer, out currentPlayer))
 			{
 				// found Player in playerDictionary
-				myNetworkView.RPC("OnPlayerConnected_Rpc", netPlayer, currentNetPlayer, currentPlayer.characterScriptableObject.charId);
+				myNetworkView.RPC("OnPlayerConnected_Rpc", netPlayer, currentNetPlayer, currentPlayer.characterScriptableObject.charId, currentPlayer.team.mId, currentPlayer.teamPos);
 			}
 		}
 
+		// Server!!!!
 		if(PlayerDictionaryManager.serverHasPlayer)
 		{
 			Player currentPlayer;
 			if(PlayerDictionaryManager._instance.TryGetPlayer(Network.player, out currentPlayer))
 			{
-				myNetworkView.RPC("OnPlayerConnected_Rpc", netPlayer, Network.player, currentPlayer.characterScriptableObject.charId);
+				myNetworkView.RPC("OnPlayerConnected_Rpc", netPlayer, Network.player, currentPlayer.characterScriptableObject.charId, currentPlayer.team.mId, currentPlayer.teamPos);
 			}
 			else
 			{
@@ -631,10 +707,111 @@ public class UnityNetworkManager : MonoBehaviour {
 			return null;
 	}
 
+	[RPC]
+	void SwitchTeam_Rpc (NetworkPlayer requestedNetPlayer, NetworkMessageInfo inf)
+	{
+		Debug.LogWarning("SwitchTeam_Rpc");
+		if(!UserIsAuthoritative())
+			return;
+		// Server only
+		// jeder Character kann nur einmal gewählt werden, damit es fair bleibt entscheidet der Server wer
+		// welchen Character bekommt: First Come First Get
 
+		Player player = GetPlayer(requestedNetPlayer);
+		
+		Team playerTeam = null;
+		int currentTeamId = -1;
+		
+		SmwCharacter currentAvatar = null;
+		int currentSelectedCharacterAvatarId = -1;
 
-	/// <summary>
-	/// Nexts the character_ rpc.
+		int newTeamId = TeamLibrary.TeamIdNoTeam;
+
+		if(player != null)
+		{
+			playerTeam = player.team;
+			if(playerTeam != null)
+			{
+				//
+				//	Important Part ->
+				//
+				currentTeamId = playerTeam.mId;
+
+				newTeamId = myTeams.GetTeamIdWithLowestMemberCount();
+
+				Debug.Log("Server: currentTeamId = " + currentTeamId);
+				Debug.Log("Server: newTeamId = " + newTeamId);
+
+				//
+				//	<- Important Part 
+				//
+
+			}
+			else
+			{
+				// Spieler hat kein Team !
+				Debug.LogError("Spieler hat kein Team!");
+				
+				playerTeam = myTeams.GetNewPlayerTeam();
+				if( playerTeam != null)
+				{
+					player.team = playerTeam;
+					currentTeamId = playerTeam.mId;
+				}
+				else
+				{
+					Debug.LogError("Spieler hat IMMER NOCH KEIN kein Team!");
+					return;
+				}
+			}
+			
+			currentAvatar = player.characterScriptableObject;
+			if(currentAvatar != null)
+			{
+				currentSelectedCharacterAvatarId = currentAvatar.charId;
+			}
+			else
+			{
+				// Spieler hat kein CharacterAvatar !
+                Debug.LogError("Spieler hat keinen CharacterAvatar!");
+				return;
+            }
+        }
+        else
+        {
+            // Spieler ist nicht in playerDictionary registriert !
+            Debug.LogError("Spieler ist nicht in playerDictionary registriert!");
+            return;		//TODO added 10.04.2015
+        }
+
+		if (currentTeamId == newTeamId)
+		{
+			myNetworkView.RPC("TeamChangeFailed_Rpc", RPCMode.All, requestedNetPlayer);					//TODO server!!!!!!! cant send to server network.player
+        }
+        else
+		{
+			// auf Server wird auftrag schon übernommen
+			player.team.RemoveMember(player);
+			Team newTeam = myTeams.GetTeam(newTeamId);
+			if (newTeam != null)
+			{
+				int newTeamPos = newTeam.AddMember(player);
+				if(newTeamPos != Team.ErrorNoFreePosition)
+				{
+					myNetworkView.RPC("UpdatePlayerSelection_Rpc", RPCMode.All, requestedNetPlayer, currentSelectedCharacterAvatarId, newTeamId, player.teamPos);
+				}
+				else
+				{
+					Debug.LogError ("// kein freier Playerslot in members gefunden");
+				}
+			}
+
+		}
+
+    }
+    
+    /// <summary>
+    /// Nexts the character_ rpc.
 	/// </summary>
 	/// <param name="requestedNetPlayer">Requested net player.</param>
 	/// <param name="info">Info.</param>
@@ -652,11 +829,39 @@ public class UnityNetworkManager : MonoBehaviour {
 
 		// aktuellen Character herausfinden
 		Player player = GetPlayer(requestedNetPlayer);
+
+		Team playerTeam = null;
+		int currentTeamId = -1;
+		
 		SmwCharacter currentAvatar = null;
 		int currentSelectedCharacterAvatarId = -1;
+
 		if(player != null)
 		{
-			currentAvatar = player.characterScriptableObject;
+			playerTeam = player.team;
+			if(playerTeam != null)
+			{
+				currentTeamId = playerTeam.mId;
+			}
+			else
+			{
+				// Spieler hat kein Team !
+				Debug.LogError("Spieler hat kein Team!");
+
+				playerTeam = myTeams.GetNewPlayerTeam();
+				if( playerTeam != null)
+				{
+					player.team = playerTeam;
+					currentTeamId = playerTeam.mId;
+				}
+				else
+				{
+					Debug.LogError("Spieler hat IMMER NOCH KEIN kein Team!");
+					return;
+				}
+            }
+            
+            currentAvatar = player.characterScriptableObject;
 			if(currentAvatar != null)
 			{
 				currentSelectedCharacterAvatarId = currentAvatar.charId;
@@ -671,6 +876,7 @@ public class UnityNetworkManager : MonoBehaviour {
 		{
 			// Spieler ist nicht in playerDictionary registriert !
 			Debug.LogError("Spieler ist nicht in playerDictionary registriert!");
+			return;		//TODO added 10.04.2015
 		}
 
 		// hole nächsten verfügbaren Character aus library 
@@ -687,7 +893,7 @@ public class UnityNetworkManager : MonoBehaviour {
 			// kein freier Character gefunden!
 			Debug.LogWarning("kein freier Character gefunden!");
 			// wenn keiner mehr existiert abbrechen und requestedPlayer mitteilen (Sound)
-			myNetworkView.RPC("NextCharacterFailed_Rpc", requestedNetPlayer);					//TODO server!!!!!!! cant send to server network.player
+			myNetworkView.RPC("NextCharacterFailed_Rpc", RPCMode.All, requestedNetPlayer);					//TODO server!!!!!!! cant send to server network.player
 			return;
 		}
 
@@ -703,22 +909,42 @@ public class UnityNetworkManager : MonoBehaviour {
 //			Debug.Log(requestedNetPlayer.ToString() + " ist Server (Hosting Player)");
 			
 
-		myNetworkView.RPC("UpdatePlayerSelection_Rpc", RPCMode.All, requestedNetPlayer, nextUnSelectedCharacterAvatarId);
+		myNetworkView.RPC("UpdatePlayerSelection_Rpc", RPCMode.All, requestedNetPlayer, nextUnSelectedCharacterAvatarId, currentTeamId, player.teamPos);
 	}
 
+	[RPC]
+	void TeamChangeFailed_Rpc(NetworkPlayer requestedNetPlayer)
+	{
+		if (requestedNetPlayer == Network.player)
+		{
+			// mein Versuch das Team zu wechseln ging schief.
+			Debug.LogError("TeamChangeFailed_Rpc");
+        }
+    }
+    
+	[RPC]
+	void NextCharacterFailed_Rpc(NetworkPlayer requestedNetPlayer)
+    {
+		if (requestedNetPlayer == Network.player)
+		{
+			// mein Versuch einen neuen Character zuwählen ging schief.
+			Debug.LogError("NextCharacterFailed_Rpc");
+		}
+	}
+        
 	/// <summary>
 	/// Updates the player selection_ rpc.
 	/// </summary>
 	/// <param name="selector">Selector.</param>
 	/// <param name="characterAvatarID">Character avatar I.</param>
 	[RPC]
-	void UpdatePlayerSelection_Rpc(NetworkPlayer selector, int characterAvatarID)
+	void UpdatePlayerSelection_Rpc(NetworkPlayer selector, int characterAvatarID, int teamId, int teamPos)
 	{
 		Debug.LogWarning("UpdatePlayerSelection_Rpc selector:" + selector + ", charID= " + characterAvatarID);
 		Player player = GetPlayer(selector);
 		if(player != null)
 		{
-			Debug.LogWarning("UpdatePlayerSelection_Rpc, Spieler gefunden");
+//			Debug.LogWarning("UpdatePlayerSelection_Rpc, Spieler gefunden");
 			if(UserIsClient())
 			{
 				// nur auf Clients setzen (Server hat bereits)
@@ -731,6 +957,13 @@ public class UnityNetworkManager : MonoBehaviour {
 			//player neuen character zuweisen
 			player.characterScriptableObject = nextAvatar;
 
+			if (player.team != null)
+			{
+				//TODO checks
+				TeamColor.ChangeColors(player.team.mColors, nextAvatar.charSpritesheet[0].texture);
+			}
+
+
 			Debug.LogWarning("UpdatePlayerSelection_Rpc, Next Avatar " + nextAvatar.name + " Id:" +nextAvatar.charId);
 
 			if(UserIsClient())
@@ -741,20 +974,22 @@ public class UnityNetworkManager : MonoBehaviour {
 		}
 		else
 		{
-			Debug.LogError("kein Spieler "+ selector.ToString() +" in playerDictionary gefunden!");
+			Debug.LogError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! kein Spieler "+ selector.ToString() +" in playerDictionary gefunden!");
+			return; // added 10.04.2015
 //TODO		Eigentlich Connected Spieler zum Server
 			// Server meldet das allen mit freier Character Zuweisung (Spieler ist in playerDicitonary enthalten)
 			// Server spieler (localhost) client connected aber nicht zum Server und hat deshalb keinen playerDictionary eintrag
 			// Spieler existiert nicht in playerDicitionary!
-			SetupNewPlayer(selector, characterAvatarID);
+			SetupNewPlayer(selector, characterAvatarID, teamId, teamPos);
 			player = GetPlayer(selector);
 			if(player == null)
 			{
-				Debug.LogError("versucht Spieler neu zu erstellen fehlgeschlagen");
+				Debug.LogError("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! versucht Spieler neu zu erstellen fehlgeschlagen");
+				return; // added 10.04.2015
 			}
 			else
 			{
-				Debug.LogWarning("Spieler erfolgreich nachträglich hinzugefügt!");
+				Debug.LogWarning("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Spieler erfolgreich nachträglich hinzugefügt!");
 			}
 		}
 

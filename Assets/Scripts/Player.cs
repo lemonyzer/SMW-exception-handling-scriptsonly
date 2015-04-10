@@ -7,6 +7,8 @@ public class Player
 {
 	public bool loadingLevelComplete = false;
 	private int id;
+	public int teamPos;
+	public Team team;
 	private string name;
 //	private PhotonPlayer photonPlayer;
 	private NetworkPlayer networkPlayer;
