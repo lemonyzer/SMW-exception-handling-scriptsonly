@@ -1,13 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public class Team
+{
+	public static Color32[] referenceColors = new Color32[] {
+		new Color32 ((byte)128, (byte)0, (byte)0, (byte)255),
+		new Color32 ((byte)192, (byte)0, (byte)0, (byte)255),
+		new Color32 ((byte)255, (byte)0, (byte)0, (byte)255) };
+	
+	public static Color32[] teamGreenColors = new Color32[] {
+		new Color32 ((byte)90, (byte)146, (byte)0, (byte)255),
+		new Color32 ((byte)123, (byte)178, (byte)0, (byte)255),
+		new Color32 ((byte)165, (byte)219, (byte)0, (byte)255) };
+}
+
 public class ColorScript : MonoBehaviour {
 
 	SpriteRenderer spriteRenderer;
 
-	int colorId = 0;
-	int mColorCount = 4;
-	int mColorIntensityCount = 3;
+	bool reverse = false;
 
 	// Use this for initialization
 	void Start () {
@@ -23,94 +34,70 @@ public class ColorScript : MonoBehaviour {
 	{
 		if (GUILayout.Button ("Change Color"))
 		{
-			EditSpriteRendererSprite(spriteRenderer, colorId);
-			colorId++;
-			colorId = colorId % mColorCount;
-//			Debug.Log(colorId);
+			EditSpriteRendererSprite(spriteRenderer, reverse);
+			reverse = !reverse;
 		}
 	}
 
-	void EditSpriteRendererSprite (SpriteRenderer fSpriteRenderer, int fColorId)
+	void EditSpriteRendererSprite (SpriteRenderer fSpriteRenderer, bool freverse)
 	{
-		ModifyTexture2D(fSpriteRenderer.sprite.texture, fColorId);
+		ModifyTexture2D(fSpriteRenderer.sprite.texture, freverse);
 	}
 	
-	public void ModifyTexture2D(Texture2D texture, int fColorId)
+	public void ModifyTexture2D(Texture2D texture, bool freverse)
 	{
-		int fPixelChanged = 0;
-		texture.filterMode = FilterMode.Bilinear;
+		texture.filterMode = FilterMode.Point;
 		texture.wrapMode = TextureWrapMode.Clamp;
 		
 		for (int y = 0; y < texture.height; y++)
 		{
-			#if UNITY_EDITOR
-			//Debug.Log("y: " + y);
-			#endif
 			for (int x = 0; x < texture.width; x++)
 			{
-				Color32 currentColor = texture.GetPixel (x,y);
 
-//#if UNITY_EDITOR
-//				if( y == 0 && x == 0)
-//				{
-//					Debug.Log("GetPixel("+y+", "+x+") = " + currentColor);
-//				}
-//				else if ( y == 18 && x == 18)
-//				{
-//					Debug.Log("GetPixel("+y+", "+x+") = " + currentColor);
-//				}
-//#endif
+				Color32 currentColor = texture.GetPixel (x,y);
 
 				Color32 newColor = new Color32();
 				bool pixelHasReferenceColor = false;
 				// schleife:
 				// schaue ob aktueller Pixel einer der folgenden referenz Farben besitzt:
-				for (int iColor = 0; iColor < mColorCount; iColor++)
+				for (int i = 0; i < Team.referenceColors.Length; i++)
 				{
+					if (Team.referenceColors.Length != Team.teamGreenColors.Length)
+						return;
+
 					Color32 refColor;
-					for (int iColorIntensity = 0; iColorIntensity < mColorIntensityCount; iColorIntensity++)
+
+					if(!freverse)
 					{
-						refColor = TeamColor.referenceColors[iColor,iColorIntensity];
-
-//						#if UNITY_EDITOR
-//						if( y == 0 && x == 0)
-//						{
-//							Debug.Log("refColor = " + refColor);
-//							Debug.Log("newColor = " + Team.referenceColors[fColorId,iColorIntensity]);
-//						}
-//						else if ( y == 18 && x == 18)
-//						{
-//							Debug.Log("refColor = " + refColor);
-//							Debug.Log("newColor = " + Team.referenceColors[fColorId,iColorIntensity]);
-//						}
-//						#endif
-
-						if(currentColor.Equals(refColor))
-						{
-							newColor = TeamColor.referenceColors[fColorId,iColorIntensity];
-							pixelHasReferenceColor = true;
-							break;
-						}
+						refColor = Team.referenceColors[i];
+						newColor = Team.teamGreenColors[i];
 					}
-					if(pixelHasReferenceColor)
+					else
+					{
+						refColor = Team.teamGreenColors[i];
+						newColor = Team.referenceColors[i];
+					}
+						
+					if(currentColor.Equals(refColor))
+					{
+						pixelHasReferenceColor = true;
 						break;
+					}
 				}
 				
 				if(pixelHasReferenceColor)
 				{
 					texture.SetPixel (x, y, newColor);
-					fPixelChanged++;
 				}
 				
 			}
 		}
-		Debug.Log("Anzahl an geänderten Pixel = " + fPixelChanged);
 		texture.Apply();
 	}
 
-	void CreateNewTeamSprite(int fTeamColorId)
+	void CreateNewTeamSprite()
 	{
-		Texture2D modifiedCopy = CopyAndModifyTexture2D(spriteRenderer.sprite.texture, fTeamColorId);
+		Texture2D modifiedCopy = CopyAndModifyTexture2D(spriteRenderer.sprite.texture);
 		
 		if(modifiedCopy == null)
 		{
@@ -128,7 +115,7 @@ public class ColorScript : MonoBehaviour {
 	}
 
 
-	public Texture2D CopyAndModifyTexture2D(Texture2D texture, int fColorId)
+	public Texture2D CopyAndModifyTexture2D(Texture2D texture)
 	{
 		Texture2D copyTexture = new Texture2D(texture.width, texture.height);
 		
@@ -141,30 +128,32 @@ public class ColorScript : MonoBehaviour {
 			{
 				Color32 currentColor = texture.GetPixel (x,y);
 				Color32 newColor = new Color32();
-				bool pixelHasReferenceColor = false;
+				bool pixelColorSet = false;
 				// schleife:
 				// schaue ob aktueller Pixel einer der folgenden referenz Farben besitzt:
-				for (int iColor = 0; iColor < mColorCount; iColor++)
+				for (int i = 0; i < Team.referenceColors.Length; i++)
 				{
-					Color32 refColor;
-					for (int iColorIntensity = 0; iColorIntensity < mColorIntensityCount; iColorIntensity++)
+					if (Team.referenceColors.Length != Team.teamGreenColors.Length)
+						return null;
+					
+					Color32 refColor = Team.referenceColors[i];
+					//					if(currentColor == refColor)
+					if(currentColor.Equals(refColor))
 					{
-						refColor = TeamColor.referenceColors[iColor,iColorIntensity];
-						
-						if(currentColor.Equals(refColor))
-						{
-							newColor = TeamColor.referenceColors[fColorId,iColorIntensity];
-							pixelHasReferenceColor = true;
-							break;
-						}
+						newColor = Team.teamGreenColors[i];
+						pixelColorSet = true;
+						break;
 					}
 				}
 				
-				if(!pixelHasReferenceColor)
+				if(!pixelColorSet)
 					newColor = currentColor;
 				
+				//				Color32 currentColor = texture.GetPixel (x,y);
+				//				Color32 newColor = new Color32(currentColor.g, currentColor.r, currentColor.b, currentColor.a);
+				
 				copyTexture.SetPixel (x, y, newColor);
-
+				//				texture.SetPixel (x, y, newColor);
 			}
 		}
 		copyTexture.Apply();
