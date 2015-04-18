@@ -19,6 +19,16 @@ public class SmwCharacter : ScriptableObject {
 //	{
 //		Debug.Log(this.ToString() + " Start ()");
 //	}
+	public void OnEnable()
+	{
+		Debug.Log("<color=green>" + this.ToString() + " OnEnable () </color>", this);		// OnEnable() wird bei ScriptableObject.Create asugeführt!!!!
+		Check();
+	}
+
+	void Check()
+	{
+
+	}
 
 	public string charName;
 	public int charId;

@@ -5,6 +5,11 @@ using System.Collections.Generic;
 
 public class SmwCharacterList : ScriptableObject {
 
+//	public void OnGUI()
+//	{
+//
+//	}
+
 	public List<Character> charactersList;
 	[SerializeField]
 	private List<SmwCharacter> characterSOList;
@@ -18,28 +23,40 @@ public class SmwCharacterList : ScriptableObject {
 
 	// Awake() wird bei ScriptableObject.Create asugeführt!!!!
 
-
 	private void Check()
 	{
 		if(charactersList == null)
 		{
-			Debug.LogWarning(this.ToString() + " characterSOList war nicht vorhanden");
+			Debug.LogWarning("<color=red>" + this.ToString() + " characterSOList war nicht vorhanden</color>", this);
 			characterSOList = new List<SmwCharacter>();
 		}
 		else
-			Debug.LogWarning(this.ToString() + " characterSOList war vorhanden");
+			Debug.LogWarning("<color=green>" + this.ToString() + " characterSOList war vorhanden</color>", this);
+
+		//TODO hideFlags = HideFlags.HideAndDontSave;
 	}
 
-
+	/**
+	 * ArgumentException: ToString can only be called from the main thread.
+	 * Constructors and field initializers will be executed from the loading thread when loading a scene.
+	 * Don't use this function in the constructor or field initializers, instead move initialization code to the Awake or Start function.
+	 * SmwCharacterList..ctor () (at Assets/Scripts/_Character/SmwCharacterList.cs:36)
+	 **/
 	public SmwCharacterList()
 	{
-		Debug.LogWarning(this.ToString() + " Konstruktor () - > ScriptableObject erzeugt");		// wird auch at Runtime ausgeführt
-		Check();
+//		Debug.LogWarning(this.ToString() + " Konstruktor () - > ScriptableObject erzeugt");		// wird auch at Runtime ausgeführt
+//		Check();
 	}
 
 	public void Awake()
 	{
 		Debug.LogWarning(this.ToString() + " Awake ()");		// Awake() wird bei ScriptableObject.Create asugeführt!!!!
+		Check();
+	}
+
+	public void OnEnable()
+	{
+		Debug.LogWarning(this.ToString() + " OnEnable ()");		// OnEnable() wird bei ScriptableObject.Create asugeführt!!!!
 		Check();
 	}
 
