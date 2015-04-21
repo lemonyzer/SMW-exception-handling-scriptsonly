@@ -77,7 +77,7 @@ public class MapPreviewWindow : EditorWindow {
 		GUILayout.Space(10);
 		GUILayout.Label("SMW Map Properties", EditorStyles.boldLabel);
 
-		GUILayout.Label ("Auto Import", EditorStyles.boldLabel);
+		GUILayout.Label ("Single Import", EditorStyles.boldLabel);
 
 //		guiSkin = (GUISkin) EditorGUILayout.ObjectField("guiSkin", guiSkin, typeof(GUISkin), false, GUILayout.ExpandWidth(true));
 //		if(guiSkin != null)
@@ -129,32 +129,7 @@ public class MapPreviewWindow : EditorWindow {
 			if(OnGUI_OpenFile(out m_LastMapPath))
 			{
 				m_FileOpened = true;
-				// Class
-				//				currentMap = new Map(g_TilesetManager);		// on time (on button clicked)
-				
-				// ScriptableObject
-				//				currentMap = ScriptableObject.CreateInstance<Map>();
-				//				currentMap.SetTiletsetManager(g_TilesetManager);
-				//				currentMap.loadMap(m_LastWorkingMapImportPath, ReadType.read_type_preview);
-				
-				// Asset - ScripableObject // TODO savepath+name Create(path);
-				string mapName = Path.GetFileNameWithoutExtension(m_LastMapPath);
-				if(string.IsNullOrEmpty(mapName))
-					mapName = "noMapName";
-				m_CurrentMap = Create(mapName);
-				m_CurrentMap.mapName = mapName;
-//				m_CurrentMap.SetTiletsetManager(g_TilesetManager);
-				bool loadWithoutError = m_CurrentMap.loadMap(m_LastWorkingMapImportPath, ReadType.read_type_full, g_TilesetManager);
-				if(!loadWithoutError)
-				{
-					// import mit Fehler
-					string currentAssetPath = AssetDatabase.GetAssetPath(m_CurrentMap);
-					string newAssetName = "_import_error_"+mapName;
-					AssetDatabase.RenameAsset(currentAssetPath, newAssetName);
-				}
-				EditorUtility.SetDirty(m_CurrentMap);
-//				EditorApplication.SaveAssets();
-				AssetDatabase.SaveAssets();
+				m_CurrentMap = OpenMapFile(m_LastMapPath, false);
 			}
 			else
 			{
@@ -188,7 +163,7 @@ public class MapPreviewWindow : EditorWindow {
 			w_UseAssetSubSpritesToggle = GUILayout.Toggle(w_UseAssetSubSpritesToggle, "Use Sprite from Asset, if false Sprites get sliced from Tileset-Sprite");
 			if (GUILayout.Button("Create Unity Map", GUILayout.ExpandWidth(false)))
 			{
-				CreateUnityMap(m_CurrentMap, w_BackgroundAssetFolderPath);
+				CreateUnityMap(m_CurrentMap, w_BackgroundAssetFolderPath, w_UseAssetSubSpritesToggle);
 			}
 			m_CurrentMap.OnGUI_Preview();
 		}
@@ -196,6 +171,26 @@ public class MapPreviewWindow : EditorWindow {
 //		if (GUILayout.Button("Select TileManager", GUILayout.ExpandWidth(false)))
 //		{
 //		}
+		if(g_TilesetManager != null)
+		{
+			GUI.enabled = true;
+		}
+		else
+		{
+			EditorGUILayout.LabelField("no g_TilesetManager selected");
+			GUI.enabled = false;
+		}
+		if(AssetDatabase.IsValidFolder(w_BackgroundAssetFolderPath) == false)
+		{
+			EditorGUILayout.LabelField("select existing Background Asset Folder!", EditorStyles.boldLabel);
+			GUI.enabled = false;
+		}
+		else
+		{
+			GUI.enabled = true;
+		}
+
+		OnGUI_AutoImport();
 
 		GUILayout.EndVertical();
 		GUILayout.EndHorizontal();
@@ -204,26 +199,61 @@ public class MapPreviewWindow : EditorWindow {
 //		Repaint();
 	}
 
-	void CreateUnityMap(Map mapSO, string backgroundAssetFolderPath)
+	Map OpenMapFile(string mapFilePath, bool isBatch)
+	{
+		// Class
+		//				currentMap = new Map(g_TilesetManager);		// on time (on button clicked)
+		
+		// ScriptableObject
+		//				currentMap = ScriptableObject.CreateInstance<Map>();
+		//				currentMap.SetTiletsetManager(g_TilesetManager);
+		//				currentMap.loadMap(m_LastWorkingMapImportPath, ReadType.read_type_preview);
+		
+		// Asset - ScripableObject // TODO savepath+name Create(path);
+		string mapName = Path.GetFileNameWithoutExtension(mapFilePath);
+		if(string.IsNullOrEmpty(mapName))
+			mapName = "noMapName";
+		Map currentMap = Create(mapName);
+		currentMap.mapName = mapName;
+		//				currentMap.SetTiletsetManager(g_TilesetManager);
+		bool loadWithoutError = currentMap.loadMap(mapFilePath, ReadType.read_type_full, g_TilesetManager);
+		if(!loadWithoutError)
+		{
+			// import mit Fehler
+			string currentAssetPath = AssetDatabase.GetAssetPath(currentMap);
+			string newAssetName = "_import_error_"+mapName;
+			AssetDatabase.RenameAsset(currentAssetPath, newAssetName);
+		}
+
+		EditorUtility.SetDirty(currentMap);
+		if(!isBatch)
+		{
+			AssetDatabase.SaveAssets();
+		}
+		return currentMap;
+		//				EditorApplication.SaveAssets();
+	}
+
+	GameObject CreateUnityMap(Map mapSO, string backgroundAssetFolderPath, bool useAssetSubSprites)
 	{
 		if(mapSO == null)
 		{
 			Debug.LogError("mapSO == NULL");
-			return;
+			return null;
 		}
 
 		TilesetTile[,,] mapData = mapSO.GetMapData();
 		if(mapData == null)
 		{
 			Debug.LogError("mapSO.GetMapData() == NULL -> keine Informationen über Tile<->SubSprite vorhanden");
-			return;
+			return null;
 		}
 
 		bool[,,] customMapData = mapSO.GetCustomMapData();
 		if(customMapData == null)
 		{
 			Debug.LogError("mapSO.GetCustomMapData() == NULL -> keine Informationen welches Tile ein Sprite enthält");
-			return;
+			return null;
 		}
 
 		GameObject mapRootGO = new GameObject(mapSO.mapName + (w_UseAssetSubSpritesToggle ? "_AssetSubSprites" : "_no"));
@@ -278,7 +308,7 @@ public class MapPreviewWindow : EditorWindow {
 						int tilePosY = mapData[x,y,l].iRow;
 						Tileset tileSet = g_TilesetManager.GetTileset(iTileSetId);
 						Sprite tileSprite;
-						if(w_UseAssetSubSpritesToggle)
+						if(useAssetSubSprites)
 							tileSprite = tileSet.GetTileSprite(tilePosX, tilePosY);
 						else
 							tileSprite = tileSet.GetNewCreatetTileSprite(tilePosX, tilePosY);	
@@ -422,7 +452,7 @@ public class MapPreviewWindow : EditorWindow {
 
 								Tileset tileSet = g_TilesetManager.GetTileset(iTileSetId);
 								Sprite tileSprite;
-								if(w_UseAssetSubSpritesToggle)
+								if(useAssetSubSprites)
 									tileSprite = tileSet.GetTileSprite(tilePosX, tilePosY);
 								else
 									tileSprite = tileSet.GetNewCreatetTileSprite(tilePosX, tilePosY);	
@@ -440,6 +470,8 @@ public class MapPreviewWindow : EditorWindow {
 		}
 		else
 			Debug.Log("Map: " + mapSO.mapName + " Platforms == NULL -> Map hat keine MovingPlatform");
+
+		return mapRootGO;
 	}
 
 	void TileTypeToUnityTranslation(TileType tileType, GameObject tileGO)		// Polymorphy!
@@ -519,6 +551,182 @@ public class MapPreviewWindow : EditorWindow {
 		{
 			relPath = null;
 			return false;
+		}
+	}
+
+	string EP_lastBatchMapsImportFolder = "EP_lastBatchMapsImportFolder";
+	string batch_MapsImportPath;
+	string batch_LastWorkingMapsImportPath;
+	int batchQuantity = 2;
+	void OnGUI_AutoImport()
+	{
+		GUILayout.Label ("Auto Import", EditorStyles.boldLabel);
+		GUILayout.Label ("Path = " + batch_MapsImportPath, GUILayout.ExpandWidth(false));
+		GUILayout.BeginVertical ();
+		if (GUILayout.Button("Select Import Folder", GUILayout.ExpandWidth(false)))
+		{
+			// open folder dialog
+			batch_MapsImportPath = EditorUtility.OpenFolderPanel ("Select Import Folder Maps", batch_LastWorkingMapsImportPath, "");
+			if(!string.IsNullOrEmpty(batch_MapsImportPath))
+			{
+				batch_LastWorkingMapsImportPath = batch_MapsImportPath;
+				//absolutenPath in EditorPrefs speichern 
+				EditorPrefs.SetString(EP_lastBatchMapsImportFolder, batch_LastWorkingMapsImportPath);
+				window_Batch_FileInfo = GetFileList(batch_MapsImportPath);
+			}
+			else
+			{
+				//WITCHTIG!!!!!!!!!!
+				batch_MapsImportPath = "";
+				window_Batch_FileInfo = null;
+				
+			}
+			
+		}
+		batchQuantity = EditorGUILayout.IntField("Import Anzahl:", batchQuantity);
+		if(!Directory.Exists(batch_MapsImportPath))
+		{
+			EditorGUILayout.LabelField("select existing Maps Folder!", EditorStyles.boldLabel);
+			GUI.enabled = false;
+		}
+		if(batchQuantity < 0)
+		{
+			GUI.enabled = false;
+		}
+		if (GUILayout.Button("Start Batch Import", GUILayout.ExpandWidth(false)))
+		{
+			StartBatchImport(g_TilesetManager, w_BackgroundAssetFolderPath, batch_MapsImportPath, batchQuantity);
+		}
+//		if (GUILayout.Button("Open Folder in Unity", GUILayout.ExpandWidth(false)))
+//		{
+//			// open folder dialog
+//			if(!string.IsNullOrEmpty(batch_LastWorkingMapsImportPath))
+//			{
+//				string relPath = AbsolutPathToUnityProjectRelativePath(batch_LastWorkingMapsImportPath);
+//				if(relPath != null)
+//				{
+//					EditorUtility.FocusProjectWindow();
+//					UnityEngine.Object folder = AssetDatabase.LoadAssetAtPath (relPath,typeof(UnityEngine.Object));
+//					Selection.activeObject = folder;
+//				}
+//			}
+//		}
+		GUILayout.EndVertical ();
+	}
+
+	string AbsolutPathToUnityProjectRelativePath(string absPath)
+	{
+		if (absPath.StartsWith(Application.dataPath))
+		{
+			string relPath = absPath.Substring(Application.dataPath.Length - "Assets".Length);
+			Debug.Log(absPath);
+			Debug.Log(relPath);
+			
+			return relPath;
+		}
+		return null;
+	}
+
+	FileInfo[] window_Batch_FileInfo = null;
+	
+	FileInfo[] GetFileList (string absPath)
+	{
+		if (!string.IsNullOrEmpty(absPath))
+		{
+			DirectoryInfo dir = new DirectoryInfo(absPath);
+			FileInfo[] info = dir.GetFiles("*.map");
+			
+			
+			// Einmalige ausgabe auf Console
+			foreach (FileInfo f in info)
+			{
+				//				Debug.Log("Found " + f.Name);
+				//				Debug.Log("f.DirectoryName=" + f.DirectoryName);
+				//				Debug.Log("f.FullName=" + f.FullName);
+				//				Debug.Log("modified=" + f.FullName.Substring(Application.dataPath.Length - "Assets".Length));
+				// relative pfad angabe
+//relPath		string currentMapPath = f.FullName.Substring(Application.dataPath.Length - "Assets".Length);
+				string currentMapPath = f.FullName;		//absPath
+				Debug.Log("currentMapPath=" + currentMapPath);
+				
+//				string mapName = GetMapNameFromFileName(f.Name);
+//				if(mapName != null)
+//				{
+//					Debug.Log(mapName);
+//				}
+//				else
+//				{
+//					Debug.LogError(f.Name + " konnte mapName Name nicht extrahieren");
+//				}
+			}
+			return info;
+		}
+		else
+		{
+			Debug.LogError("absPath == \"\" or NULL ");
+			return null;
+		}
+	}
+
+	public string GetMapNameFromFileName(string fileName)
+	{
+		return fileName;
+	}
+
+	void StartBatchImport(TilesetManager tilesetManager, string backgroundAssetFolderPath, string importPath, int batchNumLimit)
+	{
+		Debug.Log("<color=green><b>StartBatchImport</b></color>");
+		if(string.IsNullOrEmpty(importPath))
+		{
+			Debug.LogError ("importPath == \"\" oder null !!!");
+			return;
+		}
+		
+		//TODO DONE ordner auf existenz prüfen
+		FileInfo[] info = GetFileList(importPath);
+
+		if(info == null)
+		{
+			Debug.LogError ("FileInfo[] == null !!!");
+			return;
+		}
+
+		if (tilesetManager == null) {
+			Debug.LogError ("tilesetManager == null !!!");
+			return;
+		}
+
+		if(!AssetDatabase.IsValidFolder(backgroundAssetFolderPath))
+		{
+			Debug.LogError ("backgroundAssetFolderPath = " + backgroundAssetFolderPath + " is not valid (needs to be in Assets/");
+			return;
+		}
+		int count = 1;
+		if(info != null)
+		{
+			foreach (FileInfo f in info)
+			{
+				// Abbruchbedingung, batchNum sagt wie viele Maps automatisch erstellt werden sollen, batchNum = 0 heißt alle im Ordner!
+				if(batchNumLimit != 0)
+				{
+					if(count > batchNumLimit)
+						break;
+					else
+						Debug.Log("count = " + count + " < " + batchNumLimit + " batchNumLimit"  );
+				}
+				count++;
+
+				// relative pfad angabe
+				string currentAbsMapPath = f.FullName;
+				Debug.Log("<color=white><b>Found " + currentAbsMapPath + "</b></color>");
+
+				Map currentBatchMap = OpenMapFile(currentAbsMapPath, true);
+				GameObject currentBatchMapGO = CreateUnityMap(currentBatchMap, backgroundAssetFolderPath, w_UseAssetSubSpritesToggle);
+
+				currentBatchMapGO.SetActive(false);
+
+			}
+			AssetDatabase.SaveAssets();
 		}
 	}
 }
