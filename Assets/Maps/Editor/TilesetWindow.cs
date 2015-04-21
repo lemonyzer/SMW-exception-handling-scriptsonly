@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -7,21 +8,21 @@ using System.IO;
 using UnityEditor;
 
 public class TilesetWindow : EditorWindow {
-
+	
 	#region Variables
 	static TilesetWindow currWindow;
 	Tileset currentTileset;
 	string w_TilesetTileTypeFilePath;
 	List<TileType> w_TilesetTileTypesList;
 	#endregion
-
+	
 	#region Main Methods
-
+	
 	[MenuItem("SMW/Tileset Create Empty")]
 	public static Tileset CreateEmpty()
 	{
 		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
-
+		
 		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/tileset_NewEmptySO.asset");
 		AssetDatabase.SaveAssets();
 		
@@ -29,22 +30,22 @@ public class TilesetWindow : EditorWindow {
 		Selection.activeObject = newTilesetAsset;
 		return newTilesetAsset;
 	}
-
-	public Tileset Create(Sprite tilesetSprite, List<TileType> tileTypesList, Vector2 tilePivot)
+	
+	public Tileset Create(string tilesetName, Sprite tilesetSprite, List<TileType> tileTypesList, Vector2 tilePivot)
 	{
 		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
-		newTilesetAsset.tilesetName = tilesetSprite.name;
+		newTilesetAsset.tilesetName = tilesetName;
 		newTilesetAsset.TilesetSprite = tilesetSprite;
 		newTilesetAsset.TileTypes = tileTypesList.ToArray();
 		newTilesetAsset.tilePivot = tilePivot;
-		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/Maps/tileset_" + tilesetSprite.name + ".asset"); //TODO dateiname nur gültige zeichen
+		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/Maps/tileset_" + tilesetName + ".asset"); //TODO dateiname nur gültige zeichen
 		AssetDatabase.SaveAssets();
 		
 		//		EditorUtility.FocusProjectWindow();		// <-- Satck Overflow
 		Selection.activeObject = newTilesetAsset;
 		return newTilesetAsset;
 	}
-
+	
 	[MenuItem("SMW/Tileset Window")]
 	public static void Init()
 	{
@@ -52,26 +53,31 @@ public class TilesetWindow : EditorWindow {
 		{
 			currWindow = (TilesetWindow) EditorWindow.GetWindow(typeof(TilesetWindow));
 			currWindow.title = "Tileset";
-//			currWindow.minSize = new Vector2(256,512);
+			//			currWindow.minSize = new Vector2(256,512);
 		}
 		else
 		{
 			currWindow.Show();
 		}
 	}
-
+	
 	int w_TilesetPixelPerUnit = 32;
 	int w_SubTilePosX = 0;
 	int w_SubTilePosY = 0;
-
-//	Sprite w_subTile = null;
-
+	
+	//	Sprite w_subTile = null;
+	
 	SpriteAlignment w_TileSpriteAlignment = SpriteAlignment.BottomLeft;
 	Sprite w_TilesetSprite = null;
 	Vector2 w_customTilePivotOffset = Vector2.zero;
 	int w_TilePixelWidth = 32;
 	int w_TilePixelHeight = 32;
+	
+	Color32 w_TargetColor = new Color32(255,0,255,255);
+	Color32 w_ReplacementColor = new Color32(255,0,255,0);
 
+	string w_TilesetName = "";
+	
 	void OnGUI()
 	{
 		//EditorGUILayout.Space(10);
@@ -80,24 +86,38 @@ public class TilesetWindow : EditorWindow {
 			GUILayout.Space(10);
 			GUILayout.BeginVertical();
 			{
-			GUILayout.Space(10);
-			GUILayout.Label("SMW Tileset Creation", EditorStyles.boldLabel);
+				GUILayout.Space(10);
+				GUILayout.Label("SMW Tileset Creation", EditorStyles.boldLabel);
 				GUILayout.BeginHorizontal();
 				{
 					GUILayout.BeginVertical();
 					{
 						GUILayout.Label("Tileset from Sprite", EditorStyles.boldLabel);
-//						EditorGUILayout.LabelField("Sprite");
+						//						EditorGUILayout.LabelField("Sprite");
 						EditorGUI.BeginChangeCheck();
 						w_TilesetSprite = EditorGUILayout.ObjectField("Sprite", w_TilesetSprite, typeof(Sprite), false,  GUILayout.ExpandWidth(true)) as Sprite;
 						if(EditorGUI.EndChangeCheck())
 						{
+							if(w_TilesetSprite != null)
+								w_TilesetName = Path.GetFileNameWithoutExtension(AssetDatabase.GetAssetPath(w_TilesetSprite));
+							else
+								w_TilesetName = "";
+
 							if(w_TilesetTileTypesList != null)
 							{
 								w_TilesetTileTypesList.Clear();
 								w_TilesetTileTypesList = null;
 							}
 
+						}
+						EditorGUILayout.LabelField("TilesetName: "+ w_TilesetName, EditorStyles.boldLabel);
+						w_TargetColor = EditorGUILayout.ColorField("Target Color:", w_TargetColor);
+						w_ReplacementColor = EditorGUILayout.ColorField("Replacement Color:", w_ReplacementColor);
+						if(w_TilesetSprite == null)
+							GUI.enabled = false;
+						if(GUILayout.Button("Prepare Sprite Texture"))
+						{
+							w_TilesetSprite = PrepareSpriteTexture(w_TilesetSprite, 32, w_TargetColor, w_ReplacementColor);
 						}
 						if(GUILayout.Button("Select Tileset's TileTypeFile"))
 						{
@@ -109,8 +129,7 @@ public class TilesetWindow : EditorWindow {
 								w_TilesetTileTypesList = ReadTileTypes(w_TilesetTileTypeFilePath);
 								for(int i=0; i< w_TilesetTileTypesList.Count; i++)
 								{
-									//TODO check why string is not completly shown!
-									Debug.Log( i+": " + w_TilesetTileTypesList[i] + " AAAA" + w_TilesetTileTypesList[i].ToString());// + " " + w_TilesetTileTypes[i]);
+									Debug.Log(Path.GetDirectoryName(m_LastFilePath) + "/" + Path.GetFileName(m_LastFilePath) + " " + w_TilesetTileTypesList[i] + " - " + w_TilesetTileTypesList[i].ToString());// + " " + w_TilesetTileTypes[i]);
 								}
 							}
 							else
@@ -123,10 +142,10 @@ public class TilesetWindow : EditorWindow {
 							}
 						}
 						EditorGUILayout.LabelField("Tileset's Tile Type File Path = " + w_TilesetTileTypeFilePath, GUILayout.ExpandWidth(true));
-
+						
 						bool current = GUI.enabled;
 						w_TileSpriteAlignment = (SpriteAlignment) EditorGUILayout.EnumPopup("Pivot", w_TileSpriteAlignment);
-
+						
 						if (w_TileSpriteAlignment != SpriteAlignment.Custom) {
 							// deaktiviere custom Offset
 							GUI.enabled = false;
@@ -134,7 +153,7 @@ public class TilesetWindow : EditorWindow {
 						// GUI: Custom Pivot
 						w_customTilePivotOffset = EditorGUILayout.Vector2Field("Custom Offset", w_customTilePivotOffset);
 						GUI.enabled = current;
-
+						
 						w_TilePixelWidth = EditorGUILayout.IntField("Tile Width (px)", w_TilePixelWidth);
 						w_TilePixelHeight = EditorGUILayout.IntField("Tile Height (px)", w_TilePixelHeight);
 						if(w_TilesetSprite != null)
@@ -150,16 +169,16 @@ public class TilesetWindow : EditorWindow {
 							if(w_TilesetSprite.pixelsPerUnit == 32)
 							{
 								GUI.color = Color.green;    
-//								EditorGUILayout.LabelField("<color=green>PixelPerUnit = " + w_TilesetSprite.pixelsPerUnit + "</color>");
+								//								EditorGUILayout.LabelField("<color=green>PixelPerUnit = " + w_TilesetSprite.pixelsPerUnit + "</color>");
 							}
 							else
 							{
 								GUI.color = Color.red;    
-//								EditorGUILayout.LabelField("<color=red>PixelPerUnit = " + w_TilesetSprite.pixelsPerUnit + "</color>");
+								//								EditorGUILayout.LabelField("<color=red>PixelPerUnit = " + w_TilesetSprite.pixelsPerUnit + "</color>");
 							}
 							EditorGUILayout.LabelField("PixelPerUnit = " + w_TilesetSprite.pixelsPerUnit);
 							GUI.color = temp;
-								
+							
 						}
 						else
 						{
@@ -184,9 +203,9 @@ public class TilesetWindow : EditorWindow {
 						}
 						if (GUILayout.Button("Create Tileset from Sprite & TLS File", GUILayout.ExpandWidth(false)))
 						{
-							currentTileset = Create(w_TilesetSprite, w_TilesetTileTypesList, GetPivotValue(w_TileSpriteAlignment, w_customTilePivotOffset));
-//							EditorUtility.FocusProjectWindow();							<-- Satck Overflow
-//							Selection.activeObject = currentTileset;
+							currentTileset = Create(w_TilesetName, w_TilesetSprite, w_TilesetTileTypesList, GetPivotValue(w_TileSpriteAlignment, w_customTilePivotOffset));
+							//							EditorUtility.FocusProjectWindow();							<-- Satck Overflow
+							//							Selection.activeObject = currentTileset;
 						}
 					}
 					GUILayout.EndVertical();
@@ -202,16 +221,16 @@ public class TilesetWindow : EditorWindow {
 				currentTileset = EditorGUILayout.ObjectField("Tileset ", currentTileset, typeof(Tileset) ,false) as Tileset;
 				GUILayout.Space(10);
 				GUILayout.Label("Tileset Tile Preview", EditorStyles.boldLabel);
-
+				
 				w_TilesetPixelPerUnit = EditorGUILayout.IntField("Tileset Pixel per Unit", w_TilesetPixelPerUnit);
-
+				
 				w_SubTilePosX = EditorGUILayout.IntField("X (iCol)", w_SubTilePosX);
 				w_SubTilePosY = EditorGUILayout.IntField("Y (iRow)", w_SubTilePosY);
-
-//				if (GUILayout.Button("Show Tile (SubSprite)", GUILayout.ExpandWidth(false)))
-//				{
-//					CreateGameObjectWithSubSprite(w_SubTilePosX, w_SubTilePosY);
-//				}
+				
+				//				if (GUILayout.Button("Show Tile (SubSprite)", GUILayout.ExpandWidth(false)))
+				//				{
+				//					CreateGameObjectWithSubSprite(w_SubTilePosX, w_SubTilePosY);
+				//				}
 				if (GUILayout.Button("Show Tile (NewSprite)", GUILayout.ExpandWidth(false)))
 				{
 					CreateGameObjectWithNewSprite(w_SubTilePosX, w_SubTilePosY);
@@ -224,9 +243,9 @@ public class TilesetWindow : EditorWindow {
 			GUILayout.EndVertical();
 		}
 		GUILayout.EndHorizontal();
-//		Repaint();
+		//		Repaint();
 	}
-
+	
 	void CreateGameObjectWithAssetSprite(int x, int y)
 	{
 		GameObject spriteGO = new GameObject("Tile SubSprite x=" + x + " y= " + y);
@@ -234,7 +253,7 @@ public class TilesetWindow : EditorWindow {
 		spriteRenderer.sprite = currentTileset.GetTileSprite(x, y);
 		Selection.activeGameObject = spriteGO;
 	}
-
+	
 	void CreateGameObjectWithNewSprite(int x, int y)
 	{
 		GameObject spriteGO = new GameObject("Tile NewSprite x=" + x + " y= " + y);
@@ -242,21 +261,169 @@ public class TilesetWindow : EditorWindow {
 		spriteRenderer.sprite = currentTileset.GetNewCreatetTileSprite(x, y);
 		Selection.activeGameObject = spriteGO;
 	}
-	#endregion
+	
+	Sprite PrepareSpriteTexture(Sprite originalSprite, float pixelPerUnit, Color32 targetColor, Color32 replacementColor)
+	{
+		string spriteAssetPath = AssetDatabase.GetAssetPath(originalSprite);
 
+		//Load modified Asset
+		originalSprite = SetupSpriteTextureImporter(originalSprite, pixelPerUnit, true, false);
+
+		// Generate Texture with Alpha Channel
+		Texture2D tex = new Texture2D(originalSprite.texture.width, originalSprite.texture.height, TextureFormat.ARGB32, false);
+		// kopiere Sprite Texture
+//		tex.SetPixels(sprite.texture.GetPixels());	// //TODO wenn ColorArray kopiert wird, verliert tex alpha channel
+//		tex.Apply();
+
+		ChangeTargetColorToAlpha(originalSprite.texture, tex, targetColor);	// alphachannel schreiben
+
+		// Generate Unique Asset Path for new Texture
+//		Debug.Log("AssetDatabase.GetSubFolders(spriteAssetPath) = " + AssetDatabase.GetSubFolders(spriteAssetPath));
+//		//AssetDatabase.GetSubFolders(spriteAssetPath) = System.String[]
+//		Debug.Log("Path.GetDirectoryName(spriteAssetPath) = " + Path.GetDirectoryName(spriteAssetPath));
+//		//Path.GetDirectoryName(spriteAssetPath) = Assets/Textures/Tileset
+		string newAssetPath = Path.GetDirectoryName(spriteAssetPath) + "/" + Path.GetFileNameWithoutExtension(spriteAssetPath) + "_ARGB32_" + Path.GetExtension(spriteAssetPath);		
+		Debug.Log("newAssetPath = " + newAssetPath);
+		//newAssetPath = Assets/Textures/Tilesetsmb1_ARGB32_.png
+		string newUniqueAssetPath = AssetDatabase.GenerateUniqueAssetPath(newAssetPath);
+		Debug.Log("newUniqueAssetPath = " + newUniqueAssetPath);
+		
+		//Wite Texture to File
+		byte[] bytes = tex.EncodeToPNG();
+		System.IO.File.WriteAllBytes(newUniqueAssetPath, bytes);		// Editor Folder!
+		bytes = null;
+		// Delete generated Texture
+		UnityEngine.Object.DestroyImmediate(tex);
+		// Import Texture with Alpha-Channel Asset
+//		Texture2D assetTex = AssetDatabase.LoadAssetAtPath(newUniqueAssetPath, typeof(Texture2D)) as Texture2D;
+		// Importiere eben geschriebene Datei als Asset
+		AssetDatabase.ImportAsset(newUniqueAssetPath);
+		// Get imported Asset
+		Sprite assetSpriteCopyWithAlpha = AssetDatabase.LoadAssetAtPath(newUniqueAssetPath, typeof(Sprite)) as Sprite;
+		if(assetSpriteCopyWithAlpha != null)
+		{
+			assetSpriteCopyWithAlpha = SetupSpriteTextureImporter(assetSpriteCopyWithAlpha, pixelPerUnit, false, true);
+			return assetSpriteCopyWithAlpha;
+//			ChangeTargetColor(originalSprite.texture, assetSpriteCopy.texture, targetColor, replacementColor);		// TODO geht nicht!!! Texture kann im Sprite nicht verändert werden, Sprite nach änderung neu laden bringt auch nichts
+//
+//			//Save changes																							// TODO bringt nichts
+//			AssetDatabase.ImportAsset(newUniqueAssetPath, ImportAssetOptions.ForceUpdate);
+//			AssetDatabase.Refresh();
+//			
+//			//Load modified Sprite 
+//			assetSpriteCopy = AssetDatabase.LoadAssetAtPath(newUniqueAssetPath, typeof(Sprite)) as Sprite;			// TODO bringt nichts
+		}
+		else
+		{
+			Debug.LogError("assetSpriteCopy == " + "NULL");
+			return null;
+		}
+	}
+
+	public static Sprite SetupSpriteTextureImporter(Sprite sprite, float pixelPerUnit, bool freadable, bool alphaIsTransparency)
+	{
+		string spriteAssetPath = AssetDatabase.GetAssetPath(sprite);
+		TextureImporter texImporter = (TextureImporter) TextureImporter.GetAtPath(spriteAssetPath);
+		texImporter.textureType = TextureImporterType.Advanced;
+		// Properties are ReadOnly
+		//		texImporter.spritePixelsPerUnit = pixelPerUnit;
+		//		texImporter.wrapMode = TextureWrapMode.Clamp;
+		//		texImporter.filterMode = FilterMode.Point;
+		//		texImporter.mipmapEnabled = false;
+		//		texImporter.maxTextureSize = 1024;
+		//		texImporter.textureFormat = TextureImporterFormat.ARGB32;
+		//		texImporter.isReadable = true;
+		
+		TextureImporterSettings texImportSettings = new TextureImporterSettings();
+		texImportSettings.spriteMode = (int) SpriteImportMode.Single;
+		texImportSettings.spritePixelsPerUnit = pixelPerUnit;
+		texImportSettings.wrapMode = TextureWrapMode.Clamp;
+		texImportSettings.filterMode = FilterMode.Point;
+		texImportSettings.mipmapEnabled = false;
+		texImportSettings.maxTextureSize = 1024;
+		texImportSettings.textureFormat = TextureImporterFormat.ARGB32;
+		texImportSettings.readable = freadable;
+		texImportSettings.alphaIsTransparency = alphaIsTransparency;
+		
+		texImporter.SetTextureSettings(texImportSettings);
+		//Save changes
+		AssetDatabase.ImportAsset(spriteAssetPath, ImportAssetOptions.ForceUpdate);
+		AssetDatabase.Refresh();
+
+		//Load modified Sprite 
+		sprite = AssetDatabase.LoadAssetAtPath(spriteAssetPath, typeof(Sprite)) as Sprite;;
+		return sprite;
+	}
+	
+	void ChangeTargetColorToAlpha(Texture2D originalTexture, Texture2D modifiedTexture, Color32 targetColor)
+	{
+		int targetColorFoundCount = 0;
+		for(int y=0; y<originalTexture.height; y++)
+		{
+			for(int x=0; x<originalTexture.width; x++)
+			{
+				Color32 currentOriginalPixelColor = originalTexture.GetPixel(x,y);
+				byte alphaValue = 255;
+				if(currentOriginalPixelColor.Equals(targetColor))
+				{
+					targetColorFoundCount++;
+					alphaValue = 0;
+				}
+
+				Color32 modifiedTexturePixelColor = new Color32(currentOriginalPixelColor.r,
+				                                                currentOriginalPixelColor.g,
+				                                                currentOriginalPixelColor.b,
+				                                                alphaValue);
+
+				modifiedTexture.SetPixel(x,y, modifiedTexturePixelColor);
+			}
+		}
+		if(targetColorFoundCount > 0)
+		{
+			modifiedTexture.Apply();
+		}
+		Debug.Log("TargetColor: " + targetColor.ToString() + " found " + targetColorFoundCount + " times" );
+	}
+
+	void ReplaceTargetColor(Texture2D originalTexture, Texture2D modifiedTexture, Color32 targetColor, Color32 replacementColor)
+	{
+		int targetColorFoundCount = 0;
+		for(int y=0; y<originalTexture.height; y++)
+		{
+			for(int x=0; x<originalTexture.width; x++)
+			{
+				Color32 currentOriginalPixelColor = originalTexture.GetPixel(x,y);
+				if(currentOriginalPixelColor.Equals(targetColor))
+				{
+					targetColorFoundCount++;
+				}
+				
+				Color32 modifiedTexturePixelColor = replacementColor;
+				
+				modifiedTexture.SetPixel(x,y, modifiedTexturePixelColor);
+			}
+		}
+		if(targetColorFoundCount > 0)
+		{
+			modifiedTexture.Apply();
+		}
+		Debug.Log("TargetColor: " + targetColor.ToString() + " found " + targetColorFoundCount + " times" );
+	}
+	#endregion
+	
 	List<TileType> ReadTileTypes(string filePath)
 	{
 		if(File.Exists(filePath))
 		{
 			FileStream fs = new FileStream(filePath, FileMode.Open);
 			BinaryReader binReader = new BinaryReader(fs);
-
+			
 			try {
-
+				
 				// lese Anzhal der TileTypes aus
 				int iTileTypeSize = FileIO.ReadInt(binReader);
 				Debug.Log("iTileTypeSize = " + iTileTypeSize);
-
+				
 				if(iTileTypeSize <= 0 || iTileTypeSize > 1024)
 				{
 					Debug.Log("iTileTypeSize ("+iTileTypeSize+") < 0 ||  iTileTypeSize ("+iTileTypeSize+") > 1024");
@@ -264,17 +431,17 @@ public class TilesetWindow : EditorWindow {
 					fs.Close();
 					return null;
 				}
-
-//				tiletypes = new TileType[iTileTypeSize];
+				
+				//				tiletypes = new TileType[iTileTypeSize];
 				List<TileType> tilesetTileTypesList = new List<TileType>();
 				
 				for(short i = 0; i < iTileTypeSize; i++)
 				{
-//					tiletypes[i] = (TileType)ReadInt(tsf);
+					//					tiletypes[i] = (TileType)ReadInt(tsf);
 					TileType value = (TileType) FileIO.ReadInt(binReader);
 					tilesetTileTypesList.Add(value);
 				}
-
+				
 				return tilesetTileTypesList;
 			}
 			catch (Exception exception)
@@ -292,16 +459,16 @@ public class TilesetWindow : EditorWindow {
 			Debug.LogError("File Path: " +filePath + " doesn't exists!");
 			return null;
 		}
-
+		
 		return null;
 	}
-
-
+	
+	
 	string EP_LastWorkingTileSetTileTypeFilePath = "EP_LastWorkingTileSetTileTypeFilePath";
 	string m_LastWorkingTileSetTileTypeFilePath = "";
 	string m_LastFilePath = "";
 	bool m_FileOpened = false;
-
+	
 	bool OnGUI_OpenFile(out string absPath, string fileExtension)
 	{
 		// open folder dialog
@@ -311,7 +478,7 @@ public class TilesetWindow : EditorWindow {
 			m_LastWorkingTileSetTileTypeFilePath = absPath;
 			//absolutenPath in EditorPrefs speichern 
 			EditorPrefs.SetString(EP_LastWorkingTileSetTileTypeFilePath, m_LastWorkingTileSetTileTypeFilePath);
-
+			
 			return true;
 		}
 		else
@@ -320,11 +487,11 @@ public class TilesetWindow : EditorWindow {
 			
 		}
 	}
-
-
-
-
-
+	
+	
+	
+	
+	
 	private void PerformMetaSlice(Texture2D texture, TextureImporter spriteImporter, SpriteAlignment tileAlignment, Vector2 customTilePivot, int tilePixelWidth, int tilePixelHeight, int pixelPerUnity)
 	{
 		if(spriteImporter != null)
@@ -339,10 +506,10 @@ public class TilesetWindow : EditorWindow {
 			// falls multiple 
 			int numTilesX = Mathf.FloorToInt(texture.width / tilePixelWidth);
 			int numTilesY = Mathf.FloorToInt(texture.height / tilePixelHeight);
-
+			
 			Debug.Log("Tileset width " + texture.width + " sliced in " + numTilesX + " Tiles");
 			Debug.Log("Tileset height " + texture.height + " sliced in " + numTilesY + " Tiles");
-
+			
 			int i=0;	// subsprite name
 			for (int y=0; y<numTilesY; y++)
 			{
@@ -370,8 +537,8 @@ public class TilesetWindow : EditorWindow {
 						Debug.LogException(exception);
 					}
 				}
-//				if(y == 1)
-//					break;
+				//				if(y == 1)
+				//					break;
 			}
 			
 			if (!failed) {
@@ -400,7 +567,7 @@ public class TilesetWindow : EditorWindow {
 			else
 			{
 				Debug.LogError( spriteImporter.assetPath + " failed");
-//				SpriteAssetInfo(spriteImporter);
+				//				SpriteAssetInfo(spriteImporter);
 			}
 		}
 		else
@@ -408,7 +575,7 @@ public class TilesetWindow : EditorWindow {
 			Debug.LogError( " sprite == null");
 		}
 	}
-
+	
 	public static Vector2 GetPivotValue(SpriteAlignment alignment, Vector2 customOffset)
 	{
 		switch (alignment)
@@ -437,7 +604,7 @@ public class TilesetWindow : EditorWindow {
 			return Vector2.zero;
 		}
 	}
-
+	
 	private void PerformMetaSliceFromDownToTop(Texture2D texture, TextureImporter spriteImporter, SpriteAlignment tileAlignment, Vector2 tilePivot, int tilePixelWidth, int tilePixelHeight, int pixelPerUnity)
 	{
 		if(spriteImporter != null)
@@ -521,5 +688,6 @@ public class TilesetWindow : EditorWindow {
 			Debug.LogError( " sprite == null");
 		}
 	}
-
+	
 }
+#endif
