@@ -13,6 +13,12 @@ public class TilesetManager : ScriptableObject {
 	short iClassicTilesetIndex = 0;
 	[SerializeField]
 	List<Tileset> tilesetList;
+	[SerializeField]
+	Tileset animationTileset;
+	[SerializeField]
+	Tileset blockTileset;
+	[SerializeField]
+	Tileset unknownTileset;
 //	Tileset tClassicTileset;
 
 	public void OnEnable()
@@ -51,6 +57,29 @@ public class TilesetManager : ScriptableObject {
 
 	public Tileset GetTileset(int index)
 	{
+
+		if(index == Globals.TILESETNONE)
+		{
+			Debug.LogError("GetTileset() spezial: TILESETNONE: " + Globals.TILESETNONE);
+			return null;
+		}
+		if(index == Globals.TILESETUNKNOWN)
+		{
+			Debug.LogError("GetTileset() spezial: TILESETUNKNOWN:" + Globals.TILESETUNKNOWN);
+			if(unknownTileset == null)
+				Debug.LogError(this.ToString() + " TilesetManager unknownTileset missing");
+				
+			return unknownTileset;
+		}
+		if(index == Globals.TILESETANIMATED)
+		{
+			Debug.LogError("GetTileset() spezial: TILESETANIMATED: " + Globals.TILESETANIMATED);
+			if(animationTileset == null)
+				Debug.LogError(this.ToString() + " TilesetManager animationTileset missing");
+
+			return animationTileset;
+		}
+
 		if(index < 0 || index > tilesetList.Count)
 		{
 			Debug.LogError(this.ToString() + " Index " + index + " > tilesetList.Count " + tilesetList.Count);

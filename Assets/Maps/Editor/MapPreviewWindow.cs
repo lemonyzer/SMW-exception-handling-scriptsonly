@@ -13,6 +13,9 @@ public class MapPreviewWindow : EditorWindow {
 	TilesetManager g_TilesetManager;
 	Map m_CurrentMap;
 	bool w_UseAssetSubSpritesToggle = true;
+	bool w_DontTranslationUnknown = true;
+	bool w_SetNotValidToUnknown = true;
+	bool w_SetTileTypeForNonValidTiles = true;
 	string EP_TilesetManagerKey = "EP_tilesetManagerKey";
 	public static string EP_BackgroundAssetFolderPathKey = "EP_BackgroundAssetFolderPathKey";
 	string w_BackgroundAssetFolderPath = "";
@@ -161,9 +164,21 @@ public class MapPreviewWindow : EditorWindow {
 			EditorGUILayout.LabelField(m_CurrentMap.mapName);
 			GUI.enabled = true;
 			w_UseAssetSubSpritesToggle = GUILayout.Toggle(w_UseAssetSubSpritesToggle, "Use Sprite from Asset, if false Sprites get sliced from Tileset-Sprite");
+			w_DontTranslationUnknown = GUILayout.Toggle(w_DontTranslationUnknown, "leave Tile.TilesetID's == Globals.TILESETUNKNOWN (iCol&iRow)=0, else Tile.TilesetID's -> 0 (first Tileset in Map) -> lokal translated");
+			w_SetNotValidToUnknown = GUILayout.Toggle(w_SetNotValidToUnknown, "Non Valid Tile.TilesetID's -> Globals.TILESETUNKNOWN, else Tile.TilesetID's -> 0 (first Tileset in Map) -> lokal translated");
+			if(!w_SetNotValidToUnknown)
+				w_SetTileTypeForNonValidTiles = GUILayout.Toggle(w_SetTileTypeForNonValidTiles, "use Tileset TileTyp for non Valid Tiles");
+			else
+			{
+				bool temp = GUI.enabled;
+				GUI.enabled = false;
+				w_SetTileTypeForNonValidTiles = GUILayout.Toggle(w_SetTileTypeForNonValidTiles, "use Tileset TileTyp for non Valid Tiles");
+				GUI.enabled = temp;
+			}
+
 			if (GUILayout.Button("Create Unity Map", GUILayout.ExpandWidth(false)))
 			{
-				CreateUnityMap(m_CurrentMap, w_BackgroundAssetFolderPath, w_UseAssetSubSpritesToggle);
+				CreateUnityMap(m_CurrentMap, w_BackgroundAssetFolderPath, w_UseAssetSubSpritesToggle, w_DontTranslationUnknown, w_SetNotValidToUnknown, w_SetTileTypeForNonValidTiles);
 			}
 			m_CurrentMap.OnGUI_Preview();
 		}
@@ -225,20 +240,27 @@ public class MapPreviewWindow : EditorWindow {
 			AssetDatabase.RenameAsset(currentAssetPath, newAssetName);
 		}
 
-		EditorUtility.SetDirty(currentMap);
 		if(!isBatch)
 		{
+			EditorUtility.SetDirty(currentMap);
 			AssetDatabase.SaveAssets();
 		}
 		return currentMap;
 		//				EditorApplication.SaveAssets();
 	}
 
-	GameObject CreateUnityMap(Map mapSO, string backgroundAssetFolderPath, bool useAssetSubSprites)
+	GameObject CreateUnityMap(Map mapSO, string backgroundAssetFolderPath, bool useAssetSubSprites, bool dontTranslateUnknown, bool setNotValidToUnknown, bool setTileTypeForNonValidTiles)
 	{
 		if(mapSO == null)
 		{
 			Debug.LogError("mapSO == NULL");
+			return null;
+		}
+
+		TilesetTile[,,] mapDataRaw = mapSO.GetMapDataRaw();
+		if(mapDataRaw == null)
+		{
+			Debug.LogError("mapSO.GetMapDataRaw() == NULL -> keine Informationen über Tile<->SubSprite vorhanden");
 			return null;
 		}
 
@@ -298,40 +320,160 @@ public class MapPreviewWindow : EditorWindow {
 //					                              Globals.MAPHEIGHT*0.5f -y,
 //					                              0f);
 //					currentTileTransform.localPosition = tilePos;
-					if(customMapData[x,y,l] == true)
+					//TilesetTile currenTilesetTile = mapData[x,y,l];
+					TilesetTile currentRawTilesetTile = mapDataRaw[x,y,l];
+					if(currentRawTilesetTile != null)
 					{
-						GameObject currentTileGO = new GameObject("Tile " + x.ToString("D2") + " " + y.ToString("D2"));
-						Transform currentTileTransform = currentTileGO.transform;
-						currentTileTransform.SetParent(currentMapLayerGO.transform);
-						//currentTileTransform.position
-						Vector3 tilePos = new Vector3(-Globals.MAPWIDTH*0.5f +x,		// x+1: pivot Right , x+0.5f: pivor Center, x: pivot Left
-						                              Globals.MAPHEIGHT*0.5f -(y+1),	// y-1: pivot Bottom, y-0.5f: pivot Center, y: pivot Top //TODO Tileset SlicedSprite Pivot setzen!
-						                              0f);
-						currentTileTransform.localPosition = tilePos;
-						SpriteRenderer currentSpriteRenderer = currentTileGO.AddComponent<SpriteRenderer>();
-						currentSpriteRenderer.sortingLayerName = "MapTileLayer"+l;
-						int iTileSetId = mapData[x,y,l].iTilesetID;
-						int tilePosX = mapData[x,y,l].iCol;
-						int tilePosY = mapData[x,y,l].iRow;
-						Tileset tileSet = g_TilesetManager.GetTileset(iTileSetId);
-						Sprite tileSprite;
-						if(useAssetSubSprites)
-							tileSprite = tileSet.GetTileSprite(tilePosX, tilePosY);
+						// erzeuge (kopiere) currenTilesetTile neu um RawDaten nicht zu manipulieren!
+						TilesetTile translatedTile = new TilesetTile();
+						translatedTile.iTilesetID = currentRawTilesetTile.iTilesetID;
+						translatedTile.iCol = currentRawTilesetTile.iCol;
+						translatedTile.iRow = currentRawTilesetTile.iRow;
+
+						if(translatedTile.iTilesetID == Globals.TILESETNONE)		// geht nur mit mapDataRaw !!!
+						{
+							// TILESET NONE
+
+						}
 						else
-							tileSprite = tileSet.GetNewCreatetTileSprite(tilePosX, tilePosY);	
-						currentSpriteRenderer.sprite = tileSprite;
+						{
+							bool useTileType = true;
+							if(translatedTile.iTilesetID == Globals.TILESETANIMATED)	// geht nur mit mapDataRaw !!!
+							{
+								// TILESET ANIMATED
+								useTileType = false;
+								translatedTile.iTilesetID = currentRawTilesetTile.iTilesetID;
+								translatedTile.iCol = currentRawTilesetTile.iCol;
+								translatedTile.iRow = currentRawTilesetTile.iRow;
+							}
+							else if(translatedTile.iTilesetID == Globals.TILESETUNKNOWN)	// geht nur mit mapDataRaw !!!
+							{
+								// TILESET unknown
+								// erzeuge currenTilesetTile neu um RawDaten nicht zu manipulieren!
 
-						TileType currentTileType = tileSet.GetTileType((short)tilePosX, (short)tilePosY);
+								Debug.LogError( mapSO.mapName + " non Valid Tile (TileID > maxTilesetID) found " + (setNotValidToUnknown ? "set UNKNOWN" : "set TileID = 0" ));
 
-						TileTypeToUnityTranslation(currentTileType, currentTileGO);
 
-						TileScript currenTileScript = currentTileGO.AddComponent<TileScript>();
-						currenTileScript.tileSet = tileSet;
-						currenTileScript.tileType = currentTileType;
+								if(dontTranslateUnknown)
+								{
+									translatedTile.iTilesetID = Globals.TILESETUNKNOWN;	// TODO ID darf nicht lokal Translated werden!!! (array out of bounds error)
+									translatedTile.iCol = 0;
+									translatedTile.iRow = 0;
+									
+									useTileType = false;
+								}
+								else
+								{
+									translatedTile.iTilesetID = 0;
+
+									//Make sure the column and row we read in is within the bounds of the tileset
+									if(translatedTile.iCol < 0 || translatedTile.iCol >= mapSO.tilesetwidths[translatedTile.iTilesetID])
+									{
+										translatedTile.iCol = 0;
+									}
+									
+									if(translatedTile.iRow < 0 || translatedTile.iRow >= mapSO.tilesetheights[translatedTile.iTilesetID])
+									{
+										translatedTile.iRow = 0;
+									}
+
+									if(setTileTypeForNonValidTiles)		
+										useTileType = true;				// obwohl aktuelles Tile einem Tileste angehört das in der Map-Datei nicht gelistet wurde wird der TileTyp vom ersten Tileset verwendet um dem Tile Collider/Movement/Friction zu geben
+									else
+										useTileType = false;
+
+									translatedTile.iTilesetID = (short) mapSO.translationid[currentRawTilesetTile.iTilesetID];
+								}
+
+							}
+							else if(translatedTile.iTilesetID > mapSO.GetMaxTilesetID())
+							{
+								// TilesetID passt nicht zu den in der Map angegebenen Tilesets!
+								// setzte TilesetID von aktuellem Tile auf das Tileset das als erstes in Map angegebenen wurde
+								
+								Debug.LogError( mapSO.mapName + " non Valid Tile (TileID > maxTilesetID) found " + (setNotValidToUnknown ? "set UNKNOWN" : "set TileID = 0" ));
+								
+								if(setNotValidToUnknown)
+								{
+									translatedTile.iTilesetID = Globals.TILESETUNKNOWN;	// TODO ID darf nicht lokal Translated werden!!! (array out of bounds error)
+									translatedTile.iCol = 0;
+									translatedTile.iRow = 0;
+									
+									useTileType = false;
+								}
+								else
+								{
+									translatedTile.iTilesetID = 0;		// TODO ID muss noch Translated werden!!!
+									
+									//Make sure the column and row we read in is within the bounds of the tileset
+									if(translatedTile.iCol < 0 || translatedTile.iCol >= mapSO.tilesetwidths[translatedTile.iTilesetID])
+									{
+										translatedTile.iCol = 0;
+									}
+									
+									if(translatedTile.iRow < 0 || translatedTile.iRow >= mapSO.tilesetheights[translatedTile.iTilesetID])
+									{
+										translatedTile.iRow = 0;
+									}
+									
+									if(setTileTypeForNonValidTiles)		
+										useTileType = true;				// obwohl aktuelles Tile einem Tileste angehört das in der Map-Datei nicht gelistet wurde wird der TileTyp vom ersten Tileset verwendet um dem Tile Collider/Movement/Friction zu geben
+									else
+										useTileType = false;
+									
+									// translate from Map TilesetID to Lokal TilesetManager TilesetID
+									// Map.TilesetID -> Lokal TilesetManager.GetTilesetIDByName(Map.Tileset)TilesetID)
+									translatedTile.iTilesetID = (short) mapSO.translationid[currentRawTilesetTile.iTilesetID];	// TODO lokal translation non valid tile translated to first Map-File Tileset
+									
+								}
+							}
+							else
+							{
+								// in diesem ELSE darf translatedTile.iTilesetID 0 bis eingeschlossen mapSO.GetMaxTilesetID laufen
+								// normales Tile (inerhalb der erlaubten 0-iMaxTilesetID
+								// translate from Map TilesetID to Lokal TilesetManager TilesetID
+								// Map.TilesetID -> Lokal TilesetManager.GetTilesetIDByName(Map.Tileset)TilesetID)
+								translatedTile.iTilesetID = (short) mapSO.translationid[currentRawTilesetTile.iTilesetID];		// TODO lokal translation normal tile
+								useTileType = true;	
+							}
+
+							GameObject currentTileGO = new GameObject("Tile " + x.ToString("D2") + " " + y.ToString("D2"));
+							Transform currentTileTransform = currentTileGO.transform;
+							currentTileTransform.SetParent(currentMapLayerGO.transform);
+							//currentTileTransform.position
+							Vector3 tilePos = new Vector3(-Globals.MAPWIDTH*0.5f +x,		// x+1: pivot Right , x+0.5f: pivor Center, x: pivot Left
+							                              Globals.MAPHEIGHT*0.5f -(y+1),	// y-1: pivot Bottom, y-0.5f: pivot Center, y: pivot Top //TODO Tileset SlicedSprite Pivot setzen!
+							                              0f);
+							currentTileTransform.localPosition = tilePos;
+							SpriteRenderer currentSpriteRenderer = currentTileGO.AddComponent<SpriteRenderer>();
+							currentSpriteRenderer.sortingLayerName = "MapTileLayer"+l;
+							int iTileSetId = translatedTile.iTilesetID;
+							int tilePosX = translatedTile.iCol;
+							int tilePosY = translatedTile.iRow;
+							Tileset tileSet = g_TilesetManager.GetTileset(iTileSetId);
+							Sprite tileSprite;
+							if(useAssetSubSprites)
+								tileSprite = tileSet.GetTileSprite(tilePosX, tilePosY);
+							else
+								tileSprite = tileSet.GetNewCreatetTileSprite(tilePosX, tilePosY);	
+							currentSpriteRenderer.sprite = tileSprite;
+
+							if (useTileType)
+							{
+								TileType currentTileType = tileSet.GetTileType((short)tilePosX, (short)tilePosY);
+								
+								TileTypeToUnityTranslation(currentTileType, currentTileGO);
+								
+								TileScript currenTileScript = currentTileGO.AddComponent<TileScript>();
+								currenTileScript.tileSet = tileSet;
+								currenTileScript.tileType = currentTileType;
+							}
+						}
                         
                     }
 					else
 					{
+						Debug.LogError("mapData/Raw enthält Lücken : x=" + x + " y= " + y + " l="+ l );
 //						DestroyImmediate(currentTileGO);
 					}
 				}
@@ -728,7 +870,7 @@ public class MapPreviewWindow : EditorWindow {
 				Debug.Log("<color=white><b>Found " + currentAbsMapPath + "</b></color>");
 
 				Map currentBatchMap = OpenMapFile(currentAbsMapPath, true);
-				GameObject currentBatchMapGO = CreateUnityMap(currentBatchMap, backgroundAssetFolderPath, w_UseAssetSubSpritesToggle);
+				GameObject currentBatchMapGO = CreateUnityMap(currentBatchMap, backgroundAssetFolderPath, w_UseAssetSubSpritesToggle, w_DontTranslationUnknown, w_SetNotValidToUnknown, w_SetTileTypeForNonValidTiles);
 
 				currentBatchMapGO.SetActive(false);
 

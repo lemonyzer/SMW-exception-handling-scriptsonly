@@ -433,6 +433,16 @@ public class Map : ScriptableObject {
 		return mapdata;
 	}
 
+	public TilesetTile[,,] GetMapDataRaw()
+	{
+		return mapdataRaw;
+	}
+
+	public short GetMaxTilesetID()
+	{
+		return m_iMaxTilesetID;
+	}
+
 	public bool[,,] GetCustomMapData()
 	{
 		return mapdataCustom;
@@ -458,6 +468,13 @@ public class Map : ScriptableObject {
 
 	[SerializeField]
 	bool[] fAutoFilter = new bool[Globals.NUM_AUTO_FILTERS];
+
+	[SerializeField]
+	short iNumOfTilesets;
+
+	[SerializeField]
+	short m_iMaxTilesetID;
+
 
 	[SerializeField]
 	public TilesetTranslation[] translations;
@@ -492,6 +509,8 @@ public class Map : ScriptableObject {
 	//	bool[] 		fAutoFilter = new bool[NUM_AUTO_FILTERS];
 	[SerializeField]
 	bool[,,] mapdataCustom;
+	[SerializeField]
+	TilesetTile[,,] mapdataRaw;	// komplett eingelesene Tiles der Map
 	[SerializeField]
 	TilesetTile[,,] mapdata;	// komplett eingelesene Tiles der Map
 	[SerializeField]
@@ -716,14 +735,14 @@ public class Map : ScriptableObject {
 		//clearPlatforms();
 
 		importError = ImportErrorType.ReadingMapNumOfTilesets;
-		short iNumOfTilesets = ReadingMapNumOfTilesets(binReader, iReadType);
+		iNumOfTilesets = ReadingMapNumOfTilesets(binReader, iReadType);
 		importError = ImportErrorType.ReadingMapTilesetsInformations;
-		short iMaxTilesetID = ReadingMapTilesetsInformations(binReader, iReadType, iNumOfTilesets);
+		m_iMaxTilesetID = ReadingMapTilesetsInformations(binReader, iReadType, iNumOfTilesets);
 		
 		importError = ImportErrorType.BuildTranlations;
-		BuildTranlations(iNumOfTilesets, iMaxTilesetID, f_TilesetManager);
+		BuildTranlations(iNumOfTilesets, m_iMaxTilesetID, f_TilesetManager);
 		importError = ImportErrorType.ReadingMapDataAndObjectData;
-		ReadingMapDataAndObjectData(binReader, iReadType, iMaxTilesetID);
+		ReadingMapDataAndObjectData(binReader, iReadType, m_iMaxTilesetID);
 		importError = ImportErrorType.ReadingBackgroundFileName;
 		ReadingBackgroundFileName(binReader, iReadType);
 
@@ -738,7 +757,7 @@ public class Map : ScriptableObject {
 			fPreview = false;
 
 		importError = ImportErrorType.ReadingPlatforms;
-		loadPlatforms(binReader, fPreview, version, f_TilesetManager, translationid, tilesetwidths, tilesetheights, iMaxTilesetID);
+		loadPlatforms(binReader, fPreview, version, f_TilesetManager, translationid, tilesetwidths, tilesetheights, m_iMaxTilesetID);
 
 		//All tiles have been loaded so the translation is no longer needed
 		//		delete [] translationid;
@@ -822,6 +841,7 @@ public class Map : ScriptableObject {
 	short ReadingMapNumOfTilesets(BinaryReader binReader, ReadType iReadType)
 	{
 		short iNumTilesets = (short) ReadInt(binReader);
+		Debug.Log("<color=blue>iNumTilesets = <b>" + iNumTilesets + "</b></color> Anzahl an Tileset Translations");
 		return iNumTilesets;
 	}
 
@@ -869,6 +889,8 @@ public class Map : ScriptableObject {
 #endif
 			Debug.Log("\tiTileset = " + iTileset + ", iTilesetID = " + iTilesetID + ", Name = " + translations[iTileset].Name + ", iMaxTilesetID = " + iMaxTilesetID); 
 		}
+		Debug.Log("<color=red>iMaxTilesetID = <b>" + iMaxTilesetID + "</b></color> wenn in mapdata eine TilesetID > iMaxTilesetID gefunden wird wird sie angepasst. ACHTUNG: TILENONE, TILEANIMATED, TILEUNKNOWN!!!");
+		
 		return iMaxTilesetID;
 	}
 	void BuildTranlations(int iNumTilesets, int iMaxTilesetID, TilesetManager f_TilesetManager)
@@ -905,6 +927,7 @@ public class Map : ScriptableObject {
 		//2. load map data
 		mapdataCustom = new bool[Globals.MAPWIDTH, Globals.MAPHEIGHT, Globals.MAPLAYERS];
 		mapdata = new TilesetTile[Globals.MAPWIDTH, Globals.MAPHEIGHT, Globals.MAPLAYERS];	// mapdata, hier werden die eingelesenen Daten gespeichert
+		mapdataRaw = new TilesetTile[Globals.MAPWIDTH, Globals.MAPHEIGHT, Globals.MAPLAYERS];	// mapdata, hier werden die eingelesenen Daten gespeichert
 		objectdata = new MapBlock[Globals.MAPWIDTH, Globals.MAPHEIGHT];
 		int iColChanges = 0;
 		int iRowChanges = 0;
@@ -919,18 +942,23 @@ public class Map : ScriptableObject {
 				for(int l = 0; l < Globals.MAPLAYERS; l++)
 				{
 					//					TilesetTile * tile = &mapdata[i][j][k];	// zeigt auf aktuelles Element in mapdata
-					
+					mapdataRaw[x,y,l] = new TilesetTile();
 					mapdata[x, y, l] = new TilesetTile();
 					TilesetTile tile = mapdata[x, y, l];
 					tile.iTilesetID = ReadByteAsShort(binReader);
 					tile.iCol = ReadByteAsShort(binReader);
 					tile.iRow = ReadByteAsShort(binReader);
-					
+					TilesetTile tileRaw = new TilesetTile();
+					tileRaw.iTilesetID = tile.iTilesetID;
+					tileRaw.iCol = tile.iCol;
+					tileRaw.iRow = tile.iRow;
+					mapdataRaw[x,y,l] = tileRaw;
+
 					if(tile.iTilesetID >= 0)
 					{
 						if(tile.iTilesetID > iMaxTilesetID)
 						{
-							if(tile.iTilesetID == 254)
+							if(tile.iTilesetID == Globals.TILESETNONE)
 							{
 								mapdataCustom[x,y,l] = false;		// wenn tile.iID == 254 dann enthält tile in aktueller layer kein Sprite!
 							}
@@ -1551,7 +1579,7 @@ public class Map : ScriptableObject {
 	{
 	}
 
-
+	bool fShowRawMapData = false;
 	bool fShowMapData = false;
 	bool fShowPlatformData = false;
 	bool fShowObjectData = false;
@@ -1562,6 +1590,14 @@ public class Map : ScriptableObject {
 		{
 			//		previewSliderPosition = EditorGUILayout.BeginScrollView(previewSliderPosition);
 			OnGUI_Preview_Mapdata();
+			//		EditorGUILayout.EndScrollView();
+		}
+
+		fShowRawMapData = UnityEditor.EditorGUILayout.Foldout(fShowRawMapData,"Preview RawMapdata");
+		if(fShowRawMapData)
+		{
+			//		previewSliderPosition = EditorGUILayout.BeginScrollView(previewSliderPosition);
+			OnGUI_Preview_Mapdata(mapdataRaw);
 			//		EditorGUILayout.EndScrollView();
 		}
 		
@@ -1707,12 +1743,84 @@ public class Map : ScriptableObject {
 
 	public GUIStyle textAreaStyle;
 
+	public void OnGUI_Preview_Mapdata(TilesetTile[,,] tilesData)
+	{
+		textAreaStyle = new GUIStyle(GUI.skin.textArea);		// SMART
+		textAreaStyle.richText = true;
+		textAreaStyle.stretchWidth = true;
+		textAreaStyle.fixedWidth = 24+4+16+4+16;
+		//		//textAreaStyle.stretchWidth = true;
+		
+		if(tilesData != null)
+		{
+			previewSliderPosition = EditorGUILayout.BeginScrollView(previewSliderPosition);
+			EditorGUILayout.BeginHorizontal();
+			//			GUILayout.Space(10);
+			//			EditorGUILayout.Space();
+			EditorGUILayout.BeginVertical();
+			for(int y = 0; y < Globals.MAPHEIGHT; y++)
+			{
+				EditorGUILayout.BeginHorizontal();
+				for(int x = 0; x < Globals.MAPWIDTH; x++)
+				{
+					
+					string tileString = "";
+					
+					for(int l = 0; l < Globals.MAPLAYERS; l++)
+					{
+
+						TilesetTile tile = tilesData[x,y,l];
+						
+						if( tile == null)
+						{
+							GUILayout.Label("null");
+						}
+						else
+						{
+							if(true)
+							{
+								tileString += tile.iTilesetID.ToString("D2")+","+tile.iCol.ToString("D2")+","+tile.iRow.ToString("D2");
+							}
+							else
+							{
+								tileString += tile.iTilesetID.ToString("D2")+",--,--";
+							}
+							
+							if(l == Globals.MAPLAYERS -1)
+							{
+								// no line end
+							}
+							else
+							{
+								tileString += "\n";
+							}
+						}
+					}
+					EditorGUILayout.TextArea(tileString, textAreaStyle);
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+			EditorGUILayout.Space();
+			GUILayout.Space(20);
+			EditorGUILayout.EndVertical();
+			EditorGUILayout.Space();
+			GUILayout.Space(20);
+			EditorGUILayout.EndHorizontal();
+			EditorGUILayout.EndScrollView();
+			
+		}
+		else
+		{
+			EditorGUILayout.LabelField("<color=red>tilesData empty</color>");
+		}
+	}
+
 	public void OnGUI_Preview_Mapdata()
 	{
 		textAreaStyle = new GUIStyle(GUI.skin.textArea);		// SMART
 		textAreaStyle.richText = true;
 		textAreaStyle.stretchWidth = true;
-		textAreaStyle.fixedWidth = 16+4+16+4+16;
+		textAreaStyle.fixedWidth = 24+4+16+4+16;
 //		//textAreaStyle.stretchWidth = true;
 
 		if(mapdata != null && mapdataCustom != null)
@@ -1754,7 +1862,11 @@ public class Map : ScriptableObject {
 							}
 							else
 							{
-								tileString += tile.iTilesetID.ToString("D2")+",--,--";
+//								tileString += tile.iTilesetID.ToString("D2")+",--,--";	// TODO Bug, hides Informations
+								if(tile.iCol == 0 && tile.iRow == 0)
+									tileString += tile.iTilesetID.ToString("D2")+",--,--";
+								else
+									tileString += tile.iTilesetID.ToString("D2")+","+tile.iCol.ToString("D2")+","+tile.iRow.ToString("D2");
 							}
 
 							//TODO

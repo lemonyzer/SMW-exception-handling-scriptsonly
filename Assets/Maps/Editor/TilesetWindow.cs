@@ -127,9 +127,16 @@ public class TilesetWindow : EditorWindow {
 								w_TilesetTileTypeFilePath = m_LastFilePath;
 								m_FileOpened = true;
 								w_TilesetTileTypesList = ReadTileTypes(w_TilesetTileTypeFilePath);
-								for(int i=0; i< w_TilesetTileTypesList.Count; i++)
+								if(w_TilesetTileTypesList == null)
 								{
-									Debug.Log(Path.GetDirectoryName(m_LastFilePath) + "/" + Path.GetFileName(m_LastFilePath) + " " + w_TilesetTileTypesList[i] + " - " + w_TilesetTileTypesList[i].ToString());// + " " + w_TilesetTileTypes[i]);
+									Debug.LogError("w_TilesetTileTypesList == null");
+								}
+								else
+								{
+									for(int i=0; i< w_TilesetTileTypesList.Count; i++)
+									{
+										Debug.Log(Path.GetDirectoryName(m_LastFilePath) + "/" + Path.GetFileName(m_LastFilePath) + " " + w_TilesetTileTypesList[i] + " - " + w_TilesetTileTypesList[i].ToString());// + " " + w_TilesetTileTypes[i]);
+									}
 								}
 							}
 							else
@@ -420,13 +427,13 @@ public class TilesetWindow : EditorWindow {
 			
 			try {
 				
-				// lese Anzhal der TileTypes aus
+				// lese Anzahl der TileTypes aus
 				int iTileTypeSize = FileIO.ReadInt(binReader);
 				Debug.Log("iTileTypeSize = " + iTileTypeSize);
 				
 				if(iTileTypeSize <= 0 || iTileTypeSize > 1024)
 				{
-					Debug.Log("iTileTypeSize ("+iTileTypeSize+") < 0 ||  iTileTypeSize ("+iTileTypeSize+") > 1024");
+					Debug.LogError("lese Anzahl der TileTypes aus: iTileTypeSize ("+iTileTypeSize+") < 0 ||  iTileTypeSize ("+iTileTypeSize+") > 1024");
 					binReader.Close();
 					fs.Close();
 					return null;

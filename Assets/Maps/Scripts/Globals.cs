@@ -16,9 +16,9 @@ public static class Globals {
 	public const int TILESETHEIGHT = 30;
 	public const int TILESETWIDTH = 32;
 
-	public const int TILESETANIMATED = -1;
-	public const int TILESETNONE = -2;
-	public const int TILESETUNKNOWN = -3;
+	public const int TILESETANIMATED = 255;		// byte = 255 = 0 -1
+	public const int TILESETNONE = 254;			// byte = 254 = 0 -2
+	public const int TILESETUNKNOWN = 253;		// byte = 253 = 0 -3
 
 	public const int TILESET_TRANSLATION_CSTRING_SIZE = 128;
 	public const int NUMTILETYPES = 19;
