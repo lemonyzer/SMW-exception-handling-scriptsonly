@@ -177,13 +177,19 @@ public class Tileset : ScriptableObject {
 
 	public TileType GetTileType(short iTileCol, short iTileRow)
 	{
-//		Debug.Log("TypeID = " + iTileCol + iTileRow * tileWidth);
-		return tiletypes[iTileCol + iTileRow * (int) tileWidth];
+
+		int arrayPos = iTileCol + (iTileRow * ((int) width/((int)tileWidth)));
+		if(arrayPos >= tiletypes.Length)
+		{
+			Debug.Log(tilesetName + " width=" + width + " height=" + height + ", realMaxArraySize= " + (width*height/(tileWidth*tileHeight))  + "tiletypesArray size = " + tiletypes.Length + ", calculated arrayPos = " + arrayPos + "("+ iTileCol +"+"+ iTileRow +"*"+ tileWidth+")");
+		}
+		return tiletypes[arrayPos];
 	}
 
 	void SetTileType(short iTileCol, short iTileRow, TileType type)
 	{
-		tiletypes[iTileCol + iTileRow * (int) tileWidth] = type;
+		int arrayPos = iTileCol + (iTileRow * ((int) width/((int)tileWidth)));
+		tiletypes[arrayPos] = type;
 	}
 
 	public TileType IncrementTileType(short iTileCol, short iTileRow)
