@@ -7,32 +7,67 @@ using System;
 using System.IO;
 using UnityEditor;
 
-public class TilesetWindow : EditorWindow {
+public class AnimationTilesetWindow : EditorWindow {
 	
 	#region Variables
-	static TilesetWindow currWindow;
+	static AnimationTilesetWindow currWindow;
 	Tileset currentTileset;
 	string w_TilesetTileTypeFilePath;
 	List<TileType> w_TilesetTileTypesList;
 	#endregion
 	
 	#region Main Methods
-
-	public static Tileset CreateEmpty()
+	
+	[MenuItem("SMW/Tileset/Create Empty Animated",false,4)]
+	public static Tileset CreateEmptyAnimated()
 	{
 		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
-		
-		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/tileset_NewEmptySO.asset");
+		// set animated Tileset
+		newTilesetAsset.animatedTileset = true;
+
+		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/tileset_0_animated_NewEmptySO.asset");
 		AssetDatabase.SaveAssets();
 		
 		//		EditorUtility.FocusProjectWindow();			// <-- Satck Overflow
 		Selection.activeObject = newTilesetAsset;
 		return newTilesetAsset;
 	}
-	
+
+	[MenuItem("SMW/Tileset/Create Empty",false,3)]
+	public static Tileset CreateEmpty()
+	{
+		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
+		// set NON animated Tileset
+		newTilesetAsset.animatedTileset = false;
+		
+		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/tileset_0_NewEmptySO.asset");
+		AssetDatabase.SaveAssets();
+		
+		//		EditorUtility.FocusProjectWindow();			// <-- Satck Overflow
+		Selection.activeObject = newTilesetAsset;
+		return newTilesetAsset;
+	}
+
+	public Tileset CreateAnimated(string tilesetName, int animationWidth, Sprite tilesetSprite, List<TileType> tileTypesList, Vector2 tilePivot)
+	{
+		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
+		newTilesetAsset.animatedTileset = true;
+		newTilesetAsset.tilesetName = tilesetName;
+		newTilesetAsset.TilesetSprite = tilesetSprite;
+		newTilesetAsset.TileTypes = tileTypesList.ToArray();
+		newTilesetAsset.tilePivot = tilePivot;
+		AssetDatabase.CreateAsset(newTilesetAsset, "Assets/Maps/tileset_" + tilesetName + ".asset"); //TODO dateiname nur gültige zeichen
+		AssetDatabase.SaveAssets();
+		
+		//		EditorUtility.FocusProjectWindow();		// <-- Satck Overflow
+		Selection.activeObject = newTilesetAsset;
+		return newTilesetAsset;
+	}
+
 	public Tileset Create(string tilesetName, Sprite tilesetSprite, List<TileType> tileTypesList, Vector2 tilePivot)
 	{
 		Tileset newTilesetAsset = ScriptableObject.CreateInstance<Tileset>();
+		newTilesetAsset.animatedTileset = false;
 		newTilesetAsset.tilesetName = tilesetName;
 		newTilesetAsset.TilesetSprite = tilesetSprite;
 		newTilesetAsset.TileTypes = tileTypesList.ToArray();
@@ -45,13 +80,13 @@ public class TilesetWindow : EditorWindow {
 		return newTilesetAsset;
 	}
 	
-	[MenuItem("SMW/Tileset/Tileset Window",false,1)]
+	[MenuItem("SMW/Tileset/Animated Tileset Window",false,2)]
 	public static void Init()
 	{
 		if(currWindow == null)
 		{
-			currWindow = (TilesetWindow) EditorWindow.GetWindow(typeof(TilesetWindow));
-			currWindow.title = "Tileset";
+			currWindow = (AnimationTilesetWindow) EditorWindow.GetWindow(typeof(AnimationTilesetWindow));
+			currWindow.title = "Animated Tileset";
 			//			currWindow.minSize = new Vector2(256,512);
 		}
 		else
@@ -71,6 +106,9 @@ public class TilesetWindow : EditorWindow {
 	Vector2 w_customTilePivotOffset = Vector2.zero;
 	int w_TilePixelWidth = 32;
 	int w_TilePixelHeight = 32;
+	int w_AnimationWidth = 4;
+	int w_AnimationTilesetNumOfTiles = 256;
+	bool w_IsAnimatedTileset = true;
 	
 	Color32 w_TargetColor = new Color32(255,0,255,255);
 	Color32 w_ReplacementColor = new Color32(255,0,255,0);
@@ -79,6 +117,9 @@ public class TilesetWindow : EditorWindow {
 	
 	void OnGUI()
 	{
+		string preLabel = "";
+		if (w_IsAnimatedTileset)
+			preLabel = "Animated ";
 		//EditorGUILayout.Space(10);
 		GUILayout.BeginHorizontal();
 		{
@@ -91,10 +132,11 @@ public class TilesetWindow : EditorWindow {
 				{
 					GUILayout.BeginVertical();
 					{
-						GUILayout.Label("Tileset from Sprite", EditorStyles.boldLabel);
+						GUILayout.Label(preLabel+"Tileset from Sprite", EditorStyles.boldLabel);
 						//						EditorGUILayout.LabelField("Sprite");
 						EditorGUI.BeginChangeCheck();
 						w_TilesetSprite = EditorGUILayout.ObjectField("Sprite", w_TilesetSprite, typeof(Sprite), false,  GUILayout.ExpandWidth(true)) as Sprite;
+						w_IsAnimatedTileset = EditorGUILayout.Toggle("Animated Tileset", w_IsAnimatedTileset);
 						if(EditorGUI.EndChangeCheck())
 						{
 							if(w_TilesetSprite != null)
@@ -109,7 +151,7 @@ public class TilesetWindow : EditorWindow {
 							}
 
 						}
-						EditorGUILayout.LabelField("TilesetName: "+ w_TilesetName, EditorStyles.boldLabel);
+						EditorGUILayout.LabelField(preLabel+"TilesetName: "+ w_TilesetName, EditorStyles.boldLabel);
 						w_TargetColor = EditorGUILayout.ColorField("Target Color:", w_TargetColor);
 						w_ReplacementColor = EditorGUILayout.ColorField("Replacement Color:", w_ReplacementColor);
 						if(w_TilesetSprite == null)
@@ -118,14 +160,21 @@ public class TilesetWindow : EditorWindow {
 						{
 							w_TilesetSprite = PrepareSpriteTexture(w_TilesetSprite, 32, w_TargetColor, w_ReplacementColor);
 						}
-						if(GUILayout.Button("Select Tileset's TileTypeFile"))
+						if(GUILayout.Button("Select "+preLabel+"Tileset's TileTypeFile"))
 						{
 							if(OnGUI_OpenFile(out m_LastFilePath, "tls"))
 							{
 								// file slected and openeed
 								w_TilesetTileTypeFilePath = m_LastFilePath;
 								m_FileOpened = true;
-								w_TilesetTileTypesList = ReadTileTypes(w_TilesetTileTypeFilePath);
+								if (w_IsAnimatedTileset)
+								{
+									w_TilesetTileTypesList = ReadTileTypes(w_TilesetTileTypeFilePath, w_IsAnimatedTileset, w_AnimationTilesetNumOfTiles);
+								}
+								else
+								{
+									w_TilesetTileTypesList = ReadTileTypes(w_TilesetTileTypeFilePath, w_IsAnimatedTileset, w_AnimationTilesetNumOfTiles);
+								}
 								if(w_TilesetTileTypesList == null)
 								{
 									Debug.LogError("w_TilesetTileTypesList == null");
@@ -147,7 +196,8 @@ public class TilesetWindow : EditorWindow {
 								m_FileOpened = false;
 							}
 						}
-						EditorGUILayout.LabelField("Tileset's Tile Type File Path = " + w_TilesetTileTypeFilePath, GUILayout.ExpandWidth(true));
+
+						EditorGUILayout.LabelField(preLabel+"Tileset's Tile Type File Path" + w_TilesetTileTypeFilePath, GUILayout.ExpandWidth(true));
 						
 						bool current = GUI.enabled;
 						w_TileSpriteAlignment = (SpriteAlignment) EditorGUILayout.EnumPopup("Pivot", w_TileSpriteAlignment);
@@ -159,14 +209,19 @@ public class TilesetWindow : EditorWindow {
 						// GUI: Custom Pivot
 						w_customTilePivotOffset = EditorGUILayout.Vector2Field("Custom Offset", w_customTilePivotOffset);
 						GUI.enabled = current;
-						
+
+						current = GUI.enabled;
+						GUI.enabled = false;
+						w_AnimationWidth = EditorGUILayout.IntField("Animation Num of Tiles", w_AnimationWidth);
+						w_AnimationTilesetNumOfTiles = EditorGUILayout.IntField("Animation Tileset Num of Tiles", w_AnimationTilesetNumOfTiles);
+						GUI.enabled = current;
 						w_TilePixelWidth = EditorGUILayout.IntField("Tile Width (px)", w_TilePixelWidth);
 						w_TilePixelHeight = EditorGUILayout.IntField("Tile Height (px)", w_TilePixelHeight);
 						if(w_TilesetSprite != null)
 						{
 							GUI.enabled = true;
 							GUILayout.Label("Spritename = " + w_TilesetSprite.name);
-							if (GUILayout.Button("Slice & Prepare Tileset Sprite", GUILayout.ExpandWidth(false)))
+							if (GUILayout.Button("Slice & Prepare "+preLabel+ "Tileset Sprite", GUILayout.ExpandWidth(false)))
 							{
 								TextureImporter textureImporter = (TextureImporter) UnityEditor.TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(w_TilesetSprite));
 								PerformMetaSlice(w_TilesetSprite.texture, textureImporter, w_TileSpriteAlignment, w_customTilePivotOffset, w_TilePixelWidth, w_TilePixelHeight, w_TilesetPixelPerUnit);
@@ -195,7 +250,7 @@ public class TilesetWindow : EditorWindow {
 						{
 							if(GUI.enabled)
 							{
-								GUILayout.Label("no Tileset TileTypeFile selected", EditorStyles.boldLabel);
+								GUILayout.Label("no Tileset "+preLabel+"TileTypeFile selected", EditorStyles.boldLabel);
 								GUI.enabled = false;
 							}
 						}
@@ -207,18 +262,26 @@ public class TilesetWindow : EditorWindow {
 								GUI.enabled = false;
 							}
 						}
-						if (GUILayout.Button("Create Tileset from Sprite & TLS File", GUILayout.ExpandWidth(false)))
+
+						if (GUILayout.Button("Create "+preLabel+"Tileset from Sprite & TLS File", GUILayout.ExpandWidth(false)))
 						{
-							currentTileset = Create(w_TilesetName, w_TilesetSprite, w_TilesetTileTypesList, GetPivotValue(w_TileSpriteAlignment, w_customTilePivotOffset));
+							if(w_IsAnimatedTileset)
+								currentTileset = CreateAnimated(w_TilesetName, w_AnimationWidth, w_TilesetSprite, w_TilesetTileTypesList, GetPivotValue(w_TileSpriteAlignment, w_customTilePivotOffset));
+							else
+								currentTileset = Create(w_TilesetName, w_TilesetSprite, w_TilesetTileTypesList, GetPivotValue(w_TileSpriteAlignment, w_customTilePivotOffset));
 							//							EditorUtility.FocusProjectWindow();							<-- Satck Overflow
 							//							Selection.activeObject = currentTileset;
 						}
 					}
 					GUILayout.EndVertical();
 					GUI.enabled = true;
-					if (GUILayout.Button("Create empty Tileset SO", GUILayout.ExpandWidth(false)))
+					if (GUILayout.Button("Create empty "+preLabel+"Tileset SO", GUILayout.ExpandWidth(false)))
 					{
-						currentTileset = CreateEmpty();
+						if(w_IsAnimatedTileset)
+							currentTileset = CreateEmptyAnimated();
+						else
+							currentTileset = CreateEmpty();
+							
 					}
 				}
 				GUILayout.EndHorizontal();
@@ -416,8 +479,8 @@ public class TilesetWindow : EditorWindow {
 		Debug.Log("TargetColor: " + targetColor.ToString() + " found " + targetColorFoundCount + " times" );
 	}
 	#endregion
-	
-	List<TileType> ReadTileTypes(string filePath)
+
+	List<TileType> ReadTileTypes(string filePath, bool animated, int animatedTileTypeSize)
 	{
 		if(File.Exists(filePath))
 		{
@@ -427,12 +490,22 @@ public class TilesetWindow : EditorWindow {
 			try {
 				
 				// lese Anzahl der TileTypes aus
-				int iTileTypeSize = FileIO.ReadInt(binReader);
+				int iTileTypeSize = 0;
+				if(animated)
+				{
+					// Animated Tileset (width, height) == FIX  -> uTileTypeSize = 256, dont ReadInt() !
+					iTileTypeSize = animatedTileTypeSize;
+				}
+				else
+				{
+					// Normale Tileset (width, height ist variable), lese anzahl aus
+					iTileTypeSize = FileIO.ReadInt(binReader);
+				}
 				Debug.Log("iTileTypeSize = " + iTileTypeSize);
 				
 				if(iTileTypeSize <= 0 || iTileTypeSize > 1024)
 				{
-					Debug.LogError("lese Anzahl der TileTypes aus: iTileTypeSize ("+iTileTypeSize+") < 0 ||  iTileTypeSize ("+iTileTypeSize+") > 1024");
+					Debug.LogError("Anzahl der TileTypes: iTileTypeSize ("+iTileTypeSize+") < 0 ||  iTileTypeSize ("+iTileTypeSize+") > 1024");
 					binReader.Close();
 					fs.Close();
 					return null;
@@ -452,7 +525,11 @@ public class TilesetWindow : EditorWindow {
 			}
 			catch (Exception exception)
 			{
-				Debug.LogError("Tileset's TileType reading Error: \n" + exception);
+				string msg = "";
+				if(animated)
+					msg = "Animated ";
+
+				Debug.LogError(msg+"Tileset's TileType reading Error: \n" + exception);
 			}
 			finally
 			{
@@ -462,13 +539,40 @@ public class TilesetWindow : EditorWindow {
 		}
 		else
 		{
-			Debug.LogError("File Path: " +filePath + " doesn't exists!");
-			return null;
+
+			if(!animated)
+			{
+				Debug.LogError("File Path: " +filePath + " doesn't exists!");
+				return null;
+			}
+			else
+			{
+
+				if (animatedTileTypeSize < 0 ||  animatedTileTypeSize > 256)
+				{
+					//TODO check tileset texture width && height, calculate tiles
+					Debug.LogError("animatedTileTypeSize < 0 ||  animatedTileTypeSize > 256");
+				}
+				else
+				{
+					// Animated Tileset -> set all TileType's to TileType.tile_nonsolid;
+					Debug.LogError("File Path: " +filePath + " doesn't exists! - Init all Tiles to tile_nonsolid " + TileType.tile_nonsolid);
+					List<TileType> animatedTilesetTileTypesList = new List<TileType>();
+					
+					TileType value = TileType.tile_nonsolid;
+					for (int i=0; i< animatedTileTypeSize; i++)
+					{
+						animatedTilesetTileTypesList.Add(value);
+					}
+					return animatedTilesetTileTypesList;
+				}
+				return null;
+			}
 		}
 		
 		return null;
 	}
-	
+
 	
 	string EP_LastWorkingTileSetTileTypeFilePath = "EP_LastWorkingTileSetTileTypeFilePath";
 	string m_LastWorkingTileSetTileTypeFilePath = "";
